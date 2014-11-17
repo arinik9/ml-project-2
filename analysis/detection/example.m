@@ -9,31 +9,27 @@ clearvars;
 %    files we provided you with.
 
 % add path to piotr's toolbox
-
-% ---------------------------------------------
-% ====>   FIX TO YOUR ACTUAL TOOLBOX PATH <====
-% ---------------------------------------------
-addpath(genpath('../toolbox/'));
+addpath(genpath('./toolbox/'));
 
 % Load both features and training images
-load train_feats;
-load train_imgs;
+load('./data/detection/train_feats.mat');
+load('./data/detection/train_imgs.mat');
 
 %% --browse through the images, and show the feature visualization beside
 %  -- You should explore the features for the positive and negative
 %  examples and understand how they resemble the original image.
 for i=1:10
     clf();
-    
+
     subplot(121);
     imshow(imgs{i}); % image itself
-    
+
     subplot(122);
     im( hogDraw(feats{i}) ); colormap gray;
     axis off; colorbar off;
-    
-    pause;  % wait for keydo that then, 
-end
+
+    pause;
+end;
 
 %% -- Generate feature vectors (so each one is a row of X)
 fprintf('Generating feature vectors..\n');
@@ -42,7 +38,7 @@ X = zeros([length(imgs) D]);
 
 for i=1:length(imgs)
     X(i,:) = feats{i}(:);  % convert to a vector of D dimensions
-end
+end;
 
 %% -- Example: split half and half into train/test
 fprintf('Splitting into train/test..\n');
@@ -57,7 +53,7 @@ Te.y = labels(Te.idxs);
 
 %% Train simple neural network with matlab's toolbox
 fprintf('Training simple neural network..\n');
-rng(8339);  % fix seed, this    NN is very sensitive to initialization
+rng(8339);  % fix seed, this NN is very sensitive to initialization
 net = patternnet([3 3]);
 
 % train the neural network on the training set
@@ -87,16 +83,16 @@ avgTPRList
 figure;
 for i=1:10
     clf();
-    
+
     subplot(121);
     imshow(imgs{Te.idxs(i)}); % image itself
-    
+
     subplot(122);
     im( hogDraw(feats{Te.idxs(i)}) ); colormap gray;
     axis off; colorbar off;
-    
+
     % show if it is classified as pos or neg, and true label
     title(sprintf('Label: %d, Pred: %d', labels(Te.idxs(i)), 2*(nnPred(i)>0.5) - 1));
-    
-    pause;  % wait for keydo that then, 
-end
+
+    pause;
+end;
