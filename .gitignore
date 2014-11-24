@@ -1,6 +1,8 @@
 # Datasets (too heavy)
 data/*
 !data/.gitkeep
+!data/detection/.gitkeep
+!data/recommendation/.gitkeep
 
 # Libs
 toolbox/*
