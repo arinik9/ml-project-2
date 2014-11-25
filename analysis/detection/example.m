@@ -4,11 +4,13 @@ clearvars;
 % IMPORTANT: Make sure you downloaded Piotr's toolbox: http://vision.ucsd.edu/~pdollar/toolbox/doc/
 %            and add it to the path with
 %            addpath(genpath('where/the/toolbox/is'))
+% IMPORTANT: You need to download the Deep Learning Toolbox and add it to your path
+% You can get it from https://github.com/rasmusbergpalm/DeepLearnToolbox/archive/master.zip
 %
 %    And make sure you downloaded the train_feats.mat and train_imgs.mat
 %    files we provided you with.
 
-% add path to piotr's toolbox
+% add path to external toolboxes
 addpath(genpath('./toolbox/'));
 
 % Load both features and training images
@@ -51,20 +53,60 @@ Te.idxs = 2:2:size(X,1);
 Te.X = X(Te.idxs,:);
 Te.y = labels(Te.idxs);
 
-%% Train simple neural network with matlab's toolbox
+%%
 fprintf('Training simple neural network..\n');
-rng(8339);  % fix seed, this NN is very sensitive to initialization
-net = patternnet([3 3]);
 
-% train the neural network on the training set
-net = train(net,Tr.X', 1.0*[(Tr.y' > 0); (Tr.y' < 0)]);
+% --- NOTE ---
+% Using this toolbox requires that you understand very well neural networks
+% and that you go through the examples in their README file (github).
+% You may also need to get into the toolbox code to be able to experiment
+% with it.
+%
+% Make sure you understand what is going on below!
+
+rng(8339);  % fix seed, this NN is very sensitive to initialization
+
+% setup NN. The first layer needs to have number of features neurons,
+%  and the last layer the number of classes (here two).
+nn = nnsetup([size(Tr.X,2) 10 2]);
+opts.numepochs =  50;   %  Number of full sweeps through data
+opts.batchsize = 100;  %  Take a mean gradient step over this many samples
+
+% if == 1 => plots trainin error as the NN is trained
+opts.plot               = 1;
+
+nn.learningRate = 2;
+
+% this neural network implementation requires number of samples to be a
+% multiple of batchsize, so we remove some for this to be true.
+numSampToUse = opts.batchsize * floor( size(Tr.X) / opts.batchsize);
+Tr.X = Tr.X(1:numSampToUse,:);
+Tr.y = Tr.y(1:numSampToUse);
+
+% normalize data
+[Tr.normX, mu, sigma] = zscore(Tr.X); % train, get mu and std
+
+% prepare labels for NN
+LL = [1*(Tr.y>0)  1*(Tr.y<0)];  % first column, p(y=1)
+                                   % second column, p(y=-1)
+
+[nn, L] = nntrain(nn, Tr.normX, LL, opts);
+
+
+Te.normX = normalize(Te.X, mu, sigma);  % normalize test data
+
+% to get the scores we need to do nnff (feed-forward)
+%  see for example nnpredict().
+% (This is a weird thing of this toolbox)
+nn.testing = 1;
+nn = nnff(nn, Te.normX, zeros(size(Te.normX,1), nn.size(end)));
+nn.testing = 0;
 
 % predict on the test set
-nnPred = net(Te.X');
+nnPred = nn.a{end};
 
-% just keep the one for the positive class
-nnPred = nnPred(1,:)';
-
+% we want a single score, subtract the output sigmoids
+nnPred = nnPred(:,1) - nnPred(:,2);
 
 %% See prediction performance
 fprintf('Plotting performance..\n');
@@ -81,7 +123,7 @@ avgTPRList
 
 %% visualize samples and their predictions (test set)
 figure;
-for i=1:10
+for i=20:30  % just 10 of them, though there are thousands
     clf();
 
     subplot(121);
@@ -92,7 +134,7 @@ for i=1:10
     axis off; colorbar off;
 
     % show if it is classified as pos or neg, and true label
-    title(sprintf('Label: %d, Pred: %d', labels(Te.idxs(i)), 2*(nnPred(i)>0.5) - 1));
+    title(sprintf('Label: %d, Pred: %d', labels(Te.idxs(i)), 2*(nnPred(i)>0) - 1));
 
     pause;
 end;
