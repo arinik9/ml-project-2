@@ -12,7 +12,7 @@ Tips & Remarks
 - If you apply feature transforms to the training set, always remember to apply them to the test set as well.
 - Recommended plots:
   - Compare results (RMSE, etc) with a boxplot for each method used. Shows clearly the progress brought about by different tricks
-  - Learning curves
+  - Learning curves (especially for penalized regressions — it legitimates the choice of range for the value of the penalization term)
 
 Person detection
 ----------------
