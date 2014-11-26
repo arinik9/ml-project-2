@@ -13,6 +13,9 @@ clearvars;
 % add path to external toolboxes
 addpath(genpath('./toolbox/'));
 
+% add path to source files
+addpath(genpath('./src/'));
+
 % Load both features and training images
 load('./data/detection/train_feats.mat');
 load('./data/detection/train_imgs.mat');
@@ -53,7 +56,7 @@ Te.idxs = 2:2:size(X,1);
 Te.X = X(Te.idxs,:);
 Te.y = labels(Te.idxs);
 
-%%
+%% Training Neural Network example
 fprintf('Training simple neural network..\n');
 
 % --- NOTE ---
@@ -64,7 +67,7 @@ fprintf('Training simple neural network..\n');
 %
 % Make sure you understand what is going on below!
 
-rng(8339);  % fix seed, this NN is very sensitive to initialization
+rng(8339); % fix seed, this NN is very sensitive to initialization
 
 % setup NN. The first layer needs to have number of features neurons,
 %  and the last layer the number of classes (here two).
@@ -73,9 +76,13 @@ opts.numepochs =  50;   %  Number of full sweeps through data
 opts.batchsize = 100;  %  Take a mean gradient step over this many samples
 
 % if == 1 => plots trainin error as the NN is trained
-opts.plot               = 1;
+opts.plot = 1;
 
-nn.learningRate = 2;
+% nn.learningRate = 2;
+
+% Test NN with sigmoid activation function (seems to give better results than 'tanh_opt')
+nn.activation_function = 'sigm';    %  Sigmoid activation function
+nn.learningRate = 1;                %  Sigm require a lower learning rate
 
 % this neural network implementation requires number of samples to be a
 % multiple of batchsize, so we remove some for this to be true.
@@ -88,15 +95,17 @@ Tr.y = Tr.y(1:numSampToUse);
 
 % prepare labels for NN
 LL = [1*(Tr.y>0)  1*(Tr.y<0)];  % first column, p(y=1)
-                                   % second column, p(y=-1)
+                                % second column, p(y=-1)
 
 [nn, L] = nntrain(nn, Tr.normX, LL, opts);
 
 
 Te.normX = normalize(Te.X, mu, sigma);  % normalize test data
 
-% to get the scores we need to do nnff (feed-forward)
-%  see for example nnpredict().
+% to get the scores we need to do nnff (feed-forward) 
+% which returns an neural network structure with updated 
+% layer activations, error and loss (nn.a, nn.e and nn.L)
+% See for example nnpredict().
 % (This is a weird thing of this toolbox)
 nn.testing = 1;
 nn = nnff(nn, Te.normX, zeros(size(Te.normX,1), nn.size(end)));
@@ -123,7 +132,7 @@ avgTPRList
 
 %% visualize samples and their predictions (test set)
 figure;
-for i=20:30  % just 10 of them, though there are thousands
+for i=20:40  % just 10 of them, though there are thousands
     clf();
 
     subplot(121);
