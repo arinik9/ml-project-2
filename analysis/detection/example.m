@@ -132,7 +132,7 @@ avgTPRList
 
 %% visualize samples and their predictions (test set)
 figure;
-for i=20:40  % just 10 of them, though there are thousands
+for i=20:40  % just a subsample of them, though there are thousands
     clf();
 
     subplot(121);

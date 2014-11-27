@@ -6,22 +6,29 @@ addpath(genpath('./src'), genpath('../src'));
 
 % Load both features and training images
 load('./data/detection/train_feats.mat');
-load('./data/detection/train_imgs.mat');
+% No need to load the images for now
+%load('./data/detection/train_imgs.mat');
 
 y = labels;
 
-%% -- Generate feature vectors (so each one is a row of X)
+%% Generate feature vectors (so each one is a row of X)
 fprintf('Generating feature vectors..\n');
 D = numel(feats{1});  % feature dimensionality
-X = zeros([length(imgs) D]);
+X = zeros([size(feats, 1) D]);
 
-for i=1:length(imgs)
-    X(i,:) = feats{i}(:);  % convert to a vector of D dimensions
+% convert features to a vectors of D dimensions
+for i=1:length(feats)
+    X(i,:) = feats{i}(:); 
 end;
 
-% TO DO : factorize code
+% TODO : factorize dataset handling code
 
-%% Output visualization
+%% Normalize the data
+[Xnorm, mu, sigma] = zscore(X);
+X = Xnorm;
+
+
+%% Output (labels) visualization
 
 N = length(y);
 
@@ -33,12 +40,26 @@ length(y(~t))
 % We have 8545 images: 
 % - 1237 positive (with people) 
 % - 7308 negative (without people)
-
+% We will need to be careful not to let this skewed distribution influence
+% our results.
 hist(y);
 
-%% Features visualization
+%% Features analysis
 
-% Normalize the data
-[Xnorm, mu, sigma] = zscore(X); % X, get mu and std
-X = Xnorm;
+% Find features highly correlated to the output
+threshold = 0.5;
+selector = @(x) abs(x) > threshold;
+[correlatedToOutput, correlations] = findCorrelations(selector, X, y);
 
+% No feature explains much of the output by itself
+size(correlatedToOutput, 1)
+
+% Find features highly correlated among themselves
+threshold = 0.90;
+selector = @(x) abs(x) > threshold;
+[correlatedVariables, correlations] = findCorrelations(selector, X);
+% A *lot* of features are very highly correlated.
+% We have highly redudant input. We need to apply dimensionality reduction.
+size(correlatedVariables, 1)
+
+%% 
