@@ -28,7 +28,7 @@ Project's TODO
 - [ ] Principal Components Analysis (as a low-rank approximation) using alternating least squares
 - [ ] Neural Networks (implementation from the [DeepLearn toolbox](https://github.com/rasmusbergpalm/DeepLearnToolbox/archive/))
 - [ ] Generic learning curve plotting function
-- [ ] Generic ML method comparison function (for each method, plot achieved test error & stability with a boxplot)
+- [ ] Generic ML method comparison function (for each method, plot achieved test error & stability with a boxplot)
 
 ### Dataset pre-processing
 
@@ -40,9 +40,9 @@ Project's TODO
 ### Person detection dataset
 
 - [ ] Implement the relevant error measures
-- [ ] Get a baseline error value
-- [ ] Experiment with the Neural Network's hyperparameters (number of layers, activation functions)
-- [ ] Experiment with clustering
+- [ ] Get a baseline error value
+- [ ] Experiment with the Neural Network's hyperparameters (number of layers, activation functions)
+- [ ] Experiment with clustering
 - [ ] Experiment with Gaussian processes
 - [ ] Generate learning curves
 - [ ] Minimize the train and test error
@@ -50,10 +50,10 @@ Project's TODO
 
 ### Song recommendation dataset
 
-- [ ] Get a baseline error value
-- [ ] Experiment with SVM
+- [ ] Get a baseline error value
+- [ ] Experiment with SVM
 - [ ] Experiment with Gaussian processes
-- [ ] Experiment with clustering
+- [ ] Experiment with clustering
 - [ ] Generate learning curves
 - [ ] Minimize the train and test error
 - [ ] Check the stability of the results with k-CV
