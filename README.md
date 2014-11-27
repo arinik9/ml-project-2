@@ -25,6 +25,7 @@ Project's TODO
 - [ ] Support Vector Machine
 - [ ] Gaussian process and several kernels
 - [ ] K-means clustering
+- [ ] Gaussian Mixture Model and EM algo
 - [ ] Principal Components Analysis (as a low-rank approximation) using alternating least squares
 - [ ] Neural Networks (implementation from the [DeepLearn toolbox](https://github.com/rasmusbergpalm/DeepLearnToolbox/archive/))
 - [ ] Generic learning curve plotting function
@@ -45,6 +46,7 @@ Project's TODO
 - [ ] Experiment with clustering
 - [ ] Experiment with Gaussian processes
 - [ ] Generate learning curves
+- [ ] Plot ROC Curves of different models for comparison
 - [ ] Minimize the train and test error
 - [ ] Check the stability of the results with k-CV
 
