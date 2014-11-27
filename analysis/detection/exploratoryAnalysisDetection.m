@@ -4,7 +4,7 @@ clearvars;
 addpath(genpath('./data'), genpath('../data'));
 addpath(genpath('./src'), genpath('../src'));
 
-% Load both features and training images
+% Load dataset
 load('./data/detection/train_feats.mat');
 % No need to load the images for now
 %load('./data/detection/train_imgs.mat');

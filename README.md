@@ -50,13 +50,17 @@ Project's TODO
 
 ### Song recommendation dataset
 
+Recall we must achieve both **weak** (new ratings for existing users) and **strong** (entirely new users) prediction.
+
 - [ ] Get a baseline error value
 - [ ] Experiment with SVM
 - [ ] Experiment with Gaussian processes
 - [ ] Experiment with clustering
+- [ ] Use the social network for strong prediction (clustering ?)
 - [ ] Generate learning curves
 - [ ] Minimize the train and test error
 - [ ] Check the stability of the results with k-CV
+- [ ] Use the artists name to output fun facts
 
 ### Predictions
 
