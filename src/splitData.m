@@ -6,18 +6,18 @@ function [Ytest_strong, Ytest_weak, Gtest, Ytrain, Gtrain] = ...
 %   G:               original social network
 %   testRatioStrong: proportion of users to keep completely hidden
 %                    to use them for strong prediction testing
-%   testRatioWeak:   proportion of counts to withhold for each artist
+%   testRatioWeak:   proportion of available counts to withhold for each user
 %                    to use them for weak prediction testing
 % OUTPUT:
 %   Ytest_strong: pairs (user, artist) = count for new users to test
-%   Ytest_weak: pairs (user, artist) = count for existing users to test
+%   Ytest_weak: pairs (user, artist) = hidden counts for existing users to test
 %   Gstrong: friendship graph of new users with all users
 %   Ytrain_new and Gtrain_new is the new training set 
     if(nargin < 3)
         testRatioStrong = 0.1;
     end;
     if(nargin < 4)
-        testRatioWeak = 0.1;
+        testRatioWeak = 0.5;
     end;
     if(nargin < 5)
         seed = 1;
@@ -43,30 +43,33 @@ function [Ytest_strong, Ytest_weak, Gtest, Ytrain, Gtrain] = ...
 
     % ----- Test data for weak generalization
     % Keep testRatioWeak percent of entries per remaining user as test data
-    % TODO: double check dimensions
     [nU, nA] = size(Ytrain);
-    % Number of counts to withhold per artist
-    % TODO: would it be interesting to withhold a proportion of the
-    % available counts *for a user* instead? (i.e. the more counts
-    % available for a given user, the more we withhold)
-    numU = floor(nU * testRatioWeak);
+    
     userTestIndices = [];
     artistTestIndices = [];
     countTestValues = [];
-    % For each artist
-    for j = 1:nA
-        % Find available counts for this artist
-        available = find(Ytrain(:, j) ~= 0);
-        if length(available) > 2
+    % For each user
+    for i = 1:nU
+        % Find available counts for this user
+        available = find(Ytrain(i, :) ~= 0)';
+        % Number of counts to withhold for this user
+        numA = floor(length(available) * testRatioWeak);
+        % Make sure to leave some counts for prediction
+        if (length(available) - numA > 0) && (numA > 0)
             % Pick some of those counts for testing
-            ind = unidrnd(length(available), numU, 1);
-            i = available(ind);
-            userTestIndices = [userTestIndices; i];
-            artistTestIndices = [artistTestIndices; j * ones(numU,1)];
-            countTestValues = [countTestValues; Ytrain(i,j)];
+            ind = randperm(length(available));
+            j = available(ind(1:numA));
+            
+            userTestIndices = [userTestIndices; i * ones(numA, 1)];
+            artistTestIndices = [artistTestIndices; j];
+            countTestValues = [countTestValues; Ytrain(i, j)'];
+            
+            %fprintf('User %i has %d counts, we hide %d.\n', i, length(available), numA);
         end
     end
     Ytest_weak = sparse(userTestIndices, artistTestIndices, countTestValues, nU, nA);
     % Hide the extracted counts in the remaining test set
     Ytrain(sub2ind([nU nA], userTestIndices, artistTestIndices)) = 0;
+    
+    %fprintf('We hid %d counts in total for weak prediction.\n', nnz(countTestValues));
 end
