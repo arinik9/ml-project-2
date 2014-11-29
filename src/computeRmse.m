@@ -12,5 +12,5 @@ function err = computeMse(y, yHat)
     % TODO: double check this is the correct way
     e = diag(residuals' * residuals)' / (2 * n);
     % Overall MSE (1 x 1)
-    err = sum(e) / d;
+    err = full(sum(e) / d);
 end
