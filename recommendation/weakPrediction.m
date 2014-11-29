@@ -28,3 +28,17 @@ Goriginal = Gtrain;
 [trUserIndices, trArtistIndices] = find(Ytrain);
 [teUserIndices, teArtistIndices] = find(Ytest);
 
+%% Baseline: constant predictor (overall mean of all observed counts)
+overallMean = mean(nonzeros(Ytrain));
+
+% Predict counts (only those we're going to test on, to save memory)
+% TODO: should we predict *all* counts?
+values = overallMean * nnz(Ytrain);
+trYhat0 = sparse(trUserIndices, trArtistIndices, values, trN, trD);
+teYhat0 = sparse(teUserIndices, teArtistIndices, values, teN, teD);
+
+% Compute train and test errors (prediction vs counts in test and training set)
+trErr0 = computeRmse(Ytrain, trYhat0);
+teErr0 = computeRmse(Ytest, teYhat0);
+
+fprintf('RMSE with a constant predictor: %f | %f\n', trErr0, teErr0);
