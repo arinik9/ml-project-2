@@ -17,7 +17,7 @@ function [Ytest_strong, Ytest_weak, Gtest, Ytrain, Gtrain] = ...
         testRatioStrong = 0.1;
     end;
     if(nargin < 4)
-        testRatioWeak = 0.5;
+        testRatioWeak = 0.1;
     end;
     if(nargin < 5)
         seed = 1;
