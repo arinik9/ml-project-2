@@ -36,7 +36,7 @@ Project's TODO
 - [ ] Try obtaining helpful visualizations
 - [ ] Dimensionality reduction with PCA
 - [ ] Try feature transformations (basis expansion) on the reduced set of features
- 
+
 ### Person detection dataset
 
 - [ ] Implement the relevant error measures
@@ -52,7 +52,9 @@ Project's TODO
 
 Recall we must achieve both **weak** (new ratings for existing users) and **strong** (entirely new users) prediction.
 
-- [ ] Get a baseline error value
+- [x] Implement the relevant error measures
+- [x] Train / test split (particular for weak and strong prediction)
+- [x] Get a baseline error value
 - [ ] Experiment with SVM
 - [ ] Experiment with Gaussian processes
 - [ ] Experiment with clustering
