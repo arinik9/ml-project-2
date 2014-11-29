@@ -18,10 +18,9 @@ Goriginal = Gtrain;
 
 %% Train / test split
 % TODO: cross-validate all the things!
-% TODO: no need to withold users for strong prediction if we're focusing on
-% weak prediction here
+setSeed(1);
 % TODO: vary test / train proportions
-[~, Ytest, ~, Ytrain, ~] = splitData(Yoriginal, Goriginal);
+[~, Ytest, ~, Ytrain, ~] = splitData(Yoriginal, Goriginal, 0, 0.1);
 % Total size of train and test matrices
 [trN, trD] = size(Ytrain);
 [teN, teD] = size(Ytest);

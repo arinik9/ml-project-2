@@ -1,5 +1,5 @@
 function [Ytest_strong, Ytest_weak, Gtest, Ytrain, Gtrain] = ...
-    splitData(Y, G, testRatioStrong, testRatioWeak, seed)
+    splitData(Y, G, testRatioStrong, testRatioWeak)
 % SPLITDATA Generate a random test/train split for both weak and strong prediction
 % INPUT:
 %   Y:               original listening counts matrix
@@ -19,10 +19,6 @@ function [Ytest_strong, Ytest_weak, Gtest, Ytrain, Gtrain] = ...
     if(nargin < 4)
         testRatioWeak = 0.1;
     end;
-    if(nargin < 5)
-        seed = 1;
-    end;
-    setSeed(seed);
 
     % ----- Test data for Strong generalization
     % Keep testRatioStrong percent of users hidden for testing as 'new users'
