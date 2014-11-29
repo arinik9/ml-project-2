@@ -20,6 +20,7 @@ Goriginal = Gtrain;
 % TODO: cross-validate all the things!
 % TODO: no need to withold users for strong prediction if we're focusing on
 % weak prediction here
+% TODO: vary test / train proportions
 [~, Ytest, ~, Ytrain, ~] = splitData(Yoriginal, Goriginal);
 % Total size of train and test matrices
 [trN, trD] = size(Ytrain);
@@ -33,9 +34,8 @@ overallMean = mean(nonzeros(Ytrain));
 
 % Predict counts (only those for which we have reference data, to save memory)
 % TODO: should we predict *all* counts?
-values = overallMean * nnz(Ytrain);
-trYhat0 = sparse(trUserIndices, trArtistIndices, values, trN, trD);
-teYhat0 = sparse(teUserIndices, teArtistIndices, values, teN, teD);
+trYhat0 = sparse(trUserIndices, trArtistIndices, overallMean, trN, trD);
+teYhat0 = sparse(teUserIndices, teArtistIndices, overallMean, teN, teD);
 
 % Compute train and test errors (prediction vs counts in test and training set)
 trErr0 = computeRmse(Ytrain, trYhat0);
@@ -48,7 +48,6 @@ fprintf('RMSE with a constant predictor: %f | %f\n', trErr0, teErr0);
 % Compute corresponding mean value for each user
 uniqueUsers = unique(trUserIndices);
 meanPerUser = zeros(trN, 1);
-
 for i = 1:length(uniqueUsers)
     nCountsObserved = nnz(Ytrain(uniqueUsers(i), :));
     meanPerUser(i) = sum(Ytrain(uniqueUsers(i), :), 2) / nCountsObserved;
@@ -64,8 +63,6 @@ for k = 1:length(tePrediction)
     tePrediction(k) = meanPerUser(teUserIndices(k));
 end;
 
-%%
-% Predict counts (only those for which we have reference data, to save memory)
 trYhatMean = sparse(trUserIndices, trArtistIndices, trPrediction, trN, trD);
 teYhatMean = sparse(teUserIndices, teArtistIndices, tePrediction, teN, teD);
 
@@ -75,3 +72,8 @@ teErrMean = computeRmse(Ytest, teYhatMean);
 
 fprintf('RMSE with a constant predictor per user: %f | %f\n', trErrMean, teErrMean);
 
+% Cleanup
+clearvars i k nCountsObserved uniqueUsers meanPerUser trPrediction tePrediction;
+
+%% Other predictions
+% TODO
