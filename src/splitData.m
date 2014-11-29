@@ -1,42 +1,72 @@
-% The following script creates two kinds of test sets
-% Ytrain_strong contains pairs for new users to test.
-% Ytrain_weak contains pairs for existing users to test.
-% Gstrong contains the friendship information of new users with all users
-% Ytrain_new and Gtrain_new is the new training set 
-clear all;
-load songTrain;
+function [Ytest_strong, Ytest_weak, Gtest, Ytrain, Gtrain] = ...
+    splitData(Y, G, testRatioStrong, testRatioWeak, seed)
+% SPLITDATA Generate a random test/train split for both weak and strong prediction
+% INPUT:
+%   Y:               original listening counts matrix
+%   G:               original social network
+%   testRatioStrong: proportion of users to keep completely hidden
+%                    to use them for strong prediction testing
+%   testRatioWeak:   proportion of counts to withhold for each artist
+%                    to use them for weak prediction testing
+% OUTPUT:
+%   Ytest_strong: pairs (user, artist) = count for new users to test
+%   Ytest_weak: pairs (user, artist) = count for existing users to test
+%   Gstrong: friendship graph of new users with all users
+%   Ytrain_new and Gtrain_new is the new training set 
+    if(nargin < 3)
+        testRatioStrong = 0.1;
+    end;
+    if(nargin < 4)
+        testRatioWeak = 0.1;
+    end;
+    if(nargin < 5)
+        seed = 1;
+    end;
+    setSeed(seed);
 
-% Test data for Strong generalization
-% keep 10% of users for testing as 'new users'
-% You should decide on your own how many new users you want to test on
-setSeed(1);
-nU = size(Ytrain,1);
-idx = randperm(nU);
-nTe = floor(nU*0.1); 
-idxTe = idx(1:nTe);
-idxTr = idx(nTe+1:end);
-Ytrain_new = Ytrain(idxTr,:);
-Ytest_strong = Ytrain(idxTe,:);
-Gtrain_new = Gtrain(idxTr, idxTr);
-Gstrong = Gtrain(idxTe, [idxTr idxTe]);
+    % ----- Test data for Strong generalization
+    % Keep testRatioStrong percent of users hidden for testing as 'new users'
+    
+    % Total number of available users
+    nU = size(Y,1);
+    idx = randperm(nU);
+    % Number of users to withhold
+    nTe = floor(nU * testRatioStrong);
+    % Corresponding indices
+    idxTe = idx(1:nTe);
+    idxTr = idx(nTe+1:end);
+    % Split the matrices (counts and social network)
+    Ytrain = Y(idxTr,:);
+    Ytest_strong = Y(idxTe,:);
+    Gtrain = G(idxTr, idxTr);
+    Gtest = G(idxTe, [idxTr idxTe]);
 
-% Test data for weak generalization
-% Keep 10 entries per existing user as test data
-[D N] = size(Ytrain_new);
-numD = 10; % number of artists held out per user
-dd = [];
-nn = [];
-yy = [];
-for n = 1:N
-    On = find(Ytrain_new(:,n)~=0);
-    if length(On)>2
-        ind = unidrnd(length(On),numD,1); % choose some for testing
-        d = On(ind);
-        dd = [dd; d];
-        nn = [nn; n*ones(numD,1)];
-        yy = [yy; Ytrain_new(d,n)];
+    % ----- Test data for weak generalization
+    % Keep testRatioWeak percent of entries per remaining user as test data
+    % TODO: double check dimensions
+    [nU, nA] = size(Ytrain);
+    % Number of counts to withhold per artist
+    % TODO: would it be interesting to withhold a proportion of the
+    % available counts *for a user* instead? (i.e. the more counts
+    % available for a given user, the more we withhold)
+    numU = floor(nU * testRatioWeak);
+    userTestIndices = [];
+    artistTestIndices = [];
+    countTestValues = [];
+    % For each artist
+    for j = 1:nA
+        % Find available counts for this artist
+        available = find(Ytrain(:, j) ~= 0);
+        if length(available) > 2
+            % Pick some of those counts for testing
+            ind = unidrnd(length(available), numU, 1);
+            i = available(ind);
+            userTestIndices = [userTestIndices; i];
+            artistTestIndices = [artistTestIndices; j * ones(numU,1)];
+            countTestValues = [countTestValues; Ytrain(i,j)];
+        end
     end
+    Ytest_weak = sparse(userTestIndices, artistTestIndices, countTestValues, nU, nA);
+    % Hide the extracted counts in the remaining test set
+    Ytrain(sub2ind([nU nA], userTestIndices, artistTestIndices)) = 0;
 end
-Ytest_weak = sparse(dd,nn,yy,D,N);
-Ytrain_new(sub2ind([D N], dd, nn)) = 0;
-
