@@ -46,29 +46,28 @@ fprintf('RMSE with a constant predictor: %f | %f\n', trErr0, teErr0);
 %% Simple model: predict the average listening count of the user
 
 % Compute corresponding mean value for each user
-% TODO: this is very redundant, computations are repeated many times
-trMeans = zeros(nnz(Ytrain), 1);
-for k = 1:length(trUserIndices)
-    nCountsObserved = nnz(Ytrain(trUserIndices(k), :));
-    trMeans(k) = sum(Ytrain(trUserIndices(k), :), 2) / nCountsObserved;
+uniqueUsers = unique(trUserIndices);
+meanPerUser = zeros(trN, 1);
+
+for i = 1:length(uniqueUsers)
+    nCountsObserved = nnz(Ytrain(uniqueUsers(i), :));
+    meanPerUser(i) = sum(Ytrain(uniqueUsers(i), :), 2) / nCountsObserved;
 end
 
-% TODO: this is very redundant, computations are repeated many times
-teMeans = zeros(nnz(Ytest), 1);
-for k = 1:length(teUserIndices)
-    nCountsObserved = nnz(Ytrain(:, teUserIndices(k)));
-    if(nCountsObserved < 1)
-        % TODO: this shouldn't happen, must fix the train / test split
-        %fprintf('Warning! User %d has no data in the training set\n', teUserIndices(k));
-        teMeans(k) = 0;
-    else
-        teMeans(k) = sum(Ytrain(teUserIndices(k), :), 2) / nCountsObserved;
-    end;
-end
+% Predict counts (only those for which we have reference data, to save memory)
+trPrediction = zeros(length(trUserIndices), 1);
+for k = 1:length(trPrediction)
+    trPrediction(k) = meanPerUser(trUserIndices(k));
+end;
+tePrediction = zeros(length(teUserIndices), 1);
+for k = 1:length(tePrediction)
+    tePrediction(k) = meanPerUser(teUserIndices(k));
+end;
+
 %%
 % Predict counts (only those for which we have reference data, to save memory)
-trYhatMean = sparse(trUserIndices, trArtistIndices, trMeans, trN, trD);
-teYhatMean = sparse(teUserIndices, teArtistIndices, teMeans, teN, teD);
+trYhatMean = sparse(trUserIndices, trArtistIndices, trPrediction, trN, trD);
+teYhatMean = sparse(teUserIndices, teArtistIndices, tePrediction, teN, teD);
 
 % Compute train and test errors (prediction vs counts in test and training set)
 trErrMean = computeRmse(Ytrain, trYhatMean);
