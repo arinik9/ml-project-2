@@ -24,14 +24,14 @@ Goriginal = Gtrain;
 % Total size of train and test matrices
 [trN, trD] = size(Ytrain);
 [teN, teD] = size(Ytest);
-% Indices of available counts
+% Indices of available counts (expressed in the same coordinates space)
 [trUserIndices, trArtistIndices] = find(Ytrain);
 [teUserIndices, teArtistIndices] = find(Ytest);
 
 %% Baseline: constant predictor (overall mean of all observed counts)
 overallMean = mean(nonzeros(Ytrain));
 
-% Predict counts (only those we're going to test on, to save memory)
+% Predict counts (only those for which we have reference data, to save memory)
 % TODO: should we predict *all* counts?
 values = overallMean * nnz(Ytrain);
 trYhat0 = sparse(trUserIndices, trArtistIndices, values, trN, trD);
@@ -42,3 +42,37 @@ trErr0 = computeRmse(Ytrain, trYhat0);
 teErr0 = computeRmse(Ytest, teYhat0);
 
 fprintf('RMSE with a constant predictor: %f | %f\n', trErr0, teErr0);
+
+%% Simple model: predict the average listening count of the user
+
+% Compute corresponding mean value for each user
+% TODO: this is very redundant, computations are repeated many times
+trMeans = zeros(nnz(Ytrain), 1);
+for k = 1:length(trUserIndices)
+    nCountsObserved = nnz(Ytrain(trUserIndices(k), :));
+    trMeans(k) = sum(Ytrain(trUserIndices(k), :), 2) / nCountsObserved;
+end
+
+% TODO: this is very redundant, computations are repeated many times
+teMeans = zeros(nnz(Ytest), 1);
+for k = 1:length(teUserIndices)
+    nCountsObserved = nnz(Ytrain(:, teUserIndices(k)));
+    if(nCountsObserved < 1)
+        % TODO: this shouldn't happen, must fix the train / test split
+        %fprintf('Warning! User %d has no data in the training set\n', teUserIndices(k));
+        teMeans(k) = 0;
+    else
+        teMeans(k) = sum(Ytrain(teUserIndices(k), :), 2) / nCountsObserved;
+    end;
+end
+%%
+% Predict counts (only those for which we have reference data, to save memory)
+trYhatMean = sparse(trUserIndices, trArtistIndices, trMeans, trN, trD);
+teYhatMean = sparse(teUserIndices, teArtistIndices, teMeans, teN, teD);
+
+% Compute train and test errors (prediction vs counts in test and training set)
+trErrMean = computeRmse(Ytrain, trYhatMean);
+teErrMean = computeRmse(Ytest, teYhatMean);
+
+fprintf('RMSE with a constant predictor per user: %f | %f\n', trErrMean, teErrMean);
+
