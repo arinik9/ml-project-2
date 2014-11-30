@@ -114,10 +114,6 @@ Ynormalized = sparse(uIdx, aIdx, values, size(Y, 1), size(Y, 2));
 clear i o counts thisUserIdx values;
 
 %% Verify the result of normalization
-normalizedCounts = nonzeros(Ynormalized);
-% We observe a nicer Gaussian distribution of the counts
-figure;
-hist(normalizedCounts, 20);
 
 % Mean should be 0, deviation should be 1
 for i = 1:length(usersIdx)
@@ -127,6 +123,14 @@ for i = 1:length(usersIdx)
         assert(abs(std(counts) - 1) < 1e-1);
     end;
 end;
+
+normalizedCounts = nonzeros(Ynormalized);
+% We observe a nicer Gaussian distribution of the counts
+% But we still have a "long tail" to the right.
+figure;
+hist(normalizedCounts, 20);
+title({'Repartition of listening counts after outliers', 'removal and normalization'});
+%savePlot('./report/figures/recommendation/normalized-counts.pdf', 'Normalized count', 'Occurrences');
 
 clear i counts normalizedCounts;
 
