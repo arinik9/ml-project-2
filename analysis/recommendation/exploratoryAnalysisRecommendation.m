@@ -45,6 +45,11 @@ countsPerArtist = sum(Y(:, artistsIdx), 1); % Only for nonzero artists
 % Simple model: average count for an artist / average count for all artists
 % This is a simple estimate of popularity
 
+clear minCount minArtistCount idxMin idxMax;
+
+%% Outliers removal
+% TODO
+% TODO: also need to handle artists who have 0 listenings
 
 %% Normalization
 % "Make the data more Gaussian"
@@ -60,36 +65,51 @@ countsPerArtist = sum(Y(:, artistsIdx), 1); % Only for nonzero artists
 meanPerUser = zeros(size(usersIdx, 1), 1);
 deviationPerUser = zeros(size(usersIdx, 1), 1);
 values = zeros(nnz(Y), 1);
+zeroIdx = [];
 for i = 1:length(usersIdx)
-    %[thisUIdx, thisAIdx] = find(Y(i, :));
     counts = nonzeros(Y(i, :));
     meanPerUser(i) = mean(counts);
     deviationPerUser(i) = std(counts);
-    
-    values(uIdx == usersIdx(i)) = (counts - meanPerUser(i)) ./ deviationPerUser(i);
+    if(length(counts) <= 1)
+        zeroIdx = [zeroIdx; i];
+    end;
 end;
+% If we have only 1 data point for a user, std() is 0
+% (and we don't want to divide by 0).
+% We replace by the deviation to the mean over all counts, as an estimate of
+% the actual deviation we might have observed).
+o = ones(nnz(zeroIdx), 1);
+deviationPerUser(zeroIdx) = std([meanPerUser(zeroIdx)'; mean(meanPerUser) * o']);
+meanPerUser(zeroIdx) = mean(meanPerUser) * o;
+
 % Generate a new normalized sparse matrix
+for i = 1:length(usersIdx)
+    values(uIdx == usersIdx(i)) = (nonzeros(Y(i, :)) - meanPerUser(i)) ./ deviationPerUser(i);
+end;
 Ynormalized = sparse(uIdx, aIdx, values, size(Y, 1), size(Y, 2));
 
 % TODO: apply the same factors to the test set
 % TODO: denormalize after prediction to obtain the correct scale
 
-clear i counts thisUserIdx values;
+clear i o counts thisUserIdx values;
 
 %% Verify the result of normalization
 normalizedCounts = nonzeros(Ynormalized);
-hist(normalizedCounts);
+% We observe a nicer Gaussian distribution
+figure;
+
+hist(normalizedCounts, 20);
 
 % Mean should be 0, deviation should be 1
 for i = 1:length(usersIdx)
-    counts = nonzeros(Ynormalized(i, :));
-    mean(counts)
-    std(counts)
+    if(nnz(Ynormalized(i, :)) > 1)
+        counts = nonzeros(Ynormalized(i, :));
+        assert(abs(mean(counts) - 0) < 1e-3);
+        assert(abs(std(counts) - 1) < 1e-1);
+    end;
 end;
 
-%% Outliers removal
-% TODO
-% TODO: also need to handle artists who have 0 listenings
+clear i counts;
 
 %% Features analysis
 % TODO
