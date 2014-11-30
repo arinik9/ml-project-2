@@ -54,11 +54,9 @@
 
   \textbf{About the data}: The listening counts matrix $Y$ covers $1774$ users and $15085$ artists. It is very sparse, as we observe only $69617$ triplets (density of $0.2\%$). The friendship graph $G$ is given in the form of a symmetric $1774 \times 1774$ adjacency matrix, where $G_{i, j} = G_{j, i} = 1$ if users $i$ and $j$ are connected.\\
 
-  Artists have listening counts ranging from $1$ to $2274039$, the most listened artist being Britney Spears (for some reason).\\
-  TODO: mean and median listening counts (per user AND per artist).\\
-  TODO: histograms.\\
+  Artists have listening counts ranging from $1$ to $2274039$, the most listened artist being Britney Spears (for some reason). Over all observations, before any outlier removal, the average count is 707 while the median count is 278.\\
 
-  TODO: how did we handle unobserved data.
+  TODO: explain carefully how we handled unobserved data.
 
   \textbf{Error measure}: Both weak and strong prediction involve generating, for all users, predicted listening counts for all artists. Each output is thus $15085$-dimensional. We use mean \textbf{RMSE} as our main error measure. Given a predicted matrix $\hat{Y}$, we first compute the RMSE for each artist, and then take the mean over all artists.\\
   TODO: is this the correct approach?
@@ -66,14 +64,25 @@
   \subsection{Dataset analysis and preprocessing}
   Examining the dataset, we noticed that user $385$ had listened to artist $9162$ a whopping $352698$ times. Assuming an average song duration of $3$ minutes, user $385$ have supposedly spent the equivalent of two full years listening to \textit{Depeche Mode}. It was then necessary to remove such outliers before carrying out any learning.
 
-  In order to test our model for both weak and strong predictions, we separated the training set in two ways:
+  Several Machine Learning techniques rely on the assumption that data follows a Gaussian distribution. Since observed listening counts are strictly positive, we normalized and centered the data. We assumed that it was important to take into account artist popularity, but not the volume of music consumption of users. Therefore, we normalized the counts so as to obtain comparable values among users, but retain difference of popularity between artists.
 
+  \begin{figure}[ht]
+    \center
+    \subfigure{
+      \includegraphics[width=2.5in]{figures/recommendation/unnormalized-counts.pdf}
+    }
+    \subfigure{
+      \includegraphics[width=2.5in]{figures/recommendation/normalized-counts.pdf}
+    }
+    \caption{Normalization makes listening counts distribution more Gaussian}
+    \label{fig:recommendation-normalization}
+  \end{figure}
+
+  Finally, in order to test our models for both weak and strong predictions, we separated the training set in two ways:
   \begin{itemize}
     \item Entirely remove a proportion of users to use them as a strong prediction test set
     \item Withhold a proportion of the remaining (user, artist, listening count) triplets to use them as a weak prediction test set
   \end{itemize}
-
-  Several Machine Learning techniques rely on the assumption that data follows a Gaussian distribution. Since observed listening counts are strictly positive, we normalized and centered the data. We assumed that it was important to take into account artist popularity, but not the volume of music consumption of users. Therefore, we normalized the counts so as to obtain comparable values among users, but retain difference of popularity between artists.
 
   \subsection{Feature transformations}
 

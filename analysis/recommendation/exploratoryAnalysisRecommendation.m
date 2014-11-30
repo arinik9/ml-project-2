@@ -124,15 +124,21 @@ for i = 1:length(usersIdx)
     end;
 end;
 
-normalizedCounts = nonzeros(Ynormalized);
+% --- Before
+figure;
+hist(nonzeros(Y), 20);
+title({'Initial repartition of listening counts', ''});
+%savePlot('./report/figures/recommendation/unnormalized-counts.pdf', 'Count', 'Occurrences');
+
+% --- After
 % We observe a nicer Gaussian distribution of the counts
 % But we still have a "long tail" to the right.
 figure;
-hist(normalizedCounts, 20);
+hist(nonzeros(Ynormalized), 20);
 title({'Repartition of listening counts after outliers', 'removal and normalization'});
 %savePlot('./report/figures/recommendation/normalized-counts.pdf', 'Normalized count', 'Occurrences');
 
-clear i counts normalizedCounts;
+clear i counts;
 
 %% Features analysis
 % TODO
