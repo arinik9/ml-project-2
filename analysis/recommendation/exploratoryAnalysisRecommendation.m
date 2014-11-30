@@ -10,6 +10,7 @@ load('./data/recommendation/songTrain.mat');
 % Counts matrix:
 % Each (i, j) corresponds to the listening count of user i for artist j
 Y = Ytrain;
+allCounts = nonzeros(Y);
 [uIdx, aIdx] = find(Y);
 % Indices of users having at least one data example
 usersIdx = unique(uIdx);
@@ -29,8 +30,9 @@ friendships = Gtrain;
 %% Artists visualization
 
 % Listening counts for one (user, artist) span from 1 to 352698
-[minCount, idxMin] = min(nonzeros(Y))
-[maxCount, idxMax] = max(nonzeros(Y))
+[minCount, idxMin] = min(allCounts);
+[maxCount, idxMax] = max(allCounts);
+maxCount
 
 % There seems to be a major outlier:
 % (user 385, artist 9162) = 352698
@@ -38,8 +40,9 @@ friendships = Gtrain;
 
 % Total listening count for an artist spans from 1 to 2274039
 countsPerArtist = sum(Y(:, artistsIdx), 1); % Only for nonzero artists
-[minArtistCount, idxMin] = min(countsPerArtist)
-[maxArtistCount, idxMax] = max(countsPerArtist)
+[minArtistCount, idxMin] = min(countsPerArtist);
+[maxArtistCount, idxMax] = max(countsPerArtist);
+maxArtistCount
 % The single most "popular" artist is Britney Spears
 
 % Simple model: average count for an artist / average count for all artists
@@ -47,8 +50,24 @@ countsPerArtist = sum(Y(:, artistsIdx), 1); % Only for nonzero artists
 
 clear minCount minArtistCount idxMin idxMax;
 
-%% Outliers removal
-% TODO
+%% Simple outliers removal
+% We consider a count is an outlier if it deviates from the global mean by
+% more than 8 times the global standard deviation (note that
+% we can only deviate in the positive direction).
+globalMean = mean(allCounts);
+globalDeviation = std(allCounts);
+outliers = (Y > globalMean + 8 * globalDeviation);
+
+% We remove 97 data points
+nnz(outliers)
+Y(outliers) = 0;
+
+% Update the indices
+allCounts = nonzeros(Y);
+[uIdx, aIdx] = find(Y);
+usersIdx = unique(uIdx);
+artistsIdx = unique(aIdx);
+
 % TODO: also need to handle artists who have 0 listenings
 
 %% Normalization
@@ -78,6 +97,7 @@ end;
 % (and we don't want to divide by 0).
 % We replace by the deviation to the mean over all counts, as an estimate of
 % the actual deviation we might have observed).
+% Even if it's a bit hacky, the impact is small (we have very few such cases)
 o = ones(nnz(zeroIdx), 1);
 deviationPerUser(zeroIdx) = std([meanPerUser(zeroIdx)'; mean(meanPerUser) * o']);
 meanPerUser(zeroIdx) = mean(meanPerUser) * o;
@@ -95,9 +115,8 @@ clear i o counts thisUserIdx values;
 
 %% Verify the result of normalization
 normalizedCounts = nonzeros(Ynormalized);
-% We observe a nicer Gaussian distribution
+% We observe a nicer Gaussian distribution of the counts
 figure;
-
 hist(normalizedCounts, 20);
 
 % Mean should be 0, deviation should be 1
@@ -109,7 +128,7 @@ for i = 1:length(usersIdx)
     end;
 end;
 
-clear i counts;
+clear i counts normalizedCounts;
 
 %% Features analysis
 % TODO
