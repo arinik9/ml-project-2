@@ -48,8 +48,8 @@
   \textbf{Objective}: The song recommendation dataset represents the musical habits of users on a musical streaming service. We are given a large number of (user, artist, listening count) triplets, as well as a friendship graph encoding the connections between users. Our goal is to use this training data to perform:
 
   \begin{itemize}
-    \item \textit{Weak} prediction: for existing users, predict the listening counts for unobserved (user, artist) pairs.
-    \item \textit{Strong} prediction: for unknown users, predict the listening counts. We may use the friendship data.
+    \item \textit{Weak} generalization: for existing users, predict the listening counts for unobserved (user, artist) pairs.
+    \item \textit{Strong} generalization: for unknown users, predict the listening counts. We may use the friendship data.
   \end{itemize}
 
   \textbf{About the data}: The listening counts matrix $Y$ covers $1774$ users and $15085$ artists. It is very sparse, as we observe only $69617$ triplets (density of $0.2\%$). The friendship graph $G$ is given in the form of a symmetric $1774 \times 1774$ adjacency matrix, where $G_{i, j} = G_{j, i} = 1$ if users $i$ and $j$ are connected.\\
