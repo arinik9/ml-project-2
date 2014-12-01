@@ -37,7 +37,7 @@ Project's TODO
 - [ ] Try obtaining helpful visualizations
 - [ ] Dimensionality reduction with PCA
 - [ ] Try feature transformations (basis expansion) on the reduced set of features
- 
+
 ### Person detection dataset
 
 - [ ] Implement the relevant error measures
@@ -52,13 +52,19 @@ Project's TODO
 
 ### Song recommendation dataset
 
-- [ ] Get a baseline error value
-- [ ] Experiment with SVM
+Recall we must achieve both **weak** (new ratings for existing users) and **strong** (entirely new users) prediction.
+
+- [x] Implement the relevant error measures
+- [x] Train / test split (particular for weak and strong prediction)
+- [x] Get a baseline error value
+- [ ] Experiment with SVM
 - [ ] Experiment with Gaussian processes
-- [ ] Experiment with clustering
+- [ ] Experiment with clustering
+- [ ] Use the social network for strong prediction (clustering ?)
 - [ ] Generate learning curves
 - [ ] Minimize the train and test error
 - [ ] Check the stability of the results with k-CV
+- [ ] Use the artists name to output fun facts
 
 ### Predictions
 
