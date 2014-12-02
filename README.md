@@ -41,6 +41,8 @@ Project's TODO
 ### Person detection dataset
 
 - [ ] Implement the relevant error measures
+- [ ] Compare precision/recall vs ROC
+- [ ] Implement Mutual Information and plot against classification threshold theta
 - [ ] Get a baseline error value
 - [ ] Experiment with the Neural Network's hyperparameters (number of layers, activation functions)
 - [ ] Experiment with clustering
