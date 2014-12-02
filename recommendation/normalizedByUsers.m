@@ -1,14 +1,18 @@
-function [Ynormalized, meanPerUser, deviationPerUser] = normalizedByUsers(Y)
+function [Ynormalized, meanPerUser, deviationPerUser, Y2normalized] = ...
+    normalizedByUsers(Y, Y2)
 % NORMALIZEDBYUSERS Normalization among users for the recommendation dataset
 %
 % INPUTS
 %  Y            The initial dataset (sparse matrix)
+%  [Y2]         A second matrix to normalize with the same factors as Y.
+%               It should have the same nonzero users.
 % OUTPUTS
 %  Ynormalized  A sparse normalized version of the input
 %  meanPerUser  Means used to normalize the rows (keep it in order to
 %               denormalize after producing predictions) 
 %  deviationPerUser Deviation measure used to normalize the rows (keep it
 %                   in order to denormalize after producing predictions) 
+%  [YtestNormalized] 
 
     [uIdx, aIdx] = find(Y);
     % Indices of users having at least one data example
@@ -20,7 +24,6 @@ function [Ynormalized, meanPerUser, deviationPerUser] = normalizedByUsers(Y)
     meanPerUser = zeros(size(usersIdx, 1), 1);
     deviationPerUser = zeros(size(usersIdx, 1), 1);
 
-    values = zeros(nnz(Y), 1);
     zeroIdx = [];
     for i = 1:length(usersIdx)
         thisUser = usersIdx(i);
@@ -42,10 +45,26 @@ function [Ynormalized, meanPerUser, deviationPerUser] = normalizedByUsers(Y)
     meanPerUser(zeroIdx) = mean(meanPerUser) * o;
     
     % Generate a new normalized sparse matrix
+    values = zeros(nnz(Y), 1);
     for i = 1:length(usersIdx)
         thisUser = usersIdx(i);
-        values(uIdx == usersIdx(i)) = (nonzeros(Y(thisUser, :)) - meanPerUser(i)) ./ deviationPerUser(i);
+        values(uIdx == thisUser) = (nonzeros(Y(thisUser, :)) - meanPerUser(i)) ./ deviationPerUser(i);
     end;
     Ynormalized = sparse(uIdx, aIdx, values, size(Y, 1), size(Y, 2));
 
+    % If we were passed a second matrix, normalize it using *the
+    % same factors*
+    if(exist('Y2', 'var'))
+        [uIdx, aIdx] = find(Y2);
+        usersIdx = unique(uIdx);
+        
+        values = zeros(nnz(Y2), 1);
+        for i = 1:length(usersIdx)
+            thisUser = usersIdx(i);
+            values(uIdx == thisUser) = (nonzeros(Y2(thisUser, :)) - meanPerUser(i)) ./ deviationPerUser(i);
+        end;
+        
+        Y2normalized = sparse(uIdx, aIdx, values, size(Y2, 1), size(Y2, 2));
+    end
+    
 end
