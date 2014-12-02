@@ -12,7 +12,7 @@ function [Ytest_strong, Ytest_weak, Gtest, Ytrain, Gtrain] = ...
 %   Ytest_strong: pairs (user, artist) = count for new users to test
 %   Ytest_weak: pairs (user, artist) = hidden counts for existing users to test
 %   Gstrong: friendship graph of new users with all users
-%   Ytrain_new and Gtrain_new is the new training set 
+%   Ytrain and Gtrain is the new training set 
     if(nargin < 3)
         testRatioStrong = 0.1;
     end;
@@ -67,5 +67,5 @@ function [Ytest_strong, Ytest_weak, Gtest, Ytrain, Gtrain] = ...
     % Hide the extracted counts in the remaining test set
     Ytrain(sub2ind([nU nA], userTestIndices, artistTestIndices)) = 0;
     
-    %fprintf('We hid %d counts in total for weak prediction.\n', nnz(countTestValues));
+    %fprintf('We hide %d counts in total for weak prediction.\n', nnz(countTestValues));
 end
