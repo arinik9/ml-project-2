@@ -1,8 +1,8 @@
-function [tprAtWP,auc,fpr,tpr] = fastROC(labels,scores,plot_flag, plotStyle)
+function [tprAtWP,auc,fpr,tpr] = fastROC(labels, scores, plot_flag, plotStyle)
 % function [tprAtWP,auc,fpr,tpr] = fastROC(labels,scores,plot_flag)
 %
 % This function calculates m AUC values for m ranked lists.
-% n is the number of ranked items.
+% n is the number of ranked items. 
 % m is the number of different rankings.
 %
 % Input:  labels is nXm binary logical.
@@ -29,7 +29,7 @@ function [tprAtWP,auc,fpr,tpr] = fastROC(labels,scores,plot_flag, plotStyle)
         error('labels input should be logical');
     end
 
-    if (size(labels,2) ~= 1) | (size(scores,2) ~= 1)
+    if (size(labels,2) ~= 1) || (size(scores,2) ~= 1)
         error('labels and scores must be one-dimensional vectors');
     end
 
@@ -49,7 +49,7 @@ function [tprAtWP,auc,fpr,tpr] = fastROC(labels,scores,plot_flag, plotStyle)
     clear scores
     scores_si_reindex = scores_si+ones(n,1)*(0:m-1)*n;
     l = labels(scores_si_reindex);
-    clear scores_si labels
+    clear scores_si labels 
 
     tp = cumsum(l==1,1);
     fp = repmat((1:n)',[1 m])-tp;
@@ -68,12 +68,27 @@ function [tprAtWP,auc,fpr,tpr] = fastROC(labels,scores,plot_flag, plotStyle)
     auc = sum(tpr.*[(diff(fp)==1); zeros(1,m)])./num_neg;
 
     % average TPR between 10^-3 and 10^-2
-    logFPR = log10(fpr + eps/100);
-    intervalIdxs = find( (logFPR >= log10(10^-3)) & (logFPR <= log10(10^-2)));
+    startAvg = 10^-3;
+    endAvg = 10^-2;
 
-    tprAtWP = trapz( logFPR(intervalIdxs), tpr(intervalIdxs) ) ;
+    logFPR = log10(fpr + eps/100);
+    intervalIdxs = find( (logFPR > log10(startAvg)) & (logFPR < log10(endAvg)));
+
+    logVals = logFPR(intervalIdxs);
+
+    % fix for some pathological cases
+    if intervalIdxs(1) >= 2
+        intervalIdxs = [intervalIdxs(1)-1; intervalIdxs];
+        logVals = [log10(startAvg); logVals];
+    end
+
+    if intervalIdxs(end) < length(logFPR)
+        intervalIdxs = [intervalIdxs; intervalIdxs(end)+1];
+        logVals = [logVals; log10(endAvg)];
+    end
+
+    tprAtWP = trapz(logVals , tpr(intervalIdxs) ) ;
     if plot_flag==1
         %title(sprintf('TPR @ Working Point = %.2f', tprAtWP));
     end
-
 end
