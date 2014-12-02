@@ -4,7 +4,7 @@ addpath(genpath('./data'), genpath('../data'));
 addpath(genpath('./src'), genpath('../src'));
 
 %% Dataset pre-processing
-% TODO: refactor
+% TODO: make a common preprocessing script
 
 clearvars;
 
@@ -21,15 +21,24 @@ Goriginal = Gtrain;
 setSeed(1);
 % TODO: vary test / train proportions
 [~, Ytest, ~, Ytrain, ~] = splitData(Yoriginal, Goriginal, 0, 0.1);
+
+% Cleanup
+clear artistName Goriginal Gtrain;
+
+%% Outliers removal & normalization
+% TODO: test removing more or less "outliers"
+nDev = 3;
+[Ytrain, Ytest] = removeOutliers(Ytrain, nDev, Ytest);
+
+% TODO: denormalize after prediction to obtain the correct scale
+[Ytrain, ~, ~, Ytest] = normalizedByUsers(Ytrain, Ytest);
+
 % Total size of train and test matrices
 [trN, trD] = size(Ytrain);
 [teN, teD] = size(Ytest);
 % Indices of available counts (expressed in the same coordinates space)
 [trUserIndices, trArtistIndices] = find(Ytrain);
 [teUserIndices, teArtistIndices] = find(Ytest);
-
-% Cleanup
-clear artistName Goriginal Gtrain;
 
 %% Baseline: constant predictor (overall mean of all observed counts)
 overallMean = mean(nonzeros(Ytrain));
