@@ -115,6 +115,7 @@ nnPred = nn.a{end};
 % we want a single score, subtract the output sigmoids
 nnPred = nnPred(:,1) - nnPred(:,2);
 
+
 %% See prediction performance
 fprintf('Plotting performance..\n');
 % let's also see how random predicition does
@@ -122,7 +123,7 @@ randPred = rand(size(Te.y));
 
 % and plot all together, and get the performance of each
 methodNames = {'Neural Network', 'Random'}; % this is to show it in the legend
-avgTPRList = evaluateMultipleMethods( Te.y > 0, [nnPred,randPred], true, methodNames );
+avgTPRList = evaluateMultipleMethods( Te.y > 0, [nnPred, randPred], true, methodNames );
 
 % now you can see that the performance of each method
 % is in avgTPRList. You can see that random is doing very bad.
@@ -135,8 +136,9 @@ avgTPRRandom = fastROC(Te.y > 0, randPred);
 
 %% Neural network predictions and associated average True Positive Rate
 
-yhatNN = outputLabelsFromPrediction(nnPred, 0);
-avgTPRNN = fastROC(Te.y > 0, nnPred);
+yhatNN = outputLabelsFromPrediction(nnPred2, 0.5);
+avgTPRNN = fastROC(Te.y > 0, nnPred2)
+accuracyNN = computeAccuracy(Te.y, yhatNN)
 
 %% visualize samples and their predictions (test set)
 figure;

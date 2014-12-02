@@ -44,11 +44,14 @@ Project's TODO
 - [ ] Compare precision/recall vs ROC
 - [ ] Implement Mutual Information and plot against classification threshold theta
 - [ ] Get a baseline error value
-- [ ] Experiment with the Neural Network's hyperparameters (number of layers, activation functions)
+- [ ] Implement logistic Regression
+- [ ] Experiment with the Neural Network's hyperparameters (number of layers, activation functions, dropout...)
 - [ ] Experiment with clustering
-- [ ] Experiment with Gaussian processes
+- [ ] Experiment with Gaussian Processes (check provided toolbox)
+- [ ] Experiment with Gaussian SVM (check provided toolbox)
 - [ ] Generate learning curves
 - [ ] Plot ROC Curves of different models for comparison
+- [ ] Experiment with the threshold once a model decided
 - [ ] Minimize the train and test error
 - [ ] Check the stability of the results with k-CV
 
