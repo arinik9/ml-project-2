@@ -62,6 +62,7 @@ Recall we must achieve both **weak** (new ratings for existing users) and **stro
 - [ ] Experiment with SVM
 - [ ] Experiment with Gaussian processes
 - [ ] Experiment with clustering
+- [ ] Determine if using the social graph helps weak prediction (then, we will be able to know if we can use it for strong prediction as well)
 - [ ] Use the social network for strong prediction (clustering ?)
 - [ ] Generate learning curves
 - [ ] Minimize the train and test error

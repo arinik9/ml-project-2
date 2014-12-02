@@ -28,8 +28,7 @@ setSeed(1);
 [trUserIndices, trArtistIndices] = find(Ytrain);
 [teUserIndices, teArtistIndices] = find(Ytest);
 
-% Cleanup: we're not using the social graph for weak prediction
-% TODO: should we?
+% Cleanup
 clear artistName Goriginal Gtrain;
 
 %% Baseline: constant predictor (overall mean of all observed counts)
