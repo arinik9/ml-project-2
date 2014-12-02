@@ -57,24 +57,28 @@ fprintf('RMSE with a constant predictor: %f | %f\n', trErr0, teErr0);
 % Cleanup
 clear overallMean;
 
-%% Simple model: predict the average listening count of the user
+%% Simple model: predict the average listening count of the artist
 
-% Compute corresponding mean value for each user
-uniqueUsers = unique(trUserIndices);
-meanPerUser = zeros(trN, 1);
-for i = 1:length(uniqueUsers)
-    nCountsObserved = nnz(Ytrain(uniqueUsers(i), :));
-    meanPerUser(i) = sum(Ytrain(uniqueUsers(i), :), 2) / nCountsObserved;
+% Compute corresponding mean value for each artist
+uniqueArtists = unique(trArtistIndices);
+meanPerArtist = zeros(trD, 1);
+for i = 1:length(uniqueArtists)
+    nCountsObserved = nnz(Ytrain(:, uniqueArtists(i)));
+    if(nCountsObserved > 0)
+        meanPerArtist(i) = sum(Ytrain(:, uniqueArtists(i))) / nCountsObserved;
+    else
+        meanPerArtist(i) = 0;
+    end;
 end
 
 % Predict counts (only those for which we have reference data, to save memory)
-trPrediction = zeros(length(trUserIndices), 1);
+trPrediction = zeros(length(trArtistIndices), 1);
 for k = 1:length(trPrediction)
-    trPrediction(k) = meanPerUser(trUserIndices(k));
+    trPrediction(k) = meanPerArtist(trArtistIndices(k));
 end;
-tePrediction = zeros(length(teUserIndices), 1);
+tePrediction = zeros(length(teArtistIndices), 1);
 for k = 1:length(tePrediction)
-    tePrediction(k) = meanPerUser(teUserIndices(k));
+    tePrediction(k) = meanPerArtist(teArtistIndices(k));
 end;
 
 trYhatMean = sparse(trUserIndices, trArtistIndices, trPrediction, trN, trD);
@@ -84,7 +88,7 @@ teYhatMean = sparse(teUserIndices, teArtistIndices, tePrediction, teN, teD);
 trErrMean = computeRmse(Ytrain, trYhatMean);
 teErrMean = computeRmse(Ytest, teYhatMean);
 
-fprintf('RMSE with a constant predictor per user: %f | %f\n', trErrMean, teErrMean);
+fprintf('RMSE with a constant predictor per artist: %f | %f\n', trErrMean, teErrMean);
 
 % Cleanup
 clearvars i k nCountsObserved uniqueUsers meanPerUser trPrediction tePrediction;
