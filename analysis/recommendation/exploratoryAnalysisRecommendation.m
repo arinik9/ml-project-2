@@ -51,12 +51,13 @@ maxArtistCount
 clear minCount minArtistCount idxMin idxMax;
 
 %% Simple outliers removal
-% We consider a count is an outlier if it deviates from the global mean by
+% We consider a count is an outlier if it deviates from the global median by
 % more than 8 times the global standard deviation (note that
 % we can only deviate in the positive direction).
-globalMean = mean(allCounts);
+globalMedian = median(allCounts);
 globalDeviation = std(allCounts);
-outliers = (Y > globalMean + 8 * globalDeviation);
+% TODO: test removing more or less outliers
+outliers = (Y > globalMedian + 8 * globalDeviation);
 
 % We remove 97 data points
 nnz(outliers)
