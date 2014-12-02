@@ -23,7 +23,8 @@ function [Ynormalized, meanPerUser, deviationPerUser] = normalizedByUsers(Y)
     values = zeros(nnz(Y), 1);
     zeroIdx = [];
     for i = 1:length(usersIdx)
-        counts = nonzeros(Y(i, :));
+        thisUser = usersIdx(i);
+        counts = nonzeros(Y(thisUser, :));
         meanPerUser(i) = mean(counts);
         deviationPerUser(i) = std(counts);
         if(length(counts) <= 1 || deviationPerUser(i) == 0)
@@ -39,9 +40,11 @@ function [Ynormalized, meanPerUser, deviationPerUser] = normalizedByUsers(Y)
     o = ones(nnz(zeroIdx), 1);
     deviationPerUser(zeroIdx) = std([meanPerUser(zeroIdx)'; mean(meanPerUser) * o']);
     meanPerUser(zeroIdx) = mean(meanPerUser) * o;
+    
     % Generate a new normalized sparse matrix
     for i = 1:length(usersIdx)
-        values(uIdx == usersIdx(i)) = (nonzeros(Y(i, :)) - meanPerUser(i)) ./ deviationPerUser(i);
+        thisUser = usersIdx(i);
+        values(uIdx == usersIdx(i)) = (nonzeros(Y(thisUser, :)) - meanPerUser(i)) ./ deviationPerUser(i);
     end;
     Ynormalized = sparse(uIdx, aIdx, values, size(Y, 1), size(Y, 2));
 

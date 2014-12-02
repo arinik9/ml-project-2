@@ -52,7 +52,7 @@ clear minCount minArtistCount idxMin idxMax;
 
 %% Simple outliers removal
 % Allow up to `nDev` deviations from the median
-nDev = 10;
+nDev = 3;
 nnzBefore = nnz(Y);
 Y = removeOutliers(Y, nDev);
 disp(['We removed ', int2str(nnzBefore - nnz(Y)), ' outliers from Y']);
