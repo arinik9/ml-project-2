@@ -47,6 +47,7 @@ function tprAtWP = evaluateMultipleMethods( labels, predictions, ...
 
     for i=1:M
         tprAtWP(i) = fastROC( labels, predictions(:,i), showPlot, styles{i} );
+        fprintf('tprAtWP : %d \n', tprAtWP(i));
         if showPlot
             hold on;
         end

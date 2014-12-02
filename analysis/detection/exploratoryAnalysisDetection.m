@@ -3,6 +3,8 @@ clearvars;
 
 addpath(genpath('./data'), genpath('../data'));
 addpath(genpath('./src'), genpath('../src'));
+addpath(genpath('./detection'), genpath('../detection'));
+
 
 % Load dataset
 load('./data/detection/train_feats.mat');
@@ -13,15 +15,15 @@ y = labels;
 
 %% Generate feature vectors (so each one is a row of X)
 fprintf('Generating feature vectors..\n');
-D = numel(feats{1});  % feature dimensionality
-X = zeros([size(feats, 1) D]);
+X = generateFeatureVectors(feats);
 
-% convert features to a vectors of D dimensions
-for i=1:length(feats)
-    X(i,:) = feats{i}(:); 
-end;
+%% Remove outliers
 
-% TODO : factorize dataset handling code
+[Xnew, ynew] = removeOutliers(X, y, 3);
+
+% It seems to us that there are no obvious outliers. All the data is at
+% most at 3 times the deviation from the median (and only 4 datapoints are less than 2
+% times the deviation)
 
 %% Normalize the data
 [Xnorm, mu, sigma] = zscore(X);

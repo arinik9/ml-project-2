@@ -15,6 +15,7 @@ addpath(genpath('./toolbox/'));
 
 % add path to source files
 addpath(genpath('./src/'));
+addpath(genpath('./detection/'));
 
 % Load both features and training images
 load('./data/detection/train_feats.mat');
@@ -38,12 +39,7 @@ end;
 
 %% -- Generate feature vectors (so each one is a row of X)
 fprintf('Generating feature vectors..\n');
-D = numel(feats{1});  % feature dimensionality
-X = zeros([length(imgs) D]);
-
-for i=1:length(imgs)
-    X(i,:) = feats{i}(:);  % convert to a vector of D dimensions
-end;
+X = generateFeatureVectors(feats);
 
 %% -- Example: split half and half into train/test
 fprintf('Splitting into train/test..\n');
@@ -73,7 +69,7 @@ rng(8339); % fix seed, this NN is very sensitive to initialization
 %  and the last layer the number of classes (here two).
 nn = nnsetup([size(Tr.X,2) 10 2]);
 opts.numepochs =  50;   %  Number of full sweeps through data
-opts.batchsize = 100;  %  Take a mean gradient step over this many samples
+opts.batchsize = 100;   %  Take a mean gradient step over this many samples
 
 % if == 1 => plots trainin error as the NN is trained
 opts.plot = 1;
@@ -83,6 +79,8 @@ opts.plot = 1;
 % Test NN with sigmoid activation function (seems to give better results than 'tanh_opt')
 nn.activation_function = 'sigm';    %  Sigmoid activation function
 nn.learningRate = 1;                %  Sigm require a lower learning rate
+
+% nn.dropoutFraction = 0.5;           %  Dropout fraction 
 
 % this neural network implementation requires number of samples to be a
 % multiple of batchsize, so we remove some for this to be true.
@@ -129,6 +127,16 @@ avgTPRList = evaluateMultipleMethods( Te.y > 0, [nnPred,randPred], true, methodN
 % now you can see that the performance of each method
 % is in avgTPRList. You can see that random is doing very bad.
 avgTPRList
+
+%% Random predictions and associated average True Positive Rate
+
+yHatRandom = outputLabelsFromPrediction(randPred, 0.5);
+avgTPRRandom = fastROC(Te.y > 0, randPred);
+
+%% Neural network predictions and associated average True Positive Rate
+
+yhatNN = outputLabelsFromPrediction(nnPred, 0);
+avgTPRNN = fastROC(Te.y > 0, nnPred);
 
 %% visualize samples and their predictions (test set)
 figure;
