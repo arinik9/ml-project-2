@@ -48,7 +48,7 @@ Project's TODO
 - [ ] Experiment with the Neural Network's hyperparameters (number of layers, activation functions, dropout...)
 - [ ] Experiment with clustering
 - [ ] Experiment with Gaussian Processes (check provided toolbox)
-- [ ] Experiment with Gaussian SVM (check provided toolbox)
+- [ ] Experiment with SVM (check provided toolbox)
 - [ ] Generate learning curves
 - [ ] Plot ROC Curves of different models for comparison
 - [ ] Experiment with the threshold once a model decided

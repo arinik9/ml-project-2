@@ -25,16 +25,26 @@ Te.idxs = 2:2:size(X,1);
 Te.X = X(Te.idxs,:);
 Te.y = labels(Te.idxs);
 
-%% Prediction using different models
-fprintf('Predictions using different models..\n');
+%% Prediction with different NN
+fprintf('Predictions using different Neural Networks..\n');
 
 fprintf('Default NN prediction\n');
 % Default NN prediction (tanh, learningRate=1, ...)
-nnPred = neuralNetworkPredict(Tr, Te);
+%nnPred = neuralNetworkPredict(Tr, Te);
 
 fprintf('Tuned NN prediction\n');
 % Tuned NN prediction (sigmoid activations and lower learningRate)
-nnPred2 = neuralNetworkPredict(Tr, Te, 0, 1, 'sigm');
+nnPred = neuralNetworkPredict(Tr, Te, 0, 1, 'sigm');
+
+% Tuned NN prediction with Dropout Fraction set to 0.5 (close to optimality
+% according to paper on dropout)
+nnPred2 = neuralNetworkPredict(Tr, Te, 0, 1, 'sigm', 0.5);
+
+% Tunned NN predictions with Weight Decay on L2 (Tikhonov regularization)
+nnPred3 = neuralNetworkPredict(Tr, Te, 0, 1, 'sigm', 0, 1e-4);
+
+
+%% Random Predictions
 
 fprintf('Random prediction\n');
 % Random prediction
@@ -48,9 +58,9 @@ fprintf('Plotting performance..\n');
 trueLabels = Te.y > 0;
 
 % Methods names for legend
-methodNames = {'NN Sigmoid Activation', 'NN TanH Activation', 'Random'};
+methodNames = {'NN Sigmoid Activation', 'NN Drop out', 'NN Weight Decay', 'Random'};
 
 % Prediction performances on different models
-avgTPRList = evaluateMultipleMethods( trueLabels, [nnPred,nnPred2, randPred], true, methodNames );
+avgTPRList = evaluateMultipleMethods( trueLabels, [nnPred, nnPred2, nnPred3, randPred], true, methodNames );
 
 avgTPRList

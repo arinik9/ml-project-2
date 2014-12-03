@@ -136,9 +136,13 @@ avgTPRRandom = fastROC(Te.y > 0, randPred);
 
 %% Neural network predictions and associated average True Positive Rate
 
-yhatNN = outputLabelsFromPrediction(nnPred2, 0.5);
-avgTPRNN = fastROC(Te.y > 0, nnPred2)
+yhatNN = outputLabelsFromPrediction(nnPred, 0.5);
+avgTPRNN = fastROC(Te.y > 0, nnPred)
 accuracyNN = computeAccuracy(Te.y, yhatNN)
+
+yhatNN2 = outputLabelsFromPrediction(nnPred2, 0.5);
+avgTPRNN2 = fastROC(Te.y > 0, nnPred2)
+accuracyNN2 = computeAccuracy(Te.y, yhatNN2)
 
 %% visualize samples and their predictions (test set)
 figure;
