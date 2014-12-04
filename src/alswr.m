@@ -1,4 +1,4 @@
-function [U, M] = alswr(R, k, lambda)
+function [U, M] = alswr(R, k, lambda, plotLearningCurve)
 % ALSWR Alternating Least Squares with Weighted lambda-regulaziation
 % Low-rank matrix factorization using the technique described by:
 %   Zhou, Y., Wilkinson, D., Schreiber, R., & Pan, R. (2008).
@@ -9,11 +9,15 @@ function [U, M] = alswr(R, k, lambda)
 %      of D movies by N users).
 %   k: Target (reduced) dimensionality
 %   lambda: Regulaziation parameter
+%   plotLearningCurve: Boolean flag to plot the learning curve
 % OUTPUT:
 %   
 
     if(~exist('lambda', 'var'))
         lambda = 0;
+    end;
+    if(~exist('plotLearningCurve', 'var'))
+        plotLearningCurve = 0;
     end;
     
     [N, D] = size(R);
@@ -39,7 +43,7 @@ function [U, M] = alswr(R, k, lambda)
     
     % Until convergence, make ALS steps
     % Convergence criterion: the U and M matrices stop changing much
-    maxIterations = 5;
+    maxIterations = 15;
     it = 0;
     
     % TODO: plot learning curves (train and test reconstruction error vs
@@ -48,7 +52,7 @@ function [U, M] = alswr(R, k, lambda)
     % TODO: convergence criterion: stop when test error starts going up
     % epsilon = 1e-2;
     % movement = -1;
-    
+    errors = [];
     while (it < maxIterations) % (abs(movement) > epsilon)
         it = it + 1;
         
@@ -89,7 +93,14 @@ function [U, M] = alswr(R, k, lambda)
         % Estimate the quality of our approximation
         Rapprox = U' * M;
         error = computeRmse(R, Rapprox);
+        errors = [errors; error];
         
-        fprintf('At iteration %d, can reconstruct R with error %f\n', it, error);
+        if(plotLearningCurve)
+            fprintf('At iteration %d, can reconstruct R with error %f\n', it, error);
+        end;
+    end;
+    
+    if(plotLearningCurve)
+        plot(1:it, errors, '.-');
     end;
 end
