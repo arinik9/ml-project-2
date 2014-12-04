@@ -61,6 +61,7 @@ function [tprAtWP,auc,fpr,tpr] = fastROC(labels, scores, plot_flag, plotStyle)
     %Plot the ROC curve
     if plot_flag==1
         semilogx(fpr,tpr,plotStyle,'LineWidth',2);
+        %plot(fpr,tpr,plotStyle,'LineWidth',2);
         xlabel('False Positive Rate');
         ylabel('True Positive Rate');
     end

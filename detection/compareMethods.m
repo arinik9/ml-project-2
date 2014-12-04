@@ -1,3 +1,5 @@
+% TODO: Clean file + factorize methods as nnPredict
+
 clearvars;
 
 % add path to source files and toolboxs
@@ -58,23 +60,86 @@ nnPred3 = neuralNetworkPredict(Tr, Te, 0, 1, 'sigm', 0, 1e-4);
 %nnPred3 = neuralNetworkPredict(Tr, Te, 0, 1, 'sigm', 0, 1e-4);
 
 %% GP prediction
-% TODO: Continue
+% TODO: Continue : Take more data examples + normalize before + make
+% fastROC work for result
 
-meanfunc = @meanConst; hyp.mean = 0;
-covfunc = @covSEiso; ell = 1.0; sf = 1.0; hyp.cov = log([ell sf]);
-likfunc = @likErf;
+% Give a try to GP regression as classification seems really slow. But is
+% it a good way to proceed ?
 
-n = length(Te.X(1:5,:));
+x = Tr.X(1:100,:);
+y = Tr.y(1:100);
+z = Te.X(1:100,:);
+n = size(x,1);
 
-hyp = minimize(hyp, @gp, -40, @infEP, meanfunc, covfunc, likfunc, Tr.X(1:5,:), Tr.y(1:5));
-[a b c d lp] = gp(hyp, @infEP, meanfunc, covfunc, likfunc, Tr.X(1:5,:), Tr.y(1:5), Te.X(1:5,:), ones(n, 1));
+% Mean function
+meanfunc = @meanConst; 
+hyp.mean = 0;
 
+% use inducing points u and to base the computations on cross-covariances 
+% between training, test and inducing points only
+nu = fix(n); iu = randperm(n); iu = iu(1:nu); u = x(iu,:);
+
+% Covariance function
+covfunc = @covSEiso; 
+ell = 1.0; % characteristic length-scale
+sf = 1.0; % standard deviation of the signal sf
+hyp.cov = log([ell sf]);
+covfuncF = {@covFITC, {covfunc}, u};
+
+% To try also : 
+% covSEard hyp.cov = log(ones(1, size(u,1) + 1) 1xD+1 size % we should try
+% that one also
+
+% Likelihood function
+likfunc = @likGauss; 
+sn = 0.1; % standard deviation of the noise
+hyp.lik = log(sn); 
+
+% compute the (joint) negative log probability (density) nlml (also called marginal likelihood or evidence)
+% nlml = gp(hyp, @infEP, meanfunc, covfunc, likfunc, x, y);
+
+hyp = minimize(hyp, @gp, -100, @infFITC, meanfunc, covfuncF, likfunc, x, y);
+[m s2] = gp(hyp, @infFITC, meanfunc, covfuncF, likfunc, x, y, z);
+
+% Take a threshold to assign to one of the class
+yhatGP = outputLabelsFromPrediction(m, 0);
+
+
+%% GP Classification
+% TODO: Large Scale Classification to implement
+
+% Note: Output arguments: 
+% When computing test probabilities, we call gp with additional test inputs, 
+% and as the last argument a vector of targets for which the log probabilities 
+% lp should be computed. The fist four output arguments of the function are mean 
+% and variance for the targets and corresponding latent variables respectively.
 
 %% Random Predictions
 
 fprintf('Random prediction\n');
 % Random prediction
 randPred = rand(size(Te.y)); 
+
+%% Test on threshold choice
+% TODO: how to plot a single point on ROC Curve for corresponding
+% threshold?
+% non log scale ROC curve is better to visualize threshold
+
+yHatRandom = outputLabelsFromPrediction(randPred, 0.5);
+yHatRandom2 = outputLabelsFromPrediction(randPred, 0.95);
+[avgTPRR, auc] = fastROC(Te.y > 0, yHatRandom)
+[avgTPRR2, auc2] = fastROC(Te.y > 0, yHatRandom2)
+
+yHatnnPred2 = outputLabelsFromPrediction(nnPred2, 0.3);
+[avgTPRnn, aucNN] = fastROC(Te.y > 0, yHatnnPred2)
+yHatnnPred2bis = outputLabelsFromPrediction(nnPred2, 0.99);
+[avgTPRnn, aucNN] = fastROC(Te.y > 0, yHatnnPred2bis)
+
+% Methods names for legend
+methodNames = {'0.5 threshold','0.95 threshold', 'NN 0.5 t', 'NN 0.56 t', 'NN proba'};
+
+% Prediction performances on different models
+avgTPRList = evaluateMultipleMethods( trueLabels, [yHatRandom, yHatRandom2, yHatnnPred2, yHatnnPred2bis, nnPred2], true, methodNames );
 
 
 %% See prediction performance
