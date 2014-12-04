@@ -52,7 +52,7 @@ function nnPred = neuralNetworkPredict(Tr, Te, plot_flag, learningRate, activati
 
     % setup NN. The first layer needs to have number of features neurons,
     %  and the last layer the number of classes (here two).
-    nn = nnsetup([size(Tr.X,2) 10 2]);
+    nn = nnsetup([size(Tr.X,2) 2]);
     opts.numepochs =  numepochs;        %  Number of full sweeps through data
     opts.batchsize = batchsize;         %  Take a mean gradient step over this many samples
 

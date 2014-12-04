@@ -45,7 +45,7 @@ Project's TODO
 - [ ] Implement Mutual Information and plot against classification threshold theta
 - [ ] Get a baseline error value
 - [ ] Implement logistic Regression
-- [ ] Experiment with the Neural Network's hyperparameters (number of layers, activation functions, dropout...)
+- [X] Experiment with the Neural Network's hyperparameters (number of layers, activation functions, dropout...)
 - [ ] Experiment with clustering
 - [ ] Experiment with Gaussian Processes (check provided toolbox)
 - [ ] Experiment with SVM (check provided toolbox)
