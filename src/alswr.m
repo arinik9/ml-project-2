@@ -33,17 +33,17 @@ function [U, M] = alswr(R, k, lambda, plotLearningCurve)
     %   Rapprox = U' * M
 
     % Initialization: average over the features or small random numbers
-    M = rand(k, D);
     U = zeros(k, N);
-    for i = 1:k
-        if(nnz(R(:, i)) > 0)
-            M(1, i) = mean(nonzeros(R(:, i)));
+    M = rand(k, D);
+    for j = 1:D
+        if(nnz(R(:, j)) > 0)
+            M(1, j) = mean(nonzeros(R(:, j)));
         end;
     end;
     
     % Until convergence, make ALS steps
     % Convergence criterion: the U and M matrices stop changing much
-    maxIterations = 15;
+    maxIterations = 5;
     it = 0;
     
     % TODO: plot learning curves (train and test reconstruction error vs
@@ -52,6 +52,7 @@ function [U, M] = alswr(R, k, lambda, plotLearningCurve)
     % TODO: convergence criterion: stop when test error starts going up
     % epsilon = 1e-2;
     % movement = -1;
+    % TODO: fix (train error should always be going down)
     errors = [];
     while (it < maxIterations) % (abs(movement) > epsilon)
         it = it + 1;
