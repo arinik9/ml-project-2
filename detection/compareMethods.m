@@ -112,46 +112,37 @@ y = Tr.y(1:500);
 t = Te.X(1:500,:);
 n = size(x,1);
 
-
-% Mean function
-meanfunc = @meanConst; 
-hyp.mean = 0;
-
-% use inducing points u and to base the computations on cross-covariances 
-% between training, test and inducing points only
-nu = fix(n); iu = randperm(n); iu = iu(1:nu); u = x(iu,:);
-
-% Covariance function
-covfunc = @covSEiso; 
-ell = 1.0; % characteristic length-scale
-sf = 1.0; % standard deviation of the signal sf
-hyp.cov = log([ell sf]);
-covfuncF = {@covFITC, {covfunc}, u};
-
-% Likelihood function
-likfunc = @likErf;
-
-inffunc = @infFITC_EP;                       % also @infFITC_Laplace is possible
-
-hyp = minimize(hyp, @gp, -40, inffunc, meanfunc, covfuncF, likfunc, x, y);
-[a, b, c, d, lp] = gp(hyp, inffunc, meanfunc, covfuncF, likfunc, x, y, t, ones(n,1));
-
-% Note: Output arguments: 
-% When computing test probabilities, we call gp with additional test inputs, 
-% and as the last argument a vector of targets for which the log probabilities 
-% lp should be computed. The fist four output arguments of the function are mean 
-% and variance for the targets and corresponding latent variables respectively.
-
-% lp gives the logarithm probabilities. Get the exp to have predictions
-gpPred = exp(lp);
+gpPred = GPClassificationPrediction(y, x, t);
 yHatGP = outputLabelsFromPrediction(gpPred, 0.5);
 
 % We do recover our large rate of negative VS positive images
 hist(yHatGP);
 
-res = fastROC(Te.y(1:500) > 0, gpPred);
+%% Test GP
+% Methods names for legend
+methodNames = {'GP Classification','Random'};
 
-% TODO : Play with parameters + ROC Curve
+% Prediction performances on different models
+avgTPRList = evaluateMultipleMethods( Te.y(1:500) > 0, [gpPred, randPred(1:500)], true, methodNames );
+
+% TODO : Play with parameters
+
+%% PCA
+
+% weighted pca ?
+[coeff,score,latent,tsquared,explained] = pca(Tr.X(1:2000,:));
+
+% Plot on 1st and 2nd principal component
+figure()
+plot(scores(:,1),scores(:,2),'+')
+xlabel('1st Principal Component')
+ylabel('2nd Principal Component')
+
+% how to get 95% of representation as it should ?
+figure()
+pareto(explained)
+xlabel('Principal Component')
+ylabel('Variance Explained (%)')
 
 %% Random Predictions
 
