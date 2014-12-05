@@ -47,13 +47,13 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
     end;
     
     if(plotLearningCurve)
-        fprintf('Starting ALS-WR...');
+        fprintf('Starting ALS-WR...\n');
     end;
     
     % Until convergence, make ALS steps
     % Convergence criterion: test RMSE reduction becomes insignificant
     % or even negative (i.e. we start overfitting)
-    epsilon = 1e-6;
+    epsilon = 1e-3;
     trErrors = [];
     teErrors = [];
 
@@ -113,7 +113,7 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
         end;
         
         % Stopping criterion
-        if (it > 1 && previousError - teError < epsilon) || (it > maxIterations)
+        if (it > 5 && previousError - teError < epsilon) || (it > maxIterations)
             break;
         end;
         previousError = teError;
@@ -124,6 +124,6 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
         plot(1:it, trErrors, 'b.-');
         hold on;
         plot(1:it, teErrors, 'r.-');
-        legend('Reconstruction test error', 'Reconstruction train error');
+        legend('Reconstruction train error', 'Reconstruction test error');
     end;
 end
