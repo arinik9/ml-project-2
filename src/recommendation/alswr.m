@@ -11,7 +11,12 @@ function [U, M] = alswr(R, k, lambda, plotLearningCurve)
 %   lambda: Regulaziation parameter
 %   plotLearningCurve: Boolean flag to plot the learning curve
 % OUTPUT:
-%   
+%   U: (k x N) The dimensionality-reduced matrix representing the
+%      individuals (e.g. users).
+%   M: (k x D) The dimensionality-reduced matrix representing the items
+%      (e.g. movies).
+% An approximation of the initial R can then be reconstructed using:
+%   Rapprox = U' * M
 
     if(~exist('lambda', 'var'))
         lambda = 0;
@@ -26,18 +31,14 @@ function [U, M] = alswr(R, k, lambda, plotLearningCurve)
     rowsIdx = unique(rIdx);
     columnsIdx = unique(cIdx);
 
-    % Notation:
-    %   U: (k x N)
-    %   M: (k x D)
-    % An approximation of the initial R can then be reconstructed using:
-    %   Rapprox = U' * M
-
     % Initialization: average over the features or small random numbers
     U = zeros(k, N);
     M = rand(k, D);
     for j = 1:D
         if(nnz(R(:, j)) > 0)
             M(1, j) = mean(nonzeros(R(:, j)));
+        else
+            M(1, j) = 0;
         end;
     end;
     
@@ -97,7 +98,7 @@ function [U, M] = alswr(R, k, lambda, plotLearningCurve)
         errors = [errors; error];
         
         if(plotLearningCurve)
-            fprintf('At iteration %d, can reconstruct R with error %f\n', it, error);
+            fprintf('At iteration %d, can reconstruct Rtrain with RMSE %f\n', it, error);
         end;
     end;
     
