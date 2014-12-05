@@ -3,13 +3,15 @@ function gpPred = GPClassificationPrediction(y, Xtr, Xte)
 % Gaussian Process large scale classification
 % TODO: Hyper-parameters and model selection in function arguments
 
+    n = size(Xtr, 1);
+
     % Mean function
     meanfunc = @meanConst; 
     hyp.mean = 0;
 
     % use inducing points u and to base the computations on cross-covariances 
     % between training, test and inducing points only
-    nu = fix(n); iu = randperm(n); iu = iu(1:nu); u = x(iu,:);
+    nu = fix(n); iu = randperm(n); iu = iu(1:nu); u = Xtr(iu,:);
 
     % Covariance function
     covfunc = @covSEiso; 
@@ -24,7 +26,7 @@ function gpPred = GPClassificationPrediction(y, Xtr, Xte)
     inffunc = @infFITC_EP;                       % also @infFITC_Laplace is possible
 
     hyp = minimize(hyp, @gp, -40, inffunc, meanfunc, covfuncF, likfunc, Xtr, y);
-    [a, b, c, d, lp] = gp(hyp, inffunc, meanfunc, covfuncF, likfunc, Xtr, y, Xte, ones(n,1));
+    [~, ~, ~, ~, lp] = gp(hyp, inffunc, meanfunc, covfuncF, likfunc, Xtr, y, Xte, ones(n,1));
 
     % Note: Output arguments: 
     % When computing test probabilities, we call gp with additional test inputs, 

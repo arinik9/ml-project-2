@@ -1,44 +1,87 @@
-% TODO: Clean file + factorize methods as nnPredict
-
 clearvars;
 
 % add path to source files and toolboxs
-addpath(genpath('./toolbox/'));
+addpath(genpath('./toolbox/DeepLearnToolbox'));
+addpath(genpath('./toolbox/gpml-matlab-v3.4'));
 addpath(genpath('./src/'));
-addpath(genpath('./detection/'));
 
 % Load both features and training images
 load('./data/detection/train_feats.mat');
-load('./data/detection/train_imgs.mat');
+% load('./data/detection/train_imgs.mat');
 
 %% Pre-process data
+
 fprintf('Generating feature vectors..\n');
 X = generateFeatureVectors(feats);
+y = labels;
 
-% TODO: normalize
+% Split data into train and test set given a proportion
+prop = 2/3;
+fprintf('Splitting into train/test with proportion %.2f..\n', prop);
+[Tr.X, Tr.y, Te.X, Te.y] = splitDataDetection(y, X, prop);
 
-% TODO: do this randomly! and k-fold!
-fprintf('Splitting into train/test..\n');
-Tr.idxs = 1:2:size(X,1);
-Tr.X = X(Tr.idxs,:);
-Tr.y = labels(Tr.idxs);
-
-Te.idxs = 2:2:size(X,1);
-Te.X = X(Te.idxs,:);
-Te.y = labels(Te.idxs);
-
-%% Logistic regression
-
+% Normalize
+fprintf('Normalizing features..\n');
 [Tr.normX, mu, sigma] = zscore(Tr.X); % train, get mu and std
 Te.normX = normalize(Te.X, mu, sigma);  % normalize test data
 
-Tr.tX = [ones(size(Tr.normX,1),1), Tr.normX];
-Te.tX = [ones(size(Te.normX,1),1), Te.normX];
+fprintf('Done! You can start playing with the features!\n');
+
+%% Principal Component Analysis
+
+[coeff,score,latent,tsquared,explained] = pca(Tr.X);
+
+% Plot on 1st and 2nd principal component
+figure()
+plot(score(:,1),score(:,2),'+')
+xlabel('1st Principal Component')
+ylabel('2nd Principal Component')
+
+% how to get 95% of representation as it should ?
+figure()
+pareto(explained)
+xlabel('Principal Component')
+ylabel('Variance Explained (%)')
+
+expl = cumsum(explained);
+
+fprintf('Done! You''re now in a lower dimension space !\n');
+
+%% Plot PCA Representation
+
+% Are we plotting on every PC?
+n = size(explained,1)/2;
+
+e1 = explained(1:n);
+e2 = expl(1:n);
+
+figure();
+[ax,hBar,hLine] = plotyy(1:n, e1, 1:n, e2, 'bar', 'plot');
+title('PCA on Features')
+xlabel('Principal Component')
+ylabel(ax(1),'Variance Explained per PC')
+ylabel(ax(2),'Total Variance Explained (%)')
+hLine.LineWidth = 3;
+hLine.Color = [0,0.7,0.7];
+ylim(ax(2),[1 100]);
+
+%% Select the principal component scores: the representation of X in the principal component space
+% TODO: check if we are doing correct
+Tr.Xpca = score(:,1:500);
+c = coeff(:,1:500);
+Te.Xpca = Te.normX * c;
+%% Logistic regression: Not working
+
+%[Tr.normX, mu, sigma] = zscore(Tr.X); % train, get mu and std
+Te.normX = normalize(Te.X, mu, sigma);  % normalize test data
+
+Tr.tXpca = [ones(size(Tr.Xpca,1),1), Tr.Xpca];
+%Te.tX = [ones(size(Te.normX,1),1), Te.normX];
 
 alpha = 0.5;
-lambda = 10000;
+lambda = 100;
 
-beta = penLogisticRegression(Tr.y, Tr.tX, alpha, lambda);
+beta = penLogisticRegressionAuto(Tr.y, Tr.Xpca);
 %yHatLR = 
 
 %% Prediction with different NN
@@ -107,9 +150,9 @@ yhatGP = outputLabelsFromPrediction(m, 0);
 
 %% GP large scale Classification
 
-x = Tr.X(1:500,:);
+x = Tr.Xpca(1:500,:);
 y = Tr.y(1:500);
-t = Te.X(1:500,:);
+t = Te.Xpca(1:500,:);
 n = size(x,1);
 
 gpPred = GPClassificationPrediction(y, x, t);
@@ -126,23 +169,6 @@ methodNames = {'GP Classification','Random'};
 avgTPRList = evaluateMultipleMethods( Te.y(1:500) > 0, [gpPred, randPred(1:500)], true, methodNames );
 
 % TODO : Play with parameters
-
-%% PCA
-
-% weighted pca ?
-[coeff,score,latent,tsquared,explained] = pca(Tr.X(1:2000,:));
-
-% Plot on 1st and 2nd principal component
-figure()
-plot(scores(:,1),scores(:,2),'+')
-xlabel('1st Principal Component')
-ylabel('2nd Principal Component')
-
-% how to get 95% of representation as it should ?
-figure()
-pareto(explained)
-xlabel('Principal Component')
-ylabel('Variance Explained (%)')
 
 %% Random Predictions
 
