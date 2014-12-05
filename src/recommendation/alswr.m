@@ -46,20 +46,20 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
         end;
     end;
     
-    % Until convergence, make ALS steps
-    % Convergence criterion: the U and M matrices stop changing much
-    maxIterations = 10;
-    it = 0;
+    if(plotLearningCurve)
+        fprintf('Starting ALS-WR...');
+    end;
     
-    % TODO: plot learning curves (train and test reconstruction error vs
-    % iterations). Should look like ridge regression (because after all,
-    % this is just a regularized learning process).
-    % TODO: convergence criterion: stop when test error starts going up
-    % epsilon = 1e-2;
-    % movement = -1;
+    % Until convergence, make ALS steps
+    % Convergence criterion: test RMSE reduction becomes insignificant
+    % or even negative (i.e. we start overfitting)
+    epsilon = 1e-6;
     trErrors = [];
     teErrors = [];
-    while (it < maxIterations) % (abs(movement) > epsilon)
+
+    maxIterations = 100;
+    it = 0;
+    while true
         it = it + 1;
         
         % Fix M, solve for U
@@ -103,18 +103,24 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
         end;
         
         % Estimate the quality of our approximation
-        Rapprox = U' * M;
-        trError = computeRmse(R, Rapprox);
-        trErrors = [trErrors; trError];
-        teError = computeRmse(Rtest, Rapprox);
-        teErrors = [teErrors; teError];
+        trError = computeRmse(R, reconstructFromLowRank(R, U, M));
+        teError = computeRmse(Rtest, reconstructFromLowRank(Rtest, U, M));
         
         if(plotLearningCurve)
+            trErrors = [trErrors; trError];
+            teErrors = [teErrors; teError];
             fprintf('Iteration %d: reconstruction RMSE %f | %f\n', it, trError, teError);
         end;
+        
+        % Stopping criterion
+        if (it > 1 && previousError - teError < epsilon) || (it > maxIterations)
+            break;
+        end;
+        previousError = teError;
     end;
     
     if(plotLearningCurve)
+        fprintf('Done!\n');
         plot(1:it, trErrors, 'b.-');
         hold on;
         plot(1:it, teErrors, 'r.-');

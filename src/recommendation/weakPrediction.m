@@ -93,5 +93,21 @@ fprintf('RMSE with a constant predictor per artist: %f | %f\n', trErrMean, teErr
 % Cleanup
 clearvars i k nCountsObserved uniqueUsers meanPerUser trPrediction tePrediction;
 
+%% ALS-WR
+% TODO: experiment different lambdas and number of features
+% TODO: cross-validate
+nFeatures = 50; % Target reduced dimensionality
+lambda = 1.0;
+displayLearningCurve = 1;
+[U, M] = alswr(Ytrain, Ytest, nFeatures, lambda, displayLearningCurve);
+
+trErrALS = computeRmse(Ytrain, reconstructFromLowRank(Ytrain, U, M));
+teErrALS = computeRmse(Ytest, reconstructFromLowRank(Ytest, U, M));
+
+fprintf('RMSE ALS-WR (low rank): %f | %f\n', trErrALS, teErrALS);
+
+% Cleanup
+%clearvars U M;
+
 %% Other predictions
 % TODO
