@@ -1,12 +1,17 @@
-function [U, M] = alswr(R, k, lambda, plotLearningCurve)
+function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
 % ALSWR Alternating Least Squares with Weighted lambda-regulaziation
 % Low-rank matrix factorization using the technique described by:
 %   Zhou, Y., Wilkinson, D., Schreiber, R., & Pan, R. (2008).
 %   Large-scale parallel collaborative filtering for the netflix prize.
 %
+% Warning: with very small values of k (e.g. 3),
+% the algorithm may not converge.
+%
 % INPUT:
 %   R: The sparse features matrix (N x D) to be factorized (e.g. ratings
 %      of D movies by N users).
+%   Rtest: Test set on which to test the reconstruction error. Iterations
+%           will stop when train error starts going up ("early stopping").
 %   k: Target (reduced) dimensionality
 %   lambda: Regulaziation parameter
 %   plotLearningCurve: Boolean flag to plot the learning curve
@@ -28,8 +33,6 @@ function [U, M] = alswr(R, k, lambda, plotLearningCurve)
     [N, D] = size(R);
     % Indices of nonzeros elements
     [rIdx, cIdx] = find(R);
-    rowsIdx = unique(rIdx);
-    columnsIdx = unique(cIdx);
 
     % Initialization: average over the features or small random numbers
     U = zeros(k, N);
@@ -53,8 +56,8 @@ function [U, M] = alswr(R, k, lambda, plotLearningCurve)
     % TODO: convergence criterion: stop when test error starts going up
     % epsilon = 1e-2;
     % movement = -1;
-    % TODO: fix (train error should always be going down)
-    errors = [];
+    trErrors = [];
+    teErrors = [];
     while (it < maxIterations) % (abs(movement) > epsilon)
         it = it + 1;
         
@@ -100,15 +103,20 @@ function [U, M] = alswr(R, k, lambda, plotLearningCurve)
         
         % Estimate the quality of our approximation
         Rapprox = U' * M;
-        error = computeRmse(R, Rapprox);
-        errors = [errors; error];
+        trError = computeRmse(R, Rapprox);
+        trErrors = [trErrors; trError];
+        teError = computeRmse(Rtest, Rapprox);
+        teErrors = [teErrors; teError];
         
         if(plotLearningCurve)
-            fprintf('At iteration %d, can reconstruct Rtrain with RMSE %f\n', it, error);
+            fprintf('Iteration %d: reconstruction RMSE %f | %f\n', it, trError, teError);
         end;
     end;
     
     if(plotLearningCurve)
-        plot(1:it, errors, '.-');
+        plot(1:it, trErrors, 'b.-');
+        hold on;
+        plot(1:it, teErrors, 'r.-');
+        legend('Reconstruction test error', 'Reconstruction train error');
     end;
 end
