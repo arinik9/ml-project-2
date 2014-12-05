@@ -16,22 +16,20 @@ load('./data/recommendation/songTrain.mat');
 Yoriginal = Ytrain;
 Goriginal = Gtrain;
 
+%% Outliers removal & normalization
+% TODO: test removing more or less "outliers"
+nDev = 3;
+Y = removeOutliersSparse(Yoriginal, nDev);
+
+% TODO: denormalize after prediction to obtain the correct scale
+% TODO: we're normalizing before the train/test split, is this correct?
+Y = normalizedByUsers(Y);
+
 %% Train / test split
 % TODO: cross-validate all the things!
 setSeed(1);
 % TODO: vary test / train proportions
-[~, Ytest, ~, Ytrain, ~] = splitData(Yoriginal, Goriginal, 0, 0.1);
-
-% Cleanup
-clear artistName Goriginal Gtrain;
-
-%% Outliers removal & normalization
-% TODO: test removing more or less "outliers"
-nDev = 3;
-[Ytrain, Ytest] = removeOutliers(Ytrain, nDev, Ytest);
-
-% TODO: denormalize after prediction to obtain the correct scale
-[Ytrain, ~, ~, Ytest] = normalizedByUsers(Ytrain, Ytest);
+[~, Ytest, ~, Ytrain, ~] = splitData(Y, Goriginal, 0, 0.1);
 
 % Total size of train and test matrices
 [trN, trD] = size(Ytrain);
@@ -39,6 +37,9 @@ nDev = 3;
 % Indices of available counts (expressed in the same coordinates space)
 [trUserIndices, trArtistIndices] = find(Ytrain);
 [teUserIndices, teArtistIndices] = find(Ytest);
+
+% Cleanup
+clear artistName Goriginal Gtrain;
 
 %% Baseline: constant predictor (overall mean of all observed counts)
 overallMean = mean(nonzeros(Ytrain));
@@ -92,6 +93,22 @@ fprintf('RMSE with a constant predictor per artist: %f | %f\n', trErrMean, teErr
 
 % Cleanup
 clearvars i k nCountsObserved uniqueUsers meanPerUser trPrediction tePrediction;
+
+%% ALS-WR
+% TODO: experiment different lambdas and number of features
+% TODO: cross-validate
+nFeatures = 50; % Target reduced dimensionality
+lambda = 0.03;
+displayLearningCurve = 1;
+[U, M] = alswr(Ytrain, Ytest, nFeatures, lambda, displayLearningCurve);
+
+trErrALS = computeRmse(Ytrain, reconstructFromLowRank(Ytrain, U, M));
+teErrALS = computeRmse(Ytest, reconstructFromLowRank(Ytest, U, M));
+
+fprintf('RMSE ALS-WR (low rank): %f | %f\n', trErrALS, teErrALS);
+
+% Cleanup
+%clearvars U M;
 
 %% Other predictions
 % TODO

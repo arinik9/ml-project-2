@@ -1,4 +1,4 @@
-function [Yclean, Y2clean] = removeOutliers(Y, nDev, Y2)
+function [Yclean, Y2clean] = removeOutliersSparse(Y, nDev, Y2)
 % REMOVEOUTLIERS Simple outliers removal for the recommendation dataset
 % Warning: since the number of elements change, update any list of indices
 % you might have computed before.
