@@ -44,7 +44,7 @@ function [U, M] = alswr(R, k, lambda, plotLearningCurve)
     
     % Until convergence, make ALS steps
     % Convergence criterion: the U and M matrices stop changing much
-    maxIterations = 5;
+    maxIterations = 10;
     it = 0;
     
     % TODO: plot learning curves (train and test reconstruction error vs
@@ -59,37 +59,43 @@ function [U, M] = alswr(R, k, lambda, plotLearningCurve)
         it = it + 1;
         
         % Fix M, solve for U
-        % (For each user)
-        for i = 1:length(rowsIdx)
-            row = rowsIdx(i);
-            % Columns for which we have data from this user
-            columns = cIdx(rIdx == row);
-            subM = M(:, columns);
-            % Number of data points available for this user
-            nObserved = nnz(R(row, :));
-            
-            A = (subM * subM') + lambda * nObserved * eye(k);
-            V = subM * R(row, columns)';
-            
-            % Least-squares solve
-            U(:, i) = A \ V;
+        % For each row of R (e.g. users)
+        for i = 1:N
+            if(nnz(R(i, :)) > 0)
+                % Columns for which we have data from this user
+                columns = cIdx(rIdx == i);
+                subM = M(:, columns);
+                % Number of data points available for this user
+                nObserved = nnz(R(i, :));
+
+                A = (subM * subM') + lambda * nObserved * eye(k);
+                V = subM * R(i, columns)';
+
+                % Least-squares solve
+                U(:, i) = A \ V;
+            else
+                U(:, i) = zeros(k, 1);
+            end;
         end;
         
         % Fix U, solve for M
-        % (For each movie)
-        for j = 1:length(columnsIdx)
-            column = columnsIdx(j);
-            % Users for which we have data about this column
-            rows = rIdx(cIdx == column);
-            subU = U(:, rows);
-            % Number of data points available for this user
-            nObserved = nnz(R(:, column));
-            
-            A = (subU * subU') + lambda * nObserved * eye(k);
-            V = subU * R(rows, column);
-            
-            % Least-squares solve
-            M(:, j) = A \ V;
+        % For each column of R (e.g. movies)
+        for j = 1:D
+            if(nnz(R(:, j)) > 0)
+                % Users for which we have data about this column
+                rows = rIdx(cIdx == j);
+                subU = U(:, rows);
+                % Number of data points available for this user
+                nObserved = nnz(R(:, j));
+
+                A = (subU * subU') + lambda * nObserved * eye(k);
+                V = subU * R(rows, j);
+
+                % Least-squares solve
+                M(:, j) = A \ V;
+            else
+                M(:, j) = zeros(k, 1);
+            end;
         end;
         
         % Estimate the quality of our approximation
