@@ -10,6 +10,7 @@ load('./data/recommendation/songTrain.mat');
 % Counts matrix:
 % Each (i, j) corresponds to the listening count of user i for artist j
 Y = Ytrain;
+[N, D] = size(Y);
 allCounts = nonzeros(Y);
 [uIdx, aIdx] = find(Y);
 % Indices of users having at least one data example
@@ -72,7 +73,12 @@ artistsIdx = unique(aIdx);
 
 [Ynormalized, meanPerUser, devPerUser] = normalizedByUsers(Y);
 
-%% Verify the result of normalization
+% Power transformation
+%transformedValues = nonzeros(Ynormalized) .^ 2;
+%Ytransformed = sparse(uIdx, aIdx, transformedValues, N, D);
+
+
+% Verify the result of normalization
 
 % Mean should be 0, deviation should be 1
 for i = 1:length(usersIdx)

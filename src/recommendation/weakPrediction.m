@@ -98,7 +98,7 @@ clearvars i k nCountsObserved uniqueUsers meanPerUser trPrediction tePrediction;
 % TODO: experiment different lambdas and number of features
 % TODO: cross-validate
 nFeatures = 50; % Target reduced dimensionality
-lambda = 0.03;
+lambda = 0.05;
 displayLearningCurve = 1;
 [U, M] = alswr(Ytrain, Ytest, nFeatures, lambda, displayLearningCurve);
 
