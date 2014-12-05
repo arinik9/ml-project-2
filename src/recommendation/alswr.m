@@ -3,8 +3,9 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
 % Low-rank matrix factorization using the technique described by:
 %   Zhou, Y., Wilkinson, D., Schreiber, R., & Pan, R. (2008).
 %   Large-scale parallel collaborative filtering for the netflix prize.
-%
-% Warning: with very small values of k (e.g. 3),
+% 
+% Input matrices are expected to be normalized.
+% Warning: for very small values of k (e.g. 3),
 % the algorithm may not converge.
 %
 % INPUT:

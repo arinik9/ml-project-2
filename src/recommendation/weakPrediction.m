@@ -28,7 +28,7 @@ clear artistName Goriginal Gtrain;
 %% Outliers removal & normalization
 % TODO: test removing more or less "outliers"
 nDev = 3;
-[Ytrain, Ytest] = removeOutliers(Ytrain, nDev, Ytest);
+[Ytrain, Ytest] = removeOutliersSparse(Ytrain, nDev, Ytest);
 
 % TODO: denormalize after prediction to obtain the correct scale
 [Ytrain, ~, ~, Ytest] = normalizedByUsers(Ytrain, Ytest);
