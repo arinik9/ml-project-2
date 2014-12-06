@@ -75,10 +75,10 @@ Te.normX = normalize(Te.X, mu, sigma);  % normalize test data
 
 
 % create a model with the tuned parameters
-model = svmtrain(Tr.y, Tr.normX, '-t 0 -b 1'); % linear kernel, with probabilities, etc
+model = svmtrain(Tr.y, Tr.normX, '-t 0 -b 1 -e 0.01'); % linear kernel, with probabilities, etc
 
 % predict on test data
-[predict_label, accuracy, prob_estimates] = svmpredict(rand(size(Te.y)), Te.normX, model, '-b 1');
+[predict_label, accuracy, prob_estimates] = svmpredict(Te.y, Te.normX, model, '-b 1');
 
 % get scores(not labels) for ROC
 svmPredict  = prob_estimates(:, 1) - prob_estimates(:, 2);
