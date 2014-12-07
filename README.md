@@ -26,16 +26,16 @@ Project's TODO
 - [ ] Gaussian process and several kernels
 - [ ] K-means clustering
 - [ ] Gaussian Mixture Model and EM algo
-- [ ] Principal Components Analysis (as a low-rank approximation) using alternating least squares
+- [x] Principal Components Analysis (as a low-rank approximation) using alternating least squares
 - [ ] Neural Networks (implementation from the [DeepLearn toolbox](https://github.com/rasmusbergpalm/DeepLearnToolbox/archive/))
 - [ ] Generic learning curve plotting function
 - [ ] Generic ML method comparison function (for each method, plot achieved test error & stability with a boxplot)
 
 ### Dataset pre-processing
 
-- [ ] Basic data characteristics (dimensionality, repartition, correlation, ...)
+- [x] Basic data characteristics (dimensionality, repartition, correlation, ...)
 - [ ] Try obtaining helpful visualizations
-- [ ] Dimensionality reduction with PCA
+- [x] Dimensionality reduction with PCA
 - [ ] Try feature transformations (basis expansion) on the reduced set of features
 
 ### Person detection dataset
@@ -60,6 +60,7 @@ Project's TODO
 Recall we must achieve both **weak** (new ratings for existing users) and **strong** (entirely new users) prediction.
 
 - [x] Implement the relevant error measures
+- [ ] Implement error diagnostics (which kind of counts do we make the most error on?)
 - [x] Train / test split (particular for weak and strong prediction)
 - [x] Get a baseline error value
 - [ ] Experiment with SVM
