@@ -5,7 +5,6 @@ addpath(genpath('./src'), genpath('../src'));
 
 %% Dataset pre-processing
 % TODO: make a common preprocessing script
-
 clearvars;
 
 % Load dataset

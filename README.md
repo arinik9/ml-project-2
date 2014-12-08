@@ -60,9 +60,11 @@ Project's TODO
 Recall we must achieve both **weak** (new ratings for existing users) and **strong** (entirely new users) prediction.
 
 - [x] Implement the relevant error measures
-- [ ] Implement error diagnostics (which kind of counts do we make the most error on?)
+- [x] Implement error diagnostics (which kind of counts do we make the most error on?)
 - [x] Train / test split (particular for weak and strong prediction)
+- [x] Feature engineering: implement derived variables
 - [x] Get a baseline error value
+- [ ] Implement the simple [Slope One](http://arxiv.org/pdf/cs/0702144v2.pdf) predictor
 - [ ] Experiment with SVM
 - [ ] Experiment with Gaussian processes
 - [ ] Experiment with clustering
