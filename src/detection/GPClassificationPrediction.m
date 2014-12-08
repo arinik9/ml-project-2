@@ -3,7 +3,8 @@ function gpPred = GPClassificationPrediction(y, Xtr, Xte)
 % Gaussian Process large scale classification
 % TODO: Hyper-parameters and model selection in function arguments
 
-    n = size(Xtr, 1);
+    n = size(Xte,1);
+    nTr = floor(size(Xtr,1)/ 10);
 
     % Mean function
     meanfunc = @meanConst; 
@@ -11,22 +12,29 @@ function gpPred = GPClassificationPrediction(y, Xtr, Xte)
 
     % use inducing points u and to base the computations on cross-covariances 
     % between training, test and inducing points only
-    nu = fix(n); iu = randperm(n); iu = iu(1:nu); u = Xtr(iu,:);
+    nu = fix(nTr)
+    iu = randperm(nTr); iu = iu(1:nu); u = Xte(iu,:);
+    %[u1,u2] = meshgrid(linspace(-2,2,5)); u = [u1(:),u2(:)]; clear u1; clear u2
+    %nu = size(u,1);
 
     % Covariance function
-    covfunc = @covSEiso; 
+    covfunc = @covSEiso; % also @covSEard is possible with hyp.cov = log(ones(1, size(u,1) + 1) 1xD+1 size
     ell = 1.0; % characteristic length-scale
     sf = 1.0; % standard deviation of the signal sf
     hyp.cov = log([ell sf]);
-    covfuncF = {@covFITC, {covfunc}, u};
+    covfuncF = {@covFITC, {covfunc}, u}; % wrap the covariance function covfunc into covFITC.m
 
     % Likelihood function
     likfunc = @likErf;
-
+    
+    % Inference function
     inffunc = @infFITC_EP;                       % also @infFITC_Laplace is possible
-
-    hyp = minimize(hyp, @gp, -40, inffunc, meanfunc, covfuncF, likfunc, Xtr, y);
-    [~, ~, ~, ~, lp] = gp(hyp, inffunc, meanfunc, covfuncF, likfunc, Xtr, y, Xte, ones(n,1));
+    
+    fprintf('Minimize hyperparameters..\n');
+    hyp = minimize(hyp, @gp, -40, inffunc, meanfunc, covfuncF, likfunc, Xtr, y)
+    
+    fprintf('Predict probabilities..\n');
+    [a, b, c, d, lp] = gp(hyp, inffunc, meanfunc, covfuncF, likfunc, Xtr, y, Xte, ones(n,1));
 
     % Note: Output arguments: 
     % When computing test probabilities, we call gp with additional test inputs, 

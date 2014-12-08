@@ -161,13 +161,51 @@ yhatGP = outputLabelsFromPrediction(m, 0);
 
 
 %% GP large scale Classification
+% TO DO : Apply PCA and classify after that
 
-x = Tr.normX(1:500,:);
-y = Tr.y(1:500);
-t = Te.normX(1:500,:);
-n = size(x,1);
+% Note: if the dimensionality is too big (very fat x matrix) we only get
+% negative labels... -> PCA + stochastic ?
+x = Tr.X(1:1200,1:500);
+y = Tr.y(1:1200);
+t = Te.X(:,1:500);
+n = size(t,1);
 
-gpPred = GPClassificationPrediction(y, x, t);
+% n1 = 80; n2 = 40;                   % number of data points from each class
+% S1 = eye(2); S2 = [1 0.95; 0.95 1];           % the two covariance matrices
+% m1 = [0.75; 0]; m2 = [-0.75; 0];                            % the two means
+%  
+% x1 = bsxfun(@plus, chol(S1)'*gpml_randn(0.2, 2, n1), m1);
+% x2 = bsxfun(@plus, chol(S2)'*gpml_randn(0.3, 2, n2), m2);
+%  
+% xB = [x1 x2]'; yB = [-ones(1,n1) ones(1,n2)]';
+% 
+% [t1, t2] = meshgrid(-4:0.1:4,-4:0.1:4);
+% tB = [t1(:) t2(:)]; nB = length(t); 
+
+% [u1,u2] = meshgrid(linspace(-2,2,5)); u = [u1(:),u2(:)]; clear u1; clear u2
+% nu = size(u,1);
+% covfuncF = {@covFITC, {covfunc}, u};
+% inffunc = @infFITC_EP;                       % also @infFITC_Laplace is possible
+% hyp = minimize(hyp, @gp, -40, inffunc, meanfunc, covfuncF, likfunc, x, y);
+% [a b c d lp] = gp(hyp, inffunc, meanfunc, covfuncF, likfunc, x, y, t, ones(n,1));
+% 
+% gpPred = exp(lp);
+
+gpPred = GPClassificationPrediction(y,x,t);
+
+% meanfunc = @meanConst; hyp.mean = 0;
+% covfunc = @covSEiso; ell = 1.0; sf = 1.0; hyp.cov = log([ell sf]);
+% likfunc = @likErf;
+% 
+% [u1,u2] = meshgrid(linspace(-2,2,5)); u = [u1(:),u2(:)]; clear u1; clear u2
+% nu = size(u,1);
+% covfuncF = {@covFITC, {covfunc}, u};
+% inffunc = @infFITC_EP; 
+% 
+% hyp = minimize(hyp, @gp, -40, inffunc, meanfunc, covfuncF, likfunc, x, y);
+% [a b c d lp] = gp(hyp, inffunc, meanfunc, covfuncF, likfunc, x, y, t, ones(n, 1));
+% gpPred = exp(lp)
+
 yHatGP = outputLabelsFromPrediction(gpPred, 0.5);
 
 % We do recover our large rate of negative VS positive images
