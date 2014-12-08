@@ -1,7 +1,7 @@
 clearvars;
 
 % add path to source files and toolboxs
-addpath(genpath('./toolbox/DeepLearnToolbox'));
+%addpath(genpath('./toolbox/DeepLearnToolbox'));
 addpath(genpath('./toolbox/gpml-matlab-v3.4'));
 addpath(genpath('./src/'));
 
@@ -23,13 +23,16 @@ fprintf('Splitting into train/test with proportion %.2f..\n', prop);
 % Normalize
 fprintf('Normalizing features..\n');
 [Tr.normX, mu, sigma] = zscore(Tr.X); % train, get mu and std
-Te.normX = normalize(Te.X, mu, sigma);  % normalize test data
+% Te.normX = normalize(Te.X, mu, sigma);  % normalize test data
+onesX = ones(size(Te.X,1), 1);
+Te.normX = (Te.X - onesX * mu) ./ (onesX * sigma);
+
 
 fprintf('Done! You can start playing with the features!\n');
 
 %% Principal Component Analysis
 
-[coeff,score,latent,tsquared,explained] = pca(Tr.X);
+[coeff,score,latent,tsquared,explained] = pca(Tr.normX);
 
 % Plot on 1st and 2nd principal component
 figure()
@@ -66,10 +69,19 @@ hLine.Color = [0,0.7,0.7];
 ylim(ax(2),[1 100]);
 
 %% Select the principal component scores: the representation of X in the principal component space
-% TODO: check if we are doing correct
-Tr.Xpca = score(:,1:500);
-c = coeff(:,1:500);
-Te.Xpca = Te.normX * c;
+fprintf('Selecting the PCA scores..\n');
+
+nPrinComp = 500;
+Tr.Xpca = score(:,1:nPrinComp);
+% Finding scores back (same result as selecting score column)
+% Tr.Xpca = Tr.normX * coeff(:,1:nPrinComp);
+
+% Compute scores of test data
+pc = coeff(:,1:nPrinComp);
+Te.Xpca = Te.normX * pc;
+
+fprintf('Done! We have now reduced train and test set !\n');
+
 %% Logistic regression: Not working
 
 %[Tr.normX, mu, sigma] = zscore(Tr.X); % train, get mu and std
@@ -150,9 +162,9 @@ yhatGP = outputLabelsFromPrediction(m, 0);
 
 %% GP large scale Classification
 
-x = Tr.Xpca(1:500,:);
+x = Tr.normX(1:500,:);
 y = Tr.y(1:500);
-t = Te.Xpca(1:500,:);
+t = Te.normX(1:500,:);
 n = size(x,1);
 
 gpPred = GPClassificationPrediction(y, x, t);
