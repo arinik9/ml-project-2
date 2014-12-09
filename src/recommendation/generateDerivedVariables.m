@@ -1,5 +1,5 @@
 function [userDV, artistDV] = generateDerivedVariables(Y)
-% GENERATEDERIVEDVARIABLES
+% GENERATEDERIVEDVARIABLES Extract features from observations
 % Derived Variables (DV) used follow the DV proposed by:
 %   Park, Yoon-Joo, and Alexander Tuzhilin.
 %   "The long tail of recommender systems and how to leverage it."
@@ -28,53 +28,53 @@ function [userDV, artistDV] = generateDerivedVariables(Y)
 %     11. Measure of "likability": average difference between the rating
 %         received and the rating's user's average
 
-  [N, D] = size(Y);
-  [uIdx, aIdx] = find(Y);
-  usersIdx = unique(uIdx);
-  artistsIdx = unique(aIdx);
+    [N, D] = size(Y);
+    [uIdx, aIdx] = find(Y);
+    usersIdx = unique(uIdx);
+    artistsIdx = unique(aIdx);
 
-  userDV = zeros(N, 8);
-  artistDV = zeros(D, 3);
+    userDV = zeros(N, 8);
+    artistDV = zeros(D, 3);
 
-  % For each artist
-  for j = 1:length(artistsIdx)
-    artist = artistsIdx(j);
+    % For each artist
+    for j = 1:length(artistsIdx)
+        artist = artistsIdx(j);
 
-    artistDV(artist, 1) = mean(nonzeros(Y(:, artist)));
-    artistDV(artist, 2) = nnz(Y(:, artist));
-  end;
+        artistDV(artist, 1) = mean(nonzeros(Y(:, artist)));
+        artistDV(artist, 2) = nnz(Y(:, artist));
+    end;
 
-  % For each user
-  for i = 1:length(usersIdx)
-    user = usersIdx(i);
-    artistsRated = aIdx(uIdx == user);
-    
-    counts = full(Y(user, artistsRated));
-    nnzCounts = nonzeros(counts);
-    assert(nnz(counts) == length(artistsRated));
-    
-    averageCount = mean(nnzCounts);
+    % For each user
+    for i = 1:length(usersIdx)
+        user = usersIdx(i);
+        artistsRated = aIdx(uIdx == user);
 
-    userDV(user, 1) = averageCount;
-    userDV(user, 2) = length(artistsRated);
-    userDV(user, 3) = mean(artistDV(artistsRated, 2));
-    userDV(user, 4) = mean(artistDV(artistsRated, 1));
+        counts = full(Y(user, artistsRated));
+        nnzCounts = nonzeros(counts);
+        assert(nnz(counts) == length(artistsRated));
 
-    likedLogical = counts >= averageCount;
-    liked = find(likedLogical);
-    userDV(user, 5) = mean(artistDV(liked, 2));
-    userDV(user, 6) = mean(artistDV(liked, 1));
+        averageCount = mean(nnzCounts);
 
-    disliked = find(~likedLogical);
-    userDV(user, 7) = mean(artistDV(disliked, 2));
-    userDV(user, 8) = mean(artistDV(disliked, 1));
-  end;
+        userDV(user, 1) = averageCount;
+        userDV(user, 2) = length(artistsRated);
+        userDV(user, 3) = mean(artistDV(artistsRated, 2));
+        userDV(user, 4) = mean(artistDV(artistsRated, 1));
 
-  % For each artist, compute the "likability"
-  for j = 1:length(artistsIdx)
-    artist = artistsIdx(j);
-    ratedBy = uIdx(aIdx == artist);
+        likedLogical = counts >= averageCount;
+        liked = find(likedLogical);
+        userDV(user, 5) = mean(artistDV(liked, 2));
+        userDV(user, 6) = mean(artistDV(liked, 1));
 
-    artistDV(artist, 3) = mean( Y(ratedBy, artist) - userDV(ratedBy, 1) );
-  end;
+        disliked = find(~likedLogical);
+        userDV(user, 7) = mean(artistDV(disliked, 2));
+        userDV(user, 8) = mean(artistDV(disliked, 1));
+    end;
+
+    % For each artist, compute the "likability"
+    for j = 1:length(artistsIdx)
+        artist = artistsIdx(j);
+        ratedBy = uIdx(aIdx == artist);
+
+        artistDV(artist, 3) = mean( Y(ratedBy, artist) - userDV(ratedBy, 1) );
+    end;
 end
