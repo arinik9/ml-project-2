@@ -1,10 +1,10 @@
-function nnPred = neuralNetworkPredict(yTr, XTr, XTe, plot_flag, learningRate, activationFunction, dropoutFraction, weightPenaltyL2, nnArchitecture, numepochs, batchsize)
+function model = learnNeuralNetwork(yTr, XTr, plot_flag, learningRate, activationFunction, dropoutFraction, weightPenaltyL2, nnArchitecture, numepochs, batchsize)
 % Binary classification using Neural Network provided by the deepLearning toolbox
 % This function takes train and test data and apply NN model with given
 % parameters in order to test different parameters tuning instead of boilerplate code.
 %
 % Outputs:
-%   - nnPred: predictions obtained from the NN
+%   - model: Neural Network trained from the training data
 % Inputs:
 %   - yTr: training output data
 %   - XTr: normalized training input data
@@ -23,36 +23,36 @@ function nnPred = neuralNetworkPredict(yTr, XTr, XTe, plot_flag, learningRate, a
 
     % Default parameter settings
     
-    if (nargin < 4)
+    if (nargin < 3)
         plot_flag = 0;
     end
     
-    if (nargin < 5)
+    if (nargin < 4)
         learningRate = 2;
     end
 
-    if (nargin < 6)
+    if (nargin < 5)
         activationFunction = 'tanh_opt';
     end
 
-    if (nargin < 7)
+    if (nargin < 6)
         dropoutFraction = 0;
     end
     
-    if (nargin < 8)
+    if (nargin < 7)
         weightPenaltyL2 = 0;
     end
     
-    if (nargin < 9)
+    if (nargin < 8)
        % setup NN with 2 layers for binary classification
        nnArchitecture = [size(XTr,2) 10 2]; 
     end
 
-    if (nargin < 10)
+    if (nargin < 9)
         numepochs = 50;
     end
     
-    if (nargin < 11)
+    if (nargin < 10)
         batchsize = 100;
     end
 
@@ -87,22 +87,7 @@ function nnPred = neuralNetworkPredict(yTr, XTr, XTe, plot_flag, learningRate, a
                                     % second column, p(y=-1)
 
     [nn, ~] = nntrain(nn, XTr, LL, opts);
-
-    % to get the scores we need to do nnff (feed-forward) 
-    % which returns an neural network structure with updated 
-    % layer activations, error and loss (nn.a, nn.e and nn.L)
-    % See for example nnpredict().
-    % (This is a weird thing of this toolbox)
-    nn.testing = 1;
-    nn = nnff(nn, XTe, zeros(size(XTe,1), nn.size(end)));
-    nn.testing = 0;
-
-    % predict on the test set
-    nnPred = nn.a{end};
-
-    % we want a single score, subtract the output sigmoids
-    nnPred = nnPred(:,1) - nnPred(:,2);
     
-    nnPred = (nnPred + 1) / 2;
+    model = nn;
     
 end

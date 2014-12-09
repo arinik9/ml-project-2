@@ -50,7 +50,7 @@ fprintf('Plotting percentage of the total variance explained by each principal c
 % too many PC.
 
 % Percentage of the total variance explained by each principal component
-PCA.explained = vars ./sum(PCA.latent);
+PCA.explained = PCA.latent ./sum(PCA.latent);
 
 % Cumulative percentage of the total variance explained by each principal component
 PCA.explainedCum = (cumsum(PCA.latent)./sum(PCA.latent));
@@ -121,7 +121,10 @@ fprintf('Tuned NN prediction\n');
 
 % Tuned NN prediction with Dropout Fraction set to 0.5 (close to optimality
 % according to paper on dropout)
-nnPred3 = neuralNetworkPredict(Tr.y, Tr.normX, Tr.normX, 0, 1, 'sigm', 0, 1e-4);
+% nnPred3 = neuralNetworkPredict(Tr.y, Tr.normX, Te.normX, 0, 1, 'sigm', 0, 1e-4);
+nn = learnNeuralNetwork(Tr.y, Tr.normX, 0, 1, 'sigm', 0, 1e-4);
+nnPred = predictNeuralNetwork(nn, Te.normX);
+
 
 % Tunned NN predictions with Weight Decay on L2 (Tikhonov regularization)
 %nnPred3 = neuralNetworkPredict(Tr, Te, 0, 1, 'sigm', 0, 1e-4);
@@ -138,7 +141,9 @@ t = Te.pcaNormX;
 nPlot = size(t,1);
 
 tic;
-gpPred = GPClassificationPrediction(y,x,t);
+% gpPred = GPClassificationPrediction(y,x,t);
+gpModel = learnGPClassification(y, x);
+gpPred = predictGPClassification(gpModel, t);
 TimeSpent = toc;
 
 yHatGP = outputLabelsFromPrediction(gpPred, 0.5);
@@ -151,8 +156,8 @@ hist(yHatGP);
 methodNames = {'Logistic Regression','Random'};
 
 % Prediction performances on different models
-avgTPRList = evaluateMultipleMethods( Te.y > 0, [logRegPred, randPred], true, methodNames );
-avgTPRListTr = evaluateMultipleMethods( Tr.y > 0, [nnPred3, randPredTrain], true, methodNames );
+avgTPRList = evaluateMultipleMethods( Te.y > 0, [pred, randPred], true, methodNames );
+%avgTPRListTr = evaluateMultipleMethods( Tr.y > 0, [nnPred3, randPredTrain], true, methodNames );
 
 % TODO : Play with parameters
 

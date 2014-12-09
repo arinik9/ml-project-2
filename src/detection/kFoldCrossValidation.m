@@ -1,8 +1,8 @@
-function [averageTrError, averageTeError] = kFoldCrossValidation(y, tX, K, learnModel, predict, computeError)
+function [trAvgTPR, teAvgTPR] = kFoldCrossValidation(y, tX, K, learnModel, predict)
 % Perform k-fold cross validation to obtain an estimate of the test error
 % K: number of folds
 % learnModel: function(y, tX) to obtain the model parameters
-% predict: function(tX, beta) to compute the prediction from the input and
+% predict: function(model, tX) to compute the prediction from the input and
 %          model parameters
 % computeError: function(y, yHat) to compute the error about the prediction
 
@@ -29,14 +29,21 @@ function [averageTrError, averageTeError] = kFoldCrossValidation(y, tX, K, learn
         XTr = tX(idxTr, :);
 
         % Learn model parameters
-        beta = learnModel(yTr, XTr);
-
+        model = learnModel(yTr, XTr);
+        
+        % Make predictions on test and train
+        predTr = predict(model, XTr);
+        predTe = predict(model, XTe);
+        
         % Compute training and test error for k'th train / test split
-        subTrError(k) = computeError(yTr, predict(XTr, beta)); 
-        subTeError(k) = computeError(yTe, predict(XTe, beta)); 
+        subTrAvgTPR(k) = fastROC(yTr > 0, predTr); 
+        subTeAvgTPR(k) = fastROC(yTe > 0, predTe); 
+        fprintf('avgTPR on train : %d | avgTPR on test : %d \n', subTrAvgTPR(k), subTeAvgTPR(k));
+        
+        
     end;
 
     % Estimate test and train errors are the average over k folds
-    averageTrError = mean(subTrError);
-    averageTeError = mean(subTeError);
+    trAvgTPR = mean(subTrAvgTPR);
+    teAvgTPR = mean(subTeAvgTPR);
 end
