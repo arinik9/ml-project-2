@@ -60,14 +60,17 @@ function [userDV, artistDV] = generateDerivedVariables(Y)
         userDV(user, 3) = mean(artistDV(artistsRated, 2));
         userDV(user, 4) = mean(artistDV(artistsRated, 1));
 
-        likedLogical = counts >= averageCount;
-        liked = find(likedLogical);
-        userDV(user, 5) = mean(artistDV(liked, 2));
-        userDV(user, 6) = mean(artistDV(liked, 1));
-
-        disliked = find(~likedLogical);
-        userDV(user, 7) = mean(artistDV(disliked, 2));
-        userDV(user, 8) = mean(artistDV(disliked, 1));
+        likedLogical = (counts >= averageCount);
+        if nnz(likedLogical) > 0
+            liked = find(likedLogical);
+            userDV(user, 5) = mean(artistDV(liked, 2));
+            userDV(user, 6) = mean(artistDV(liked, 1));
+        end;
+        if nnz(~likedLogical) > 0
+            disliked = find(~likedLogical);
+            userDV(user, 7) = mean(artistDV(disliked, 2));
+            userDV(user, 8) = mean(artistDV(disliked, 1));
+        end;
     end;
 
     % For each artist, compute the "likability"

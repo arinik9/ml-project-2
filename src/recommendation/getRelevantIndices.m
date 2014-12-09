@@ -28,14 +28,15 @@ function [indices, sizes] = getRelevantIndices(Ytrain, Ytest)
     sizes.tr.unique.a = length(indices.tr.unique.a);
 
     % ----- Test set
-    if(exist('Ytest', 'var'))
+    if (exist('Ytest', 'var') ~= 0)
         indices.te = {}; indices.te.unique = {};
+        sizes.te = {}; sizes.te.unique = {};
+
         [indices.te.u, indices.te.a] = find(Ytest);
         indices.te.unique.u = unique(indices.te.u);
         indices.te.unique.a = unique(indices.te.a);
 
         sizes.te.nnz = nnz(Ytest);
-        sizes.te = {}; sizes.te.unique = {};
         [sizes.te.u, sizes.te.a] = size(Ytest);
         sizes.te.unique.u = length(indices.te.unique.u);
         sizes.te.unique.a = length(indices.te.unique.a);
