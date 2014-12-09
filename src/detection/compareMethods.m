@@ -1,7 +1,8 @@
 clearvars;
 
 % add path to source files and toolboxs
-%addpath(genpath('./toolbox/DeepLearnToolbox'));
+addpath(genpath('./toolbox/PiotrToolbox'));
+addpath(genpath('./toolbox/DeepLearnToolbox'));
 addpath(genpath('./toolbox/gpml-matlab-v3.4'));
 addpath(genpath('./src/'));
 
@@ -31,26 +32,47 @@ Te.normX = (Te.X - onesX * mu) ./ (onesX * sigma);
 fprintf('Done! You can start playing with the features!\n');
 
 %% Principal Component Analysis
+fprintf('Performing Principal Component Analysis..\n');
 
-[coeff,score,latent,tsquared,explained] = pca(Tr.normX);
+% Matlab PCA but it is too slow with so many features
+%[coeff, mu, eigenvalues] = pca(Tr.normX);
+%[train, test] = prinCompProjection(coeff, Tr.normX(1:500,:), Te.normX(1:200,:), 50);
+
+% Need to pass a DxN matrix with N # data example
+[U, mu, vars] = pca(Tr.normX');
+
+fprintf('Projecting train and test data into the lower space..\n');
+
+% Number of PC kept
+nPrinComp = 50;
+fprintf('We are projecting on the first %d principal components..\n', nPrinComp);
+
+[pcaXTrain, pcaXhatTrain, pcaAvsqTrain] = pcaApply(Tr.normX', U, mu, nPrinComp);
+Tr.pcaX = pcaXTrain'; Tr.pcaXhatTrain = pcaXhatTrain'; Tr.pcaAvsq = pcaAvsqTrain;
+[pcaXTest, pcaXhatTest, pcaAvsqTest] = pcaApply(Te.normX', U, mu, nPrinComp);
+Te.pcaX = pcaXTest'; Te.pcaXhatTrain = pcaXhatTest'; Te.pcaAvsq = pcaAvsqTest;
+
+% Normalize reduced input features
+[Tr.pcaX muPCA sigmaPCA] = zscore(Tr.pcaX);
+Te.pcaX = normalize(Te.pcaX, muPCA, sigmaPCA);
+
+clear pcaXTrain pcaXhatTrain pcaAvsqTrain pcaXTest pcaXhatTest pcaAvsqTest;
 
 % Plot on 1st and 2nd principal component
-figure()
-plot(score(:,1),score(:,2),'+')
-xlabel('1st Principal Component')
-ylabel('2nd Principal Component')
+% figure()
+% plot(score(:,1),score(:,2),'+')
+% xlabel('1st Principal Component')
+% ylabel('2nd Principal Component')
 
-% how to get 95% of representation as it should ?
-figure()
-pareto(explained)
-xlabel('Principal Component')
-ylabel('Variance Explained (%)')
-
-expl = cumsum(explained);
+% figure()
+% pareto(explained)
+% xlabel('Principal Component')
+% ylabel('Variance Explained (%)')
 
 fprintf('Done! You''re now in a lower dimension space !\n');
 
 %% Plot PCA Representation
+% TODO: make it work using Piotr's PCA
 
 % Are we plotting on every PC?
 n = size(explained,1)/2;
@@ -69,6 +91,8 @@ hLine.Color = [0,0.7,0.7];
 ylim(ax(2),[1 100]);
 
 %% Select the principal component scores: the representation of X in the principal component space
+% Old code: not needed anymore using Piotr's PCA
+
 fprintf('Selecting the PCA scores..\n');
 
 nPrinComp = 500;
@@ -83,6 +107,7 @@ Te.Xpca = Te.normX * pc;
 fprintf('Done! We have now reduced train and test set !\n');
 
 %% Logistic regression: Not working
+% We will use 1-layer NN to run logreg
 
 %[Tr.normX, mu, sigma] = zscore(Tr.X); % train, get mu and std
 Te.normX = normalize(Te.X, mu, sigma);  % normalize test data
@@ -93,7 +118,7 @@ Tr.tXpca = [ones(size(Tr.Xpca,1),1), Tr.Xpca];
 alpha = 0.5;
 lambda = 100;
 
-beta = penLogisticRegressionAuto(Tr.y, Tr.Xpca);
+beta = penLogisticRegressionAuto(Tr.y, Tr.pcaX);
 %yHatLR = 
 
 %% Prediction with different NN
@@ -114,97 +139,20 @@ nnPred3 = neuralNetworkPredict(Tr, Te, 0, 1, 'sigm', 0, 1e-4);
 % Tunned NN predictions with Weight Decay on L2 (Tikhonov regularization)
 %nnPred3 = neuralNetworkPredict(Tr, Te, 0, 1, 'sigm', 0, 1e-4);
 
-%% GP prediction
-% TODO: Continue : Take more data examples + normalize before + make
-% fastROC work for result
-
-% Give a try to GP regression as classification seems really slow. But is
-% it a good way to proceed ?
-
-x = Tr.X(1:100,:);
-y = Tr.y(1:100);
-z = Te.X(1:100,:);
-n = size(x,1);
-
-% Mean function
-meanfunc = @meanConst; 
-hyp.mean = 0;
-
-% use inducing points u and to base the computations on cross-covariances 
-% between training, test and inducing points only
-nu = fix(n); iu = randperm(n); iu = iu(1:nu); u = x(iu,:);
-
-% Covariance function
-covfunc = @covSEiso; 
-ell = 1.0; % characteristic length-scale
-sf = 1.0; % standard deviation of the signal sf
-hyp.cov = log([ell sf]);
-covfuncF = {@covFITC, {covfunc}, u};
-
-% To try also : 
-% covSEard hyp.cov = log(ones(1, size(u,1) + 1) 1xD+1 size % we should try
-% that one also
-
-% Likelihood function
-likfunc = @likGauss; 
-sn = 0.1; % standard deviation of the noise
-hyp.lik = log(sn); 
-
-% compute the (joint) negative log probability (density) nlml (also called marginal likelihood or evidence)
-% nlml = gp(hyp, @infEP, meanfunc, covfunc, likfunc, x, y);
-
-hyp = minimize(hyp, @gp, -100, @infFITC, meanfunc, covfuncF, likfunc, x, y);
-[m s2] = gp(hyp, @infFITC, meanfunc, covfuncF, likfunc, x, y, z);
-
-% Take a threshold to assign to one of the class
-yhatGP = outputLabelsFromPrediction(m, 0);
-
-
 %% GP large scale Classification
-% TO DO : Apply PCA and classify after that
 
 % Note: if the dimensionality is too big (very fat x matrix) we only get
-% negative labels... -> PCA + stochastic ?
-x = Tr.X(1:1200,1:500);
-y = Tr.y(1:1200);
-t = Te.X(:,1:500);
+% negative labels... -> PCA
+% [Tr.pcaNormX muPCA sigmaPCA] = zscore(Tr.pcaX);
+% Te.pcaNormX = normalize(Te.pcaX, muPCA, sigmaPCA);
+x = Tr.pcaNormX;
+y = Tr.y;
+t = Te.pcaNormX;
 n = size(t,1);
 
-% n1 = 80; n2 = 40;                   % number of data points from each class
-% S1 = eye(2); S2 = [1 0.95; 0.95 1];           % the two covariance matrices
-% m1 = [0.75; 0]; m2 = [-0.75; 0];                            % the two means
-%  
-% x1 = bsxfun(@plus, chol(S1)'*gpml_randn(0.2, 2, n1), m1);
-% x2 = bsxfun(@plus, chol(S2)'*gpml_randn(0.3, 2, n2), m2);
-%  
-% xB = [x1 x2]'; yB = [-ones(1,n1) ones(1,n2)]';
-% 
-% [t1, t2] = meshgrid(-4:0.1:4,-4:0.1:4);
-% tB = [t1(:) t2(:)]; nB = length(t); 
-
-% [u1,u2] = meshgrid(linspace(-2,2,5)); u = [u1(:),u2(:)]; clear u1; clear u2
-% nu = size(u,1);
-% covfuncF = {@covFITC, {covfunc}, u};
-% inffunc = @infFITC_EP;                       % also @infFITC_Laplace is possible
-% hyp = minimize(hyp, @gp, -40, inffunc, meanfunc, covfuncF, likfunc, x, y);
-% [a b c d lp] = gp(hyp, inffunc, meanfunc, covfuncF, likfunc, x, y, t, ones(n,1));
-% 
-% gpPred = exp(lp);
-
+tic;
 gpPred = GPClassificationPrediction(y,x,t);
-
-% meanfunc = @meanConst; hyp.mean = 0;
-% covfunc = @covSEiso; ell = 1.0; sf = 1.0; hyp.cov = log([ell sf]);
-% likfunc = @likErf;
-% 
-% [u1,u2] = meshgrid(linspace(-2,2,5)); u = [u1(:),u2(:)]; clear u1; clear u2
-% nu = size(u,1);
-% covfuncF = {@covFITC, {covfunc}, u};
-% inffunc = @infFITC_EP; 
-% 
-% hyp = minimize(hyp, @gp, -40, inffunc, meanfunc, covfuncF, likfunc, x, y);
-% [a b c d lp] = gp(hyp, inffunc, meanfunc, covfuncF, likfunc, x, y, t, ones(n, 1));
-% gpPred = exp(lp)
+TimeSpent = toc;
 
 yHatGP = outputLabelsFromPrediction(gpPred, 0.5);
 
@@ -216,7 +164,7 @@ hist(yHatGP);
 methodNames = {'GP Classification','Random'};
 
 % Prediction performances on different models
-avgTPRList = evaluateMultipleMethods( Te.y(1:500) > 0, [gpPred, randPred(1:500)], true, methodNames );
+avgTPRList = evaluateMultipleMethods( Te.y > 0, [gpPred, randPred], true, methodNames );
 
 % TODO : Play with parameters
 

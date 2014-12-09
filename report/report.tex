@@ -93,17 +93,33 @@
 \section{Image classification}
 
   \subsection{Dataset description}
-  \textbf{Objective}: The people detection dataset consists of a set of images associated with a label that indicates whether there is a person or not in the image. For each of these images, we are provided with the Histogram of Oriented Gradient (HOG) features generated with Piotr's toolbox. Our goal is to predict whether people are present in unseen images.
+  \textbf{Objective}: The people detection dataset consists of a set of images associated with a label that indicates whether there is a person or not in the image. Our goal is to predict whether people are present in unseen images.
 
-  \textbf{Data characteristics}: Features where provided (Piotr's toolbox).
-
-  \subsection{Error measures}
+  \textbf{Data characteristics}: The training set is composed of $9360$ examples. For each of these images, we are provided with the Histogram of Oriented Gradient (HOG) features generated with Piotr's toolbox. In order to work with the HOG features we convert them into a vector. Hence for each image we get a vector of dimensionality equal to $9360$. 
+  
+  The training dataset includes $9360$ positive images (images with a person on it) encoded with the label $+1$ and $9360$ negative images encoded with the label $-1$. The dataset is heavily unbalanced between the two classes. 
+  
+  \subsection{Performance Evaluation}
 
   \subsection{Data visualization and cleaning}
+  - No obvious outliers
+  - Normalization
 
   \subsection{Feature transformations}
+  PCA
   
    \subsection{Model selection}
+   In each section, present briefly how it works, why we chose it, how we tuned the different parameters, overfitting or not etc.
+   
+   \textbf{Logistic Regression}: We started by applying a simple model which is Logistic Regression. It turns out that it is just a single-layer Neural Network (that we will study in detail later on in this paper).
+   
+   \textbf{Support Vectors Machines}: TODO
+   
+   \textbf{Gaussian Processes}: TODO. basic complexity is O(n3), due to the inversion of a n×n matrix which is why it is rather slow. LaPlace approx
+   
+   \textbf{Neural Networks}: TODO
+   
+   \textbf{Models comparison}: TODO  Plot ROC Curves with the different models, compare, check variance. Random guessing as a base model for comparison
 
   \subsection{Final model and predictions}
 

@@ -48,6 +48,7 @@ function nnPred = neuralNetworkPredict(Tr, Te, plot_flag, learningRate, activati
         batchsize = 100;
     end
 
+    rng('default');
     rng(8339); % fix seed, this NN is very sensitive to initialization
 
     % setup NN. The first layer needs to have number of features neurons,
