@@ -10,10 +10,11 @@ clearvars;
 % Load dataset
 load('./data/recommendation/songTrain.mat');
 
-% Counts matrix:
+% Listening cunts matrix:
 % Each (i, j) corresponds to the listening count of user i for artist j
 Yoriginal = Ytrain;
 Goriginal = Gtrain;
+clear artistName;
 
 %% Outliers removal & normalization
 % TODO: test removing more or less "outliers"
@@ -28,7 +29,7 @@ Y = normalizedByUsers(Y);
 % TODO: cross-validate all the things!
 setSeed(1);
 % TODO: vary test / train proportions
-[~, Ytest, ~, Ytrain, ~] = splitData(Y, Goriginal, 0, 0.1);
+[~, Ytest, Gtest, Ytrain, Gtrain] = splitData(Y, Goriginal, 0, 0.1);
 
 % Total size of train and test matrices
 [trN, trD] = size(Ytrain);
@@ -36,9 +37,7 @@ setSeed(1);
 % Indices of available counts (expressed in the same coordinates space)
 [trUserIndices, trArtistIndices] = find(Ytrain);
 [teUserIndices, teArtistIndices] = find(Ytest);
-
-% Cleanup
-clear artistName Goriginal Gtrain;
+uniqueArtists = unique(trArtistIndices);
 
 %% Baseline: constant predictor (overall mean of all observed counts)
 overallMean = mean(nonzeros(Ytrain));
@@ -60,7 +59,6 @@ clear overallMean;
 %% Simple model: predict the average listening count of the artist
 
 % Compute corresponding mean value for each artist
-uniqueArtists = unique(trArtistIndices);
 meanPerArtist = zeros(trD, 1);
 for i = 1:length(uniqueArtists)
     nCountsObserved = nnz(Ytrain(:, uniqueArtists(i)));
@@ -91,7 +89,7 @@ teErrMean = computeRmse(Ytest, teYhatMean);
 fprintf('RMSE with a constant predictor per artist: %f | %f\n', trErrMean, teErrMean);
 
 % Cleanup
-clearvars i k nCountsObserved uniqueUsers meanPerUser trPrediction tePrediction;
+clearvars i k nCountsObserved meanPerArtist trPrediction tePrediction;
 
 %% ALS-WR
 % TODO: experiment different lambdas and number of features
@@ -107,7 +105,60 @@ teErrALS = computeRmse(Ytest, reconstructFromLowRank(Ytest, U, M));
 fprintf('RMSE ALS-WR (low rank): %f | %f\n', trErrALS, teErrALS);
 
 % Cleanup
-%clearvars U M;
+clearvars U M;
+
+%% "Each Artist" predictions
+% Train a model for each item using derived variables
+
+[userDV, artistDV] = generateDerivedVariables(Ytrain);
+
+% TODO: refactor
+
+% Head / tail split
+headThreshold = 100;
+
+% Error made for each artist
+leastSquaresErrors = zeros(1, length(uniqueArtists));
+
+trValues = zeros(length(trArtistIndices), 1);
+teValues = zeros(length(teArtistIndices), 1);
+for j = 1:length(uniqueArtists)
+    artist = uniqueArtists(j);
+    if(nnz(Ytrain(:, artist)) > headThreshold)
+        % Train a linear model for artist j
+        Xtrain = generateFeatures(artist, Ytrain, Gtrain, userDV, artistDV);
+        tXtrain = [Xtrain ones(size(Xtrain, 1), 1)];
+        Xtest = generateFeatures(artist, Ytest, Gtrain, userDV, artistDV);
+        tXtest = [Xtest ones(size(Xtest, 1), 1)];
+        
+        yTrain = nonzeros(Ytrain(:, artist));
+        yTest = nonzeros(Ytest(:, artist));
+        
+        % Simple least squares
+        beta = (tXtrain' * tXtrain) \ (tXtrain' * yTrain);
+        trVal = tXtrain * beta;
+        teVal = tXtest * beta;
+    else
+        trVal = 0;
+        teVal = 0;
+    end;
+    
+    trValues(trArtistIndices == artist) = trVal;
+    teValues(teArtistIndices == artist) = teVal;
+    
+    leastSquaresErrors(j) = computeRmse(yTest, teVal);
+end;
+
+hist(nonzeros(leastSquaresErrors));
+
+trYhatLS = sparse(trUserIndices, trArtistIndices, trValues, trN, trD);
+teYhatLS = sparse(teUserIndices, teArtistIndices, teValues, trN, trD);
+
+trErrLS = computeRmse(Ytrain, trYhatLS);
+teErrLS = computeRmse(Ytest, teYhatLS);
+
+% Cleanup
+clearvars beta Xtrain tXtrain values trYhatLS teYhatLS;
 
 %% Other predictions
 % TODO
