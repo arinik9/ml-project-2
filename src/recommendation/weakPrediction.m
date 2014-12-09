@@ -2,15 +2,23 @@
 % Weak prediction: for an existing user, predict unobserved listening counts
 addpath(genpath('./data'), genpath('../data'));
 addpath(genpath('./src'), genpath('../src'));
+clearvars;
 
 %% Dataset pre-processing
 % TODO: make a common preprocessing script
-clearvars;
+
+% Cell array holding the errors made with various methods
+e = {};
+e.tr = {}; e.te = {};
+% Cell array holding the dimensions
+sz = {};
+sz.tr = {}; sz.te = {};
+% Cell array holding the indices
 
 % Load dataset
 load('./data/recommendation/songTrain.mat');
 
-% Listening cunts matrix:
+% Listening counts matrix:
 % Each (i, j) corresponds to the listening count of user i for artist j
 Yoriginal = Ytrain;
 Goriginal = Gtrain;
@@ -25,6 +33,8 @@ Y = removeOutliersSparse(Yoriginal, nDev);
 % TODO: we're normalizing before the train/test split, is this correct?
 Y = normalizedByUsers(Y);
 
+clearvars nDev;
+
 %% Train / test split
 % TODO: cross-validate all the things!
 setSeed(1);
@@ -32,8 +42,8 @@ setSeed(1);
 [~, Ytest, Gtest, Ytrain, Gtrain] = splitData(Y, Goriginal, 0, 0.1);
 
 % Total size of train and test matrices
-[trN, trD] = size(Ytrain);
-[teN, teD] = size(Ytest);
+[sz.tr.n, sz.tr.d] = size(Ytrain);
+[sz.te.n, sz.te.d] = size(Ytest);
 % Indices of available counts (expressed in the same coordinates space)
 [trUserIndices, trArtistIndices] = find(Ytrain);
 [teUserIndices, teArtistIndices] = find(Ytest);
@@ -44,22 +54,22 @@ overallMean = mean(nonzeros(Ytrain));
 
 % Predict counts (only those for which we have reference data, to save memory)
 % TODO: should we predict *all* counts?
-trYhat0 = sparse(trUserIndices, trArtistIndices, overallMean, trN, trD);
-teYhat0 = sparse(teUserIndices, teArtistIndices, overallMean, teN, teD);
+trYhat0 = sparse(trUserIndices, trArtistIndices, overallMean, sz.tr.n, sz.tr.d);
+teYhat0 = sparse(teUserIndices, teArtistIndices, overallMean, sz.te.n, sz.te.d);
 
 % Compute train and test errors (prediction vs counts in test and training set)
-trErr0 = computeRmse(Ytrain, trYhat0);
-teErr0 = computeRmse(Ytest, teYhat0);
+e.tr.constant = computeRmse(Ytrain, trYhat0);
+e.te.constant = computeRmse(Ytest, teYhat0);
 
-fprintf('RMSE with a constant predictor: %f | %f\n', trErr0, teErr0);
+fprintf('RMSE with a constant predictor: %f | %f\n', e.tr.constant, e.te.constant);
 
 % Cleanup
-clear overallMean;
+clear overallMean trYhat0 teYhat0;
 
 %% Simple model: predict the average listening count of the artist
 
 % Compute corresponding mean value for each artist
-meanPerArtist = zeros(trD, 1);
+meanPerArtist = zeros(sz.tr.d, 1);
 for i = 1:length(uniqueArtists)
     nCountsObserved = nnz(Ytrain(:, uniqueArtists(i)));
     if(nCountsObserved > 0)
@@ -79,17 +89,18 @@ for k = 1:length(tePrediction)
     tePrediction(k) = meanPerArtist(teArtistIndices(k));
 end;
 
-trYhatMean = sparse(trUserIndices, trArtistIndices, trPrediction, trN, trD);
-teYhatMean = sparse(teUserIndices, teArtistIndices, tePrediction, teN, teD);
+trYhatMean = sparse(trUserIndices, trArtistIndices, trPrediction, sz.tr.n, sz.tr.d);
+teYhatMean = sparse(teUserIndices, teArtistIndices, tePrediction, sz.te.n, sz.te.d);
 
 % Compute train and test errors (prediction vs counts in test and training set)
-trErrMean = computeRmse(Ytrain, trYhatMean);
-teErrMean = computeRmse(Ytest, teYhatMean);
+e.tr.mean = computeRmse(Ytrain, trYhatMean);
+e.te.mean = computeRmse(Ytest, teYhatMean);
 
-fprintf('RMSE with a constant predictor per artist: %f | %f\n', trErrMean, teErrMean);
+fprintf('RMSE with a constant predictor per artist: %f | %f\n', e.tr.mean, e.te.mean);
 
 % Cleanup
 clearvars i k nCountsObserved meanPerArtist trPrediction tePrediction;
+clearvars trYhatMean teYhatMean;
 
 %% ALS-WR
 % TODO: experiment different lambdas and number of features
@@ -99,13 +110,13 @@ lambda = 0.05;
 displayLearningCurve = 1;
 [U, M] = alswr(Ytrain, Ytest, nFeatures, lambda, displayLearningCurve);
 
-trErrALS = computeRmse(Ytrain, reconstructFromLowRank(Ytrain, U, M));
-teErrALS = computeRmse(Ytest, reconstructFromLowRank(Ytest, U, M));
+e.tr.als = computeRmse(Ytrain, reconstructFromLowRank(Ytrain, U, M));
+e.te.als = computeRmse(Ytest, reconstructFromLowRank(Ytest, U, M));
 
-fprintf('RMSE ALS-WR (low rank): %f | %f\n', trErrALS, teErrALS);
+fprintf('RMSE ALS-WR (low rank): %f | %f\n', e.tr.als, e.te.als);
 
 % Cleanup
-clearvars U M;
+clearvars nFeatures lambda displayLearningCurve U M;
 
 %% "Each Artist" predictions
 % Train a model for each item using derived variables
@@ -124,15 +135,16 @@ trValues = zeros(length(trArtistIndices), 1);
 teValues = zeros(length(teArtistIndices), 1);
 for j = 1:length(uniqueArtists)
     artist = uniqueArtists(j);
+    
+    yTrain = nonzeros(Ytrain(:, artist));
+    yTest = nonzeros(Ytest(:, artist));
+    
     if(nnz(Ytrain(:, artist)) > headThreshold)
         % Train a linear model for artist j
         Xtrain = generateFeatures(artist, Ytrain, Gtrain, userDV, artistDV);
         tXtrain = [Xtrain ones(size(Xtrain, 1), 1)];
         Xtest = generateFeatures(artist, Ytest, Gtrain, userDV, artistDV);
         tXtest = [Xtest ones(size(Xtest, 1), 1)];
-        
-        yTrain = nonzeros(Ytrain(:, artist));
-        yTest = nonzeros(Ytest(:, artist));
         
         % Simple least squares
         beta = (tXtrain' * tXtrain) \ (tXtrain' * yTrain);
@@ -151,14 +163,17 @@ end;
 
 hist(nonzeros(leastSquaresErrors));
 
-trYhatLS = sparse(trUserIndices, trArtistIndices, trValues, trN, trD);
-teYhatLS = sparse(teUserIndices, teArtistIndices, teValues, trN, trD);
+trYhatLS = sparse(trUserIndices, trArtistIndices, trValues, sz.tr.n, sz.tr.d);
+teYhatLS = sparse(teUserIndices, teArtistIndices, teValues, sz.te.n, sz.te.d);
 
-trErrLS = computeRmse(Ytrain, trYhatLS);
-teErrLS = computeRmse(Ytest, teYhatLS);
+e.tr.leastSquares = computeRmse(Ytrain, trYhatLS);
+e.te.leastSquares = computeRmse(Ytest, teYhatLS);
+
+fprintf('RMSE with Least-Squares on head only : %f | %f\n', e.tr.leastSquares, e.te.leastSquares);
 
 % Cleanup
-clearvars beta Xtrain tXtrain values trYhatLS teYhatLS;
+clearvars j artist beta Xtrain tXtrain Xtest tXtest trValues trVal teVal;
+clearvars yTrain yTest teValues trYhatLS teYhatLS;
 
 %% Other predictions
 % TODO
