@@ -1,9 +1,7 @@
 clearvars;
 
 % add path to source files and toolboxs
-addpath(genpath('./toolbox/PiotrToolbox'));
-addpath(genpath('./toolbox/DeepLearnToolbox'));
-addpath(genpath('./toolbox/gpml-matlab-v3.4'));
+addpath(genpath('./toolbox/'));
 addpath(genpath('./src/'));
 
 % Load both features and training images
@@ -134,7 +132,7 @@ fprintf('Tuned NN prediction\n');
 
 % Tuned NN prediction with Dropout Fraction set to 0.5 (close to optimality
 % according to paper on dropout)
-nnPred3 = neuralNetworkPredict(Tr, Te, 0, 1, 'sigm', 0, 1e-4);
+nnPred3 = neuralNetworkPredict(Tr.y, Tr.normX, Te.normX, 0, 1, 'sigm', 0, 1e-4);
 
 % Tunned NN predictions with Weight Decay on L2 (Tikhonov regularization)
 %nnPred3 = neuralNetworkPredict(Tr, Te, 0, 1, 'sigm', 0, 1e-4);
@@ -164,7 +162,7 @@ hist(yHatGP);
 methodNames = {'GP Classification','Random'};
 
 % Prediction performances on different models
-avgTPRList = evaluateMultipleMethods( Te.y > 0, [gpPred, randPred], true, methodNames );
+avgTPRList = evaluateMultipleMethods( Te.y > 0, [nnPred3, randPred], true, methodNames );
 
 % TODO : Play with parameters
 

@@ -1,4 +1,4 @@
-function nnPred = neuralNetworkPredict(Tr, Te, plot_flag, learningRate, activationFunction, dropoutFraction, weightPenaltyL2, numepochs, batchsize)
+function nnPred = neuralNetworkPredict(yTr, XTr, XTe, plot_flag, learningRate, activationFunction, dropoutFraction, weightPenaltyL2, numepochs, batchsize)
 % Binary classification using Neural Network provided by the deepLearning toolbox
 % This function takes train and test data and apply NN model with given
 % parameters in order to test different parameters tuning instead of boilerplate code.
@@ -6,8 +6,9 @@ function nnPred = neuralNetworkPredict(Tr, Te, plot_flag, learningRate, activati
 % Outputs:
 %   - nnPred: predictions obtained from the NN
 % Inputs:
-%   - Tr: Tr.X training input data, Tr.y training output data
-%   - Te: Te.X test input data, Te.y test output data
+%   - yTr: training output data
+%   - XTr: normalized training input data
+%   - XTe: normalized test input data
 %   - learningRate: Note from toolbox: typically needs to be lower when using 'sigm' activation function and non-normalized inputs.
 %   - activationFunction: Activation functions of hidden layers: 'sigm' (sigmoid) or 'tanh_opt' (optimal tanh).
 %   - dropoutFraction: Dropout level (http://www.cs.toronto.edu/~hinton/absps/dropout.pdf)
@@ -20,31 +21,31 @@ function nnPred = neuralNetworkPredict(Tr, Te, plot_flag, learningRate, activati
 
     % Default parameter settings
     
-    if (nargin < 3)
+    if (nargin < 4)
         plot_flag = 0;
     end
     
-    if (nargin < 4)
+    if (nargin < 5)
         learningRate = 2;
     end
 
-    if (nargin < 5)
+    if (nargin < 6)
         activationFunction = 'tanh_opt';
     end
 
-    if (nargin < 6)
+    if (nargin < 7)
         dropoutFraction = 0;
     end
     
-    if (nargin < 7)
+    if (nargin < 8)
         weightPenaltyL2 = 0;
     end
 
-    if (nargin < 8)
+    if (nargin < 9)
         numepochs = 50;
     end
     
-    if (nargin < 9)
+    if (nargin < 10)
         batchsize = 100;
     end
 
@@ -53,7 +54,7 @@ function nnPred = neuralNetworkPredict(Tr, Te, plot_flag, learningRate, activati
 
     % setup NN. The first layer needs to have number of features neurons,
     %  and the last layer the number of classes (here two).
-    nn = nnsetup([size(Tr.X,2) 2]);
+    nn = nnsetup([size(XTr,2) 10 2]);
     opts.numepochs =  numepochs;        %  Number of full sweeps through data
     opts.batchsize = batchsize;         %  Take a mean gradient step over this many samples
 
@@ -70,20 +71,15 @@ function nnPred = neuralNetworkPredict(Tr, Te, plot_flag, learningRate, activati
 
     % this neural network implementation requires number of samples to be a
     % multiple of batchsize, so we remove some for this to be true.
-    numSampToUse = opts.batchsize * floor( size(Tr.X) / opts.batchsize);
-    Tr.X = Tr.X(1:numSampToUse,:);
-    Tr.y = Tr.y(1:numSampToUse);
-
-    % normalize data
-    [Tr.normX, mu, sigma] = zscore(Tr.X); % train, get mu and std
+    numSampToUse = opts.batchsize * floor( size(XTr) / opts.batchsize);
+    XTr = XTr(1:numSampToUse,:);
+    yTr = yTr(1:numSampToUse);
 
     % prepare labels for NN
-    LL = [1*(Tr.y>0)  1*(Tr.y<0)];  % first column, p(y=1)
+    LL = [1*(yTr>0)  1*(yTr<0)];  % first column, p(y=1)
                                     % second column, p(y=-1)
 
-    [nn, L] = nntrain(nn, Tr.normX, LL, opts);
-
-    Te.normX = normalize(Te.X, mu, sigma);  % normalize test data
+    [nn, ~] = nntrain(nn, XTr, LL, opts);
 
     % to get the scores we need to do nnff (feed-forward) 
     % which returns an neural network structure with updated 
@@ -91,7 +87,7 @@ function nnPred = neuralNetworkPredict(Tr, Te, plot_flag, learningRate, activati
     % See for example nnpredict().
     % (This is a weird thing of this toolbox)
     nn.testing = 1;
-    nn = nnff(nn, Te.normX, zeros(size(Te.normX,1), nn.size(end)));
+    nn = nnff(nn, XTe, zeros(size(XTe,1), nn.size(end)));
     nn.testing = 0;
 
     % predict on the test set

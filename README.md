@@ -47,7 +47,7 @@ Project's TODO
 - [ ] Implement logistic Regression
 - [X] Experiment with the Neural Network's hyperparameters (number of layers, activation functions, dropout...)
 - [ ] Experiment with clustering
-- [ ] Experiment with Gaussian Processes (check provided toolbox)
+- [X] Experiment with Gaussian Processes (check provided toolbox)
 - [ ] Experiment with SVM (check provided toolbox)
 - [ ] Generate learning curves
 - [ ] Plot ROC Curves of different models for comparison
