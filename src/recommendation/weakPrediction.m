@@ -10,10 +10,6 @@ clearvars;
 % Cell array holding the errors made with various methods
 e = {};
 e.tr = {}; e.te = {};
-% Cell array holding the dimensions
-sz = {};
-sz.tr = {}; sz.te = {};
-% Cell array holding the indices
 
 % Load dataset
 load('./data/recommendation/songTrain.mat');
@@ -39,23 +35,18 @@ clearvars nDev;
 % TODO: cross-validate all the things!
 setSeed(1);
 % TODO: vary test / train proportions
-[~, Ytest, Gtest, Ytrain, Gtrain] = splitData(Y, Goriginal, 0, 0.1);
+[~, Ytest, ~, Ytrain, Gtrain] = splitData(Y, Goriginal, 0, 0.1);
 
-% Total size of train and test matrices
-[sz.tr.n, sz.tr.d] = size(Ytrain);
-[sz.te.n, sz.te.d] = size(Ytest);
-% Indices of available counts (expressed in the same coordinates space)
-[trUserIndices, trArtistIndices] = find(Ytrain);
-[teUserIndices, teArtistIndices] = find(Ytest);
-uniqueArtists = unique(trArtistIndices);
+[idx, sz] = getRelevantIndices(Ytrain, Ytest);
+[userDV, artistDV] = generateDerivedVariables(Ytrain);
 
 %% Baseline: constant predictor (overall mean of all observed counts)
 overallMean = mean(nonzeros(Ytrain));
 
 % Predict counts (only those for which we have reference data, to save memory)
 % TODO: should we predict *all* counts?
-trYhat0 = sparse(trUserIndices, trArtistIndices, overallMean, sz.tr.n, sz.tr.d);
-teYhat0 = sparse(teUserIndices, teArtistIndices, overallMean, sz.te.n, sz.te.d);
+trYhat0 = sparse(idx.tr.u, idx.tr.a, overallMean, sz.tr.u, sz.tr.a);
+teYhat0 = sparse(idx.te.u, idx.te.a, overallMean, sz.te.u, sz.te.a);
 
 % Compute train and test errors (prediction vs counts in test and training set)
 e.tr.constant = computeRmse(Ytrain, trYhat0);
@@ -69,28 +60,29 @@ clear overallMean trYhat0 teYhat0;
 %% Simple model: predict the average listening count of the artist
 
 % Compute corresponding mean value for each artist
-meanPerArtist = zeros(sz.tr.d, 1);
-for i = 1:length(uniqueArtists)
-    nCountsObserved = nnz(Ytrain(:, uniqueArtists(i)));
+meanPerArtist = zeros(sz.tr.a, 1);
+for j = 1:sz.tr.unique.a
+    artist = idx.tr.unique.a(j);
+    nCountsObserved = nnz(Ytrain(:, artist));
     if(nCountsObserved > 0)
-        meanPerArtist(i) = sum(Ytrain(:, uniqueArtists(i))) / nCountsObserved;
+        meanPerArtist(j) = sum(Ytrain(:, artist)) / nCountsObserved;
     else
-        meanPerArtist(i) = 0;
+        meanPerArtist(j) = 0;
     end;
 end
 
 % Predict counts (only those for which we have reference data, to save memory)
-trPrediction = zeros(length(trArtistIndices), 1);
-for k = 1:length(trPrediction)
-    trPrediction(k) = meanPerArtist(trArtistIndices(k));
+trPrediction = zeros(sz.tr.nnz, 1);
+for k = 1:sz.tr.nnz
+    trPrediction(k) = meanPerArtist(idx.tr.a(k));
 end;
-tePrediction = zeros(length(teArtistIndices), 1);
-for k = 1:length(tePrediction)
-    tePrediction(k) = meanPerArtist(teArtistIndices(k));
+tePrediction = zeros(sz.te.nnz, 1);
+for k = 1:sz.te.nnz
+    tePrediction(k) = meanPerArtist(idx.te.a(k));
 end;
 
-trYhatMean = sparse(trUserIndices, trArtistIndices, trPrediction, sz.tr.n, sz.tr.d);
-teYhatMean = sparse(teUserIndices, teArtistIndices, tePrediction, sz.te.n, sz.te.d);
+trYhatMean = sparse(idx.tr.u, idx.tr.a, trPrediction, sz.tr.u, sz.tr.a);
+teYhatMean = sparse(idx.te.u, idx.te.a, tePrediction, sz.te.u, sz.te.a);
 
 % Compute train and test errors (prediction vs counts in test and training set)
 e.tr.mean = computeRmse(Ytrain, trYhatMean);
