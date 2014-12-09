@@ -11,9 +11,9 @@ function [X] = generateFeatures(j, Y, G, userFeatures, artistFeatures)
 %   artistFeatures: (d x ..) precomputed features for each artist
 %
 % OUTPUT:
-%   X: (m x d) feature matrix,
+%   X: (m x d) feature matrix, including an intercept term
 %      - m = number of users who have listened to the given artist
-%      - d = number of extracted features (8 + 3 + ?)
+%      - d = number of extracted features (1+ 8 + 3 + ?)
 
     [uIdx, ~] = find(Y(:, j));
     m = length(uIdx);
@@ -21,12 +21,13 @@ function [X] = generateFeatures(j, Y, G, userFeatures, artistFeatures)
     dUser = size(userFeatures, 2);
     dArtist = size(artistFeatures, 2);
     dSocial = 0;
-    X = zeros(m, dUser + dArtist + dSocial);
-
+    X = zeros(m, 1 + dUser + dArtist + dSocial);
+    X(:, 1) = 1;
+    
     % Features corresponding to each user having listened to this artist
-    X(:, 1:dUser) = userFeatures(uIdx, :);
+    X(:, 2:(dUser+1)) = userFeatures(uIdx, :);
     % Features corresponding to the artist are repeated in data example
-    X(:, (dUser+1):(dUser+dArtist)) = ones(m, 1) * artistFeatures(j, :);
+    X(:, (dUser+2):(dUser+dArtist+1)) = ones(m, 1) * artistFeatures(j, :);
 
     % TODO: generate more features from the social graph
 end
