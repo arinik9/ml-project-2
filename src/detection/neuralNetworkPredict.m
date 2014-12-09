@@ -1,4 +1,4 @@
-function nnPred = neuralNetworkPredict(yTr, XTr, XTe, plot_flag, learningRate, activationFunction, dropoutFraction, weightPenaltyL2, numepochs, batchsize)
+function nnPred = neuralNetworkPredict(yTr, XTr, XTe, plot_flag, learningRate, activationFunction, dropoutFraction, weightPenaltyL2, nnArchitecture, numepochs, batchsize)
 % Binary classification using Neural Network provided by the deepLearning toolbox
 % This function takes train and test data and apply NN model with given
 % parameters in order to test different parameters tuning instead of boilerplate code.
@@ -14,6 +14,10 @@ function nnPred = neuralNetworkPredict(yTr, XTr, XTe, plot_flag, learningRate, a
 %   - dropoutFraction: Dropout level (http://www.cs.toronto.edu/~hinton/absps/dropout.pdf)
 %   - weightPenaltyL2: L2 regularization
 %   - plot_flag: if == 1 => plots trainin error as the NN is trained 
+%   - nnSetup: setup for Neural Network. The first layer needs to have
+%   number of features neurons, and the last layer the number of classes
+%   (here two). One can add as many layer as he wants by indicating the
+%   number of activation functions in that layer.
 %   - numepochs: Number of full sweeps through data
 %   - batchsize: Take a mean gradient step over this many samples
 
@@ -40,12 +44,17 @@ function nnPred = neuralNetworkPredict(yTr, XTr, XTe, plot_flag, learningRate, a
     if (nargin < 8)
         weightPenaltyL2 = 0;
     end
-
+    
     if (nargin < 9)
+       % setup NN with 2 layers for binary classification
+       nnArchitecture = [size(XTr,2) 10 2]; 
+    end
+
+    if (nargin < 10)
         numepochs = 50;
     end
     
-    if (nargin < 10)
+    if (nargin < 11)
         batchsize = 100;
     end
 
@@ -54,7 +63,7 @@ function nnPred = neuralNetworkPredict(yTr, XTr, XTe, plot_flag, learningRate, a
 
     % setup NN. The first layer needs to have number of features neurons,
     %  and the last layer the number of classes (here two).
-    nn = nnsetup([size(XTr,2) 10 2]);
+    nn = nnsetup(nnArchitecture);
     opts.numepochs =  numepochs;        %  Number of full sweeps through data
     opts.batchsize = batchsize;         %  Take a mean gradient step over this many samples
 
@@ -96,8 +105,6 @@ function nnPred = neuralNetworkPredict(yTr, XTr, XTe, plot_flag, learningRate, a
     % we want a single score, subtract the output sigmoids
     nnPred = nnPred(:,1) - nnPred(:,2);
     
-    % prediction scaled on 0 to 1 probabilities to use a [0:1] threshold
-    % TODO: check if correct to do so
     nnPred = (nnPred + 1) / 2;
     
 end

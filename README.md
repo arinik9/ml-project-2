@@ -40,11 +40,11 @@ Project's TODO
 
 ### Person detection dataset
 
-- [ ] Implement the relevant error measures
+- [X] Implement the relevant error measures
 - [ ] Compare precision/recall vs ROC
 - [ ] Implement Mutual Information and plot against classification threshold theta
-- [ ] Get a baseline error value
-- [ ] Implement logistic Regression
+- [X] Get a baseline error value
+- [X] Implement Logistic Regression
 - [X] Experiment with the Neural Network's hyperparameters (number of layers, activation functions, dropout...)
 - [ ] Experiment with clustering
 - [X] Experiment with Gaussian Processes (check provided toolbox)

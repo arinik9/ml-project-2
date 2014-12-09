@@ -22,9 +22,11 @@ fprintf('Splitting into train/test with proportion %.2f..\n', prop);
 % Normalize
 fprintf('Normalizing features..\n');
 [Tr.normX, mu, sigma] = zscore(Tr.X); % train, get mu and std
-% Te.normX = normalize(Te.X, mu, sigma);  % normalize test data
-onesX = ones(size(Te.X,1), 1);
-Te.normX = (Te.X - onesX * mu) ./ (onesX * sigma);
+Te.normX = normalize(Te.X, mu, sigma);  % normalize test data
+
+% if not using Piotr's toolbox (to replace normalize function)
+% onesX = ones(size(Te.X,1), 1);
+% Te.normX = (Te.X - onesX * mu) ./ (onesX * sigma); 
 
 
 fprintf('Done! You can start playing with the features!\n');
@@ -37,49 +39,30 @@ fprintf('Performing Principal Component Analysis..\n');
 %[train, test] = prinCompProjection(coeff, Tr.normX(1:500,:), Te.normX(1:200,:), 50);
 
 % Need to pass a DxN matrix with N # data example
-[U, mu, vars] = pca(Tr.normX');
+[PCA.coeff, PCA.mu, PCA.latent] = pca(Tr.normX');
 
-fprintf('Projecting train and test data into the lower space..\n');
-
-% Number of PC kept
-nPrinComp = 50;
-fprintf('We are projecting on the first %d principal components..\n', nPrinComp);
-
-[pcaXTrain, pcaXhatTrain, pcaAvsqTrain] = pcaApply(Tr.normX', U, mu, nPrinComp);
-Tr.pcaX = pcaXTrain'; Tr.pcaXhatTrain = pcaXhatTrain'; Tr.pcaAvsq = pcaAvsqTrain;
-[pcaXTest, pcaXhatTest, pcaAvsqTest] = pcaApply(Te.normX', U, mu, nPrinComp);
-Te.pcaX = pcaXTest'; Te.pcaXhatTrain = pcaXhatTest'; Te.pcaAvsq = pcaAvsqTest;
-
-% Normalize reduced input features
-[Tr.pcaX muPCA sigmaPCA] = zscore(Tr.pcaX);
-Te.pcaX = normalize(Te.pcaX, muPCA, sigmaPCA);
-
-clear pcaXTrain pcaXhatTrain pcaAvsqTrain pcaXTest pcaXhatTest pcaAvsqTest;
-
-% Plot on 1st and 2nd principal component
-% figure()
-% plot(score(:,1),score(:,2),'+')
-% xlabel('1st Principal Component')
-% ylabel('2nd Principal Component')
-
-% figure()
-% pareto(explained)
-% xlabel('Principal Component')
-% ylabel('Variance Explained (%)')
-
-fprintf('Done! You''re now in a lower dimension space !\n');
 
 %% Plot PCA Representation
-% TODO: make it work using Piotr's PCA
+fprintf('Plotting percentage of the total variance explained by each principal component..\n');
+% Might be useful to choose how many PC we are keeping.
+% On lower dimension dataset we usually keep PC so that we have a
+% cumulative percentage of 95% of the total variance but here it would be
+% too many PC.
+
+% Percentage of the total variance explained by each principal component
+PCA.explained = vars ./sum(PCA.latent);
+
+% Cumulative percentage of the total variance explained by each principal component
+PCA.explainedCum = (cumsum(PCA.latent)./sum(PCA.latent));
 
 % Are we plotting on every PC?
-n = size(explained,1)/2;
+nPlot = size(PCA.explained,1) / 4;
 
-e1 = explained(1:n);
-e2 = expl(1:n);
+e1 = PCA.explained(1:nPlot);
+e2 = 100 * PCA.explainedCum(1:nPlot);
 
 figure();
-[ax,hBar,hLine] = plotyy(1:n, e1, 1:n, e2, 'bar', 'plot');
+[ax,~,hLine] = plotyy(1:nPlot, e1, 1:nPlot, e2, 'bar', 'plot');
 title('PCA on Features')
 xlabel('Principal Component')
 ylabel(ax(1),'Variance Explained per PC')
@@ -88,36 +71,42 @@ hLine.LineWidth = 3;
 hLine.Color = [0,0.7,0.7];
 ylim(ax(2),[1 100]);
 
-%% Select the principal component scores: the representation of X in the principal component space
-% Old code: not needed anymore using Piotr's PCA
+clear e1 e2 nPlot ax hLine;
 
-fprintf('Selecting the PCA scores..\n');
+%% Apply PCA to train and test data
+% Project train and test data in the space formed by the PC we have decided
+% to keep. The features obtained are not normalized so we do normalize them 
+% at the end
 
-nPrinComp = 500;
-Tr.Xpca = score(:,1:nPrinComp);
-% Finding scores back (same result as selecting score column)
-% Tr.Xpca = Tr.normX * coeff(:,1:nPrinComp);
+fprintf('Projecting train and test data into the lower space..\n');
 
-% Compute scores of test data
-pc = coeff(:,1:nPrinComp);
-Te.Xpca = Te.normX * pc;
+% Number of PC kept (to choose)
+PCA.kPC = 50;
+fprintf('We are projecting on the first %d principal components..\n', PCA.kPC);
+
+[pcaXTrain, pcaXhatTrain, pcaAvsqTrain] = pcaApply(Tr.normX', PCA.coeff, PCA.mu, PCA.kPC);
+Tr.pcaX = pcaXTrain'; Tr.pcaXhatTrain = pcaXhatTrain'; Tr.pcaAvsq = pcaAvsqTrain;
+[pcaXTest, pcaXhatTest, pcaAvsqTest] = pcaApply(Te.normX', PCA.coeff, PCA.mu, PCA.kPC);
+Te.pcaX = pcaXTest'; Te.pcaXhatTrain = pcaXhatTest'; Te.pcaAvsq = pcaAvsqTest;
+
+% Normalize reduced input features
+[Tr.pcaX mu sigma] = zscore(Tr.pcaX);
+Te.pcaX = normalize(Te.pcaX, mu, sigma);
+
+clear pcaXTrain pcaXhatTrain pcaAvsqTrain pcaXTest pcaXhatTest pcaAvsqTest;
 
 fprintf('Done! We have now reduced train and test set !\n');
 
-%% Logistic regression: Not working
-% We will use 1-layer NN to run logreg
+%% Logistic Regression
+% Logistic Regression implementation using NN: A simple layer NN is a
+% logistic regression
 
-%[Tr.normX, mu, sigma] = zscore(Tr.X); % train, get mu and std
-Te.normX = normalize(Te.X, mu, sigma);  % normalize test data
+logRegPred = neuralNetworkPredict(Tr.y, Tr.normX, Te.normX, 0, 1, 'sigm', 0, 0, [size(Tr.normX,2) 2]);
 
-Tr.tXpca = [ones(size(Tr.Xpca,1),1), Tr.Xpca];
-%Te.tX = [ones(size(Te.normX,1),1), Te.normX];
+% We use values from the PCA
+logRegPred = neuralNetworkPredict(Tr.y, Tr.pcaX, Te.pcaX, 0, 1, 'sigm', 0, 0, [size(Tr.pcaX,2) 2]);
+logRegPredTrain = neuralNetworkPredict(Tr.y, Tr.pcaX, Tr.pcaX, 0, 1, 'sigm', 0, 0, [size(Tr.pcaX,2) 2]);
 
-alpha = 0.5;
-lambda = 100;
-
-beta = penLogisticRegressionAuto(Tr.y, Tr.pcaX);
-%yHatLR = 
 
 %% Prediction with different NN
 fprintf('Predictions using different Neural Networks..\n');
@@ -132,7 +121,7 @@ fprintf('Tuned NN prediction\n');
 
 % Tuned NN prediction with Dropout Fraction set to 0.5 (close to optimality
 % according to paper on dropout)
-nnPred3 = neuralNetworkPredict(Tr.y, Tr.normX, Te.normX, 0, 1, 'sigm', 0, 1e-4);
+nnPred3 = neuralNetworkPredict(Tr.y, Tr.normX, Tr.normX, 0, 1, 'sigm', 0, 1e-4);
 
 % Tunned NN predictions with Weight Decay on L2 (Tikhonov regularization)
 %nnPred3 = neuralNetworkPredict(Tr, Te, 0, 1, 'sigm', 0, 1e-4);
@@ -146,7 +135,7 @@ nnPred3 = neuralNetworkPredict(Tr.y, Tr.normX, Te.normX, 0, 1, 'sigm', 0, 1e-4);
 x = Tr.pcaNormX;
 y = Tr.y;
 t = Te.pcaNormX;
-n = size(t,1);
+nPlot = size(t,1);
 
 tic;
 gpPred = GPClassificationPrediction(y,x,t);
@@ -159,10 +148,11 @@ hist(yHatGP);
 
 %% Test GP
 % Methods names for legend
-methodNames = {'GP Classification','Random'};
+methodNames = {'Logistic Regression','Random'};
 
 % Prediction performances on different models
-avgTPRList = evaluateMultipleMethods( Te.y > 0, [nnPred3, randPred], true, methodNames );
+avgTPRList = evaluateMultipleMethods( Te.y > 0, [logRegPred, randPred], true, methodNames );
+avgTPRListTr = evaluateMultipleMethods( Tr.y > 0, [nnPred3, randPredTrain], true, methodNames );
 
 % TODO : Play with parameters
 
@@ -171,6 +161,7 @@ avgTPRList = evaluateMultipleMethods( Te.y > 0, [nnPred3, randPred], true, metho
 fprintf('Random prediction\n');
 % Random prediction
 randPred = rand(size(Te.y)); 
+randPredTrain = rand(size(Tr.y)); 
 
 %% Test on threshold choice
 % TODO: how to plot a single point on ROC Curve for corresponding
