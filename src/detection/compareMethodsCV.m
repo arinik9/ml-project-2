@@ -48,4 +48,5 @@ clear pcompX pcompXhat;
 
 learn = @(y, X) learnNeuralNetwork(y, X, 0, 1, 'sigm', 0, 0, [size(X,2) 2]);
 predict = @(model, X) predictNeuralNetwork(model, X);
-[trAvgTPR, teAvgTPR] = kFoldCrossValidation(y, pcaX, 5, learn, predict);
+[trAvgTPR, teAvgTPR, predTr, predTe] = kFoldCrossValidation(y, pcaX, 2, learn, predict);
+

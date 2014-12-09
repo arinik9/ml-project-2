@@ -1,4 +1,4 @@
-function [trAvgTPR, teAvgTPR] = kFoldCrossValidation(y, tX, K, learnModel, predict)
+function [trAvgTPR, teAvgTPR, predTr, predTe] = kFoldCrossValidation(y, tX, K, learnModel, predict)
 % Perform k-fold cross validation to obtain an estimate of the test error
 % K: number of folds
 % learnModel: function(y, tX) to obtain the model parameters
@@ -16,8 +16,12 @@ function [trAvgTPR, teAvgTPR] = kFoldCrossValidation(y, tX, K, learnModel, predi
     end;
     
     % For each fold, compute the train and test error with the learnt model
-    subTrError = zeros(K, 1);
-    subTeError = subTrError;
+    subTrAvgTPR = zeros(K, 1);
+    subTeAvgTPR = subTrAvgTPR;
+    predTr = zeros(Nk, K);
+    predTe = zeros(Nk, K);
+    trueTr = zeros(Nk, K);
+    trueTe = zeros(Nk, K);
     for k = 1:K
         % Get k'th subgroup in test, others in train
         idxTe = cvIndices(k, :);
@@ -28,20 +32,26 @@ function [trAvgTPR, teAvgTPR] = kFoldCrossValidation(y, tX, K, learnModel, predi
         yTr = y(idxTr);
         XTr = tX(idxTr, :);
 
+        % Store true labels for ROC Curve
+        trueTr(:,k) = yTr;
+        trueTe(:,k) = yTe;
+
         % Learn model parameters
         model = learnModel(yTr, XTr);
         
         % Make predictions on test and train
-        predTr = predict(model, XTr);
-        predTe = predict(model, XTe);
+        predTr(:,k) = predict(model, XTr);
+        predTe(:,k) = predict(model, XTe);
         
         % Compute training and test error for k'th train / test split
-        subTrAvgTPR(k) = fastROC(yTr > 0, predTr); 
-        subTeAvgTPR(k) = fastROC(yTe > 0, predTe); 
+        subTrAvgTPR(k) = fastROC(yTr > 0, predTr(:,k),0); 
+        subTeAvgTPR(k) = fastROC(yTe > 0, predTe(:,k),0); 
         fprintf('avgTPR on train : %d | avgTPR on test : %d \n', subTrAvgTPR(k), subTeAvgTPR(k));
-        
-        
+       
     end;
+    
+    [avgTPRtr, auctr, fprAvgtr, tprAvgtr] = kCVfastROC(trueTr, predTr, 1);
+    %[avgTPRte, aucte, fprAvgte, tprAvgte] = kCVfastROC(trueTe, predTe, 1);
 
     % Estimate test and train errors are the average over k folds
     trAvgTPR = mean(subTrAvgTPR);
