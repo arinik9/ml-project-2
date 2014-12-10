@@ -23,11 +23,11 @@ Project's TODO
 
 - [ ] Generic k-fold Cross Validation
 - [ ] Support Vector Machine
-- [ ] Gaussian process and several kernels
+- [X] Gaussian process and several kernels
 - [ ] K-means clustering
 - [ ] Gaussian Mixture Model and EM algo
 - [x] Principal Components Analysis (as a low-rank approximation) using alternating least squares
-- [ ] Neural Networks (implementation from the [DeepLearn toolbox](https://github.com/rasmusbergpalm/DeepLearnToolbox/archive/))
+- [X] Neural Networks (implementation from the [DeepLearn toolbox](https://github.com/rasmusbergpalm/DeepLearnToolbox/archive/))
 - [ ] Generic learning curve plotting function
 - [ ] Generic ML method comparison function (for each method, plot achieved test error & stability with a boxplot)
 
@@ -100,3 +100,4 @@ Tools
 
 - [Piotr's toolbox](http://vision.ucsd.edu/~pdollar/toolbox/doc/)
 - [DeepLearn toolbox](https://github.com/rasmusbergpalm/DeepLearnToolbox/archive/)
+- [Gaussian Processes for Machine Learning](http://www.gaussianprocess.org/gpml/code/matlab/doc/)
