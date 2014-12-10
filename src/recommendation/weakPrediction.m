@@ -112,51 +112,25 @@ clearvars nFeatures lambda displayLearningCurve U M;
 
 %% "Each Artist" predictions
 % Train a model for each item using derived variables
-
-[userDV, artistDV] = generateDerivedVariables(Ytrain);
-
-% TODO: refactor
-
-% Head / tail split
-headThreshold = 100;
-
-% Error made for each artist
-leastSquaresErrors = zeros(1, length(uniqueArtists));
-
-trValues = zeros(length(trArtistIndices), 1);
-teValues = zeros(length(teArtistIndices), 1);
-for j = 1:length(uniqueArtists)
-    artist = uniqueArtists(j);
+betas = learnEachArtist(Ytrain, Gtrain, userDV, artistDV);
+%%
+% Generage predictions
+trPrediction = zeros(sz.tr.nnz, 1);
+tePrediction = zeros(sz.te.nnz, 1);
+for j = 1:sz.tr.unique.a
+    artist = idx.tr.unique.a(j);
     
-    yTrain = nonzeros(Ytrain(:, artist));
-    yTest = nonzeros(Ytest(:, artist));
-    
-    if(nnz(Ytrain(:, artist)) > headThreshold)
-        % Train a linear model for artist j
-        Xtrain = generateFeatures(artist, Ytrain, Gtrain, userDV, artistDV);
-        tXtrain = [Xtrain ones(size(Xtrain, 1), 1)];
-        Xtest = generateFeatures(artist, Ytest, Gtrain, userDV, artistDV);
-        tXtest = [Xtest ones(size(Xtest, 1), 1)];
-        
-        % Simple least squares
-        beta = (tXtrain' * tXtrain) \ (tXtrain' * yTrain);
-        trVal = tXtrain * beta;
-        teVal = tXtest * beta;
-    else
-        trVal = 0;
-        teVal = 0;
-    end;
-    
-    trValues(trArtistIndices == artist) = trVal;
-    teValues(teArtistIndices == artist) = teVal;
-    
-    leastSquaresErrors(j) = computeRmse(yTest, teVal);
+    tXtrain = generateFeatures(artist, Ytrain, Gtrain, userDV, artistDV);
+    tXtest = generateFeatures(artist, Ytest, Gtrain, userDV, artistDV);
+   
+    % Since Xtrain has exactly as many lines as users listened to this
+    % artist, this will automatically produce only the predictions we need
+    trPrediction(idx.tr.a == artist) = tXtrain * betas(:, artist);
+    tePrediction(idx.te.a == artist) = tXtest * betas(:, artist);
 end;
 
-hist(nonzeros(leastSquaresErrors));
-
-trYhatLS = sparse(trUserIndices, trArtistIndices, trValues, sz.tr.n, sz.tr.d);
-teYhatLS = sparse(teUserIndices, teArtistIndices, teValues, sz.te.n, sz.te.d);
+trYhatLS = sparse(idx.tr.u, idx.tr.a, trPrediction, sz.tr.u, sz.tr.a);
+teYhatLS = sparse(idx.te.u, idx.te.a, tePrediction, sz.te.u, sz.te.a);
 
 e.tr.leastSquares = computeRmse(Ytrain, trYhatLS);
 e.te.leastSquares = computeRmse(Ytest, teYhatLS);
@@ -164,8 +138,8 @@ e.te.leastSquares = computeRmse(Ytest, teYhatLS);
 fprintf('RMSE with Least-Squares on head only : %f | %f\n', e.tr.leastSquares, e.te.leastSquares);
 
 % Cleanup
-clearvars j artist beta Xtrain tXtrain Xtest tXtest trValues trVal teVal;
-clearvars yTrain yTest teValues trYhatLS teYhatLS;
+clearvars j artist beta Xtrain tXtrain Xtest tXtest trPrediction tePrediction trVal teVal;
+clearvars yTrain yTest trYhatLS teYhatLS;
 
 %% Other predictions
 % TODO
