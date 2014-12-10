@@ -64,7 +64,8 @@ Recall we must achieve both **weak** (new ratings for existing users) and **stro
 - [x] Train / test split (particular for weak and strong prediction)
 - [x] Feature engineering: implement derived variables
 - [x] Get a baseline error value
-- [ ] Implement the simple [Slope One](http://arxiv.org/pdf/cs/0702144v2.pdf) predictor
+- [ ] Implement the simple [Slope One](http://arxiv.org/pdf/cs/0702144v2.pdf) method
+- [ ] Cluster the tail items (head / tail cutoff point to be chosen carefully)
 - [ ] Experiment with SVM
 - [ ] Experiment with Gaussian processes
 - [ ] Experiment with clustering

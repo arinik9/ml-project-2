@@ -1,4 +1,4 @@
-function [Ytest_strong, Ytest_weak, Gtest, Ytrain, Gtrain] = ...
+function [Ytest_strong, Ytest_weak, Gstrong, Ytrain, Gtrain] = ...
     splitData(Y, G, testRatioStrong, testRatioWeak)
 % SPLITDATA Generate a random test/train split for both weak and strong prediction
 % INPUT:
@@ -35,7 +35,7 @@ function [Ytest_strong, Ytest_weak, Gtest, Ytrain, Gtrain] = ...
     Ytrain = Y(idxTr,:);
     Ytest_strong = Y(idxTe,:);
     Gtrain = G(idxTr, idxTr);
-    Gtest = G(idxTe, [idxTr idxTe]);
+    Gstrong = G(idxTe, [idxTr idxTe]);
 
     % ----- Test data for weak generalization
     % Keep testRatioWeak percent of entries per remaining user as test data
