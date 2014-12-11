@@ -43,6 +43,8 @@ function [tprAtWPAvg,aucAvg,fprAvg,tprAvg] = kCVfastROC(allLabels, allScores, pl
             {plot_title, ...
             sprintf('Average ROC Curve with %d cross validation (95%% interval)', size(allLabels,2))}...
             );
+        legendName = sprintf('avgTPR = %.3f', mean(tprAtWPAvg));
+        legend( legendName, 'Location', 'NorthWest' );
     end
 
 end
