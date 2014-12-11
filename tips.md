@@ -48,6 +48,10 @@ Generate a test set from training data by:
 
 Applicable techniques: kNN, PCA, mixture models. But we need to adapt those techniques to interpret the 0 values correctly.
 
+It's mostly about the *collaborative* nature of the data. Weak prediction for a given user should leverage the users which are similar, and artists who are similar to the one he's listening to.
+
+If you have a nice Gaussian distribution, it's not necessary to normalize it. You can precompute the global mean, and use it only to shift the data back and forth. Making it only at time of computation will reduce headaches with nonzero indices with sparse matrix.
+
 **References**:
 
 - Netflix challenge
