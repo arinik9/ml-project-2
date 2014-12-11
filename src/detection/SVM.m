@@ -1,35 +1,14 @@
-clearvars;
+%getStartedDetection;
 
-addpath(genpath('../../data'));
-addpath(genpath('../../toolbox/Piotr'));
-addpath(genpath('../../toolbox/DeepLearnToolbox'));
-addpath(genpath('../../toolbox/libsvm'));
+% Split data into train and test set given a proportion
+prop = 2/3;
+fprintf('Splitting into train/test with proportion %.2f..\n', prop);
+[Tr.pcaX, Tr.y, Te.pcaX, Te.y] = splitDataDetection(y, pcaX, prop);
 
+fprintf('Splitting into train/test with proportion %.2f..\n', prop);
+[Tr.pcaExpX, Tr.expy, Te.pcaExpX, Te.expy] = splitDataDetection(y, pcaExpX, prop);
 
-
-load train_feats;
-
-%% -- Generate feature vectors (so each one is a row of X)
-fprintf('Generating feature vectors..\n');
-D = numel(feats{1});  % feature dimensionality
-X = zeros([length(feats) D]);
-
-for i=1:length(feats)
-    X(i,:) = feats{i}(:);  % convert to a vector of D dimensions
-end
-
-
-
-%% Randomly split data into train/test sets according to a fixed proportion, set aside the test data
-fprintf('Splitting into train/test..\n');
-[Tr.X, Tr.y, Te.X, Te.y] = splitDataDetection(labels, X, 0.7);
-	
-
-
-% normalize data
-[Tr.normX, mu, sigma] = zscore(Tr.X); % train, get mu and std
-Te.normX = normalize(Te.X, mu, sigma);  % normalize test data
-
+%% SVM Model
 %  no need to scale features since all the features are in the range [0, 0.2]
 
 
@@ -73,15 +52,55 @@ Te.normX = normalize(Te.X, mu, sigma);  % normalize test data
 	% svmtrain(Tr.y, Tr.X, '-t 0 -v 5'); % linear kernel, 5-fold cross validation
 
 
+%%
 
-% create a model with the tuned parameters
-model = svmtrain(Tr.y, Tr.normX, '-t 0 -b 1 -e 0.01'); % linear kernel, with probabilities, etc
+plot_flag = 1;
+%{
+learn = @(y, X) trainSVM(y, X, '-t 0 -b 1 -e 0.01');
+predict = @(model, X) predictSVM(model, X);
+computePerformance = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 1);
+[svm1.trAvgTPR, svm1.teAvgTPR, svm1.predTr, svm1.predTe] = kFoldCrossValidation(y, pcaX, 3, learn, predict, computePerformance, 'SVM Linear kernel');
 
-% predict on test data
-[predict_label, accuracy, prob_estimates] = svmpredict(Te.y, Te.normX, model, '-b 1');
 
-% get scores for ROC
-svmPred  = prob_estimates(:, 1);
+learn = @(y, X) trainSVM(y, X, '-t 1 -b 1 -e 0.01');
+predict = @(model, X) predictSVM(model, X);
+computePerformance = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 1);
+[svm2.trAvgTPR, svm2.teAvgTPR, svm2.predTr, svm2.predTe] = kFoldCrossValidation(y, pcaX, 3, learn, predict, computePerformance, 'SVM Polynomial kernel');
+
+learn = @(y, X) trainSVM(y, X, '-t 2 -b 1 -e 0.01');
+predict = @(model, X) predictSVM(model, X);
+computePerformance = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 1);
+[svm3.trAvgTPR, svm3.teAvgTPR, svm3.predTr, svm3.predTe] = kFoldCrossValidation(y, pcaX, 3, learn, predict, computePerformance, 'SVM RBF kernel');
+%}
+
+
+learn = @(y, X) trainSVM(y, X, '-t 2 -b 1 -e 0.01');
+predict = @(model, X) predictSVM(model, X);
+computePerformance = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 1);
+[svm4.trAvgTPR, svm4.teAvgTPR, svm4.predTr, svm4.predTe] = kFoldCrossValidation(y, pcaExpX, 3, learn, predict, computePerformance, 'SVM RBF kernel + Exp');
+
+%{
+
+fprintf('train SVM1...\n')
+svm1 = trainSVM(Tr.y, Tr.pcaX, '-t 0 -b 1 -e 0.01'); % C-SVC linear kernel, with probabilities, etc
+fprintf('predict SVM1...\n')
+svmPred1 = predictSVM(svm1, Te.pcaX, Te.y);
+
+fprintf('train SVM2...\n')
+svm2 = trainSVM(Tr.y, Tr.pcaX, '-t 1 -b 1 -e 0.01'); % C-SVC quadratic kernel, with probabilities, etc
+fprintf('predict SVM2...\n')
+svmPred2 = predictSVM(svm2, Te.pcaX, Te.y);
+
+fprintf('train SVM3...\n')
+svm3 = trainSVM(Tr.y, Tr.pcaX, '-t 2 -b 1 -e 0.01'); % C-SVC RFB kernel, with probabilities, etc
+fprintf('predict SVM3...\n')
+svmPred3 = predictSVM(svm3, Te.pcaX, Te.y);
+
+fprintf('train SVMExp...\n')
+svmExp = trainSVM(Tr.expy, Tr.pcaExpX, '-t 2 -b 1 -e 0.01'); % C-SVC RFB kernel exp tranfo, with probabilities, etc
+fprintf('predict SVMExp...\n')
+svmPredExp = predictSVM(svmExp, Te.pcaExpX, Te.expy);
+%}
 
 %% See prediction performance
 fprintf('Plotting performance..\n');
@@ -89,8 +108,8 @@ fprintf('Plotting performance..\n');
 randPred = rand(size(Te.y));
 
 % and plot all together, and get the performance of each
-methodNames = {'SVM', 'Random'}; % this is to show it in the legend
-avgTPRList = evaluateMultipleMethods( Te.y > 0, [svmPred,  randPred], true, methodNames ); % (true_labels, predictions, showPlot, legendNames) 
+methodNames = {'Linear Kernel', 'Polynomial Kernel', 'RBF Kernel', 'RBF + exp', 'Random'}; % this is to show it in the legend
+avgTPRList = evaluateMultipleMethods( Te.y > 0, [svm1.predTe, svm2.predTe, svm3.predTe, svm4.predTe, randPred], true, methodNames ); % (true_labels, predictions, showPlot, legendNames) 
                                             
 
 % now you can see that the performance of each method
