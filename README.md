@@ -53,7 +53,6 @@ Project's TODO
 - [X] Implement kCV fastROC
 - [X] Generate learning curves (code to replicate for different methods)
 - [ ] Plot ROC Curves of different models for comparison
-- [ ] Experiment with the threshold once a model decided
 - [ ] Maximize the train and test avgTPR
 - [ ] Check the stability of the results with k-CV
 

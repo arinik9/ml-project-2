@@ -157,18 +157,25 @@ avgTPRList = evaluateMultipleMethods( Te.y > 0, [logRegPred, randPred], true, me
 % threshold?
 % non log scale ROC curve is better to visualize threshold
 
-yHatRandom = outputLabelsFromPrediction(randPred, 0.5);
-yHatRandom2 = outputLabelsFromPrediction(randPred, 0.95);
-[avgTPRR, auc] = fastROC(Te.y > 0, yHatRandom)
-[avgTPRR2, auc2] = fastROC(Te.y > 0, yHatRandom2)
-
+yHatRandom = outputLabelsFromPrediction(randPred, 0.4);
+yHatRandom2 = outputLabelsFromPrediction(randPred, 0.5);
+yHatRandom3 = outputLabelsFromPrediction(randPred, 0.6);
+yHatRandom4 = outputLabelsFromPrediction(randPred, 0.7);
+yHatRandom5 = outputLabelsFromPrediction(randPred, 0.8);
+yHatRandom6 = outputLabelsFromPrediction(randPred, 0.9);
+yHatRandom7 = outputLabelsFromPrediction(randPred, 0.95);
+%[tprAtWG,auc,fpr,tpr] = fastROC(Te.y > 0, randPred);
+%[avgTPRR, auc] = fastROC(Te.y > 0, yHatRandom, 1)
+%[avgTPRR2, auc2] = fastROC(Te.y > 0, yHatRandom2, 1)
+%{
 yHatnnPred2 = outputLabelsFromPrediction(nnPred2, 0.3);
 [avgTPRnn, aucNN] = fastROC(Te.y > 0, yHatnnPred2)
 yHatnnPred2bis = outputLabelsFromPrediction(nnPred2, 0.99);
 [avgTPRnn, aucNN] = fastROC(Te.y > 0, yHatnnPred2bis)
-
+%}
+%%
 % Methods names for legend
-methodNames = {'0.5 threshold','0.95 threshold', 'NN 0.5 t', 'NN 0.56 t', 'NN proba'};
+methodNames = {'0.4','0.5', '0.6', '0.7', '0.8', '0.9', '0.95'};
 
 % Prediction performances on different models
-avgTPRList = evaluateMultipleMethods( trueLabels, [yHatRandom, yHatRandom2, yHatnnPred2, yHatnnPred2bis, nnPred2], true, methodNames );
+avgTPRList = evaluateMultipleMethods( Te.y > 0, [yHatRandom, yHatRandom2, yHatRandom3, yHatRandom4, yHatRandom5, yHatRandom6, yHatRandom7], true, methodNames );
