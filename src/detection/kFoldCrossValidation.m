@@ -1,4 +1,4 @@
-function [trAvgTPR, teAvgTPR, predTr, predTe, trueTr, trueTe] = kFoldCrossValidation(y, X, K, learnModel, predict, plot_flag, model_name)
+function [trAvgTPR, teAvgTPR, predTr, predTe, trueTr, trueTe] = kFoldCrossValidation(y, X, K, learnModel, predict, computePerformance, model_name)
 % Perform k-fold cross validation to obtain an estimate of the train and
 % test performances. It also returns matrices of all predictions of test
 % and train splits as well as corresponding true labels to be used to plot
@@ -19,10 +19,6 @@ function [trAvgTPR, teAvgTPR, predTr, predTe, trueTr, trueTe] = kFoldCrossValida
 %   performance estimate)
 
 % TODO: kCVfastROC outside so that kCV is plot_flag, model_name etc free?
-
-    if (~exist('plot_flag','var') && plot_flag ~= 0 && plot_flat ~= 1 )
-        plot_flag = 0;
-    end
 
     if ~exist('model_name','var')
         model_name = 'Model applied';
@@ -74,8 +70,8 @@ function [trAvgTPR, teAvgTPR, predTr, predTe, trueTr, trueTe] = kFoldCrossValida
     % Compute training and test error for every k'th train / test split.
     % Returns a vector of average TPR computed for each k train / test
     % split
-    avgTPRtrain = kCVfastROC(trueTr, predTr, plot_flag, strcat(model_name, ' on train data'));
-    avgTPRtest = kCVfastROC(trueTe, predTe, plot_flag, strcat(model_name, ' on test data'));
+    avgTPRtrain = computePerformance(trueTr, predTr, strcat(model_name, ' on train data'));
+    avgTPRtest = computePerformance(trueTe, predTe, strcat(model_name, ' on test data'));
 
     % Estimate test and train performances are the average over k folds
     trAvgTPR = mean(avgTPRtrain);

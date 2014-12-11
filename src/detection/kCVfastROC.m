@@ -1,9 +1,9 @@
-function [tprAtWPAvg,aucAvg,fprAvg,tprAvg] = kCVfastROC(allLabels, allScores, plot_flag, plot_title, plotStyle)
+function [tprAtWPAvg,aucAvg,fprAvg,tprAvg] = kCVfastROC(allLabels, allScores, plot_title, plot_flag, plotStyle)
 
-    if ~exist('plot_flag','var')
+    if (~exist('plot_flag','var') && plot_flag ~= 0 && plot_flat ~= 1 )
         plot_flag = 0;
     end
-
+    
     if ~exist('plotStyle','var')
         plotStyle = 'b';
     end

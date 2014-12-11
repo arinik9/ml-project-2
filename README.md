@@ -21,8 +21,8 @@ Project's TODO
 
 ### ML methods
 
-- [ ] Generic k-fold Cross Validation
-- [ ] Support Vector Machine
+- [X] Generic k-fold Cross Validation
+- [X] Support Vector Machine
 - [X] Gaussian process and several kernels
 - [ ] K-means clustering
 - [ ] Gaussian Mixture Model and EM algo
@@ -44,15 +44,17 @@ Project's TODO
 - [ ] Compare precision/recall vs ROC
 - [ ] Implement Mutual Information and plot against classification threshold theta
 - [X] Get a baseline error value
+- [X] Implement PCA
 - [X] Implement Logistic Regression
 - [X] Experiment with the Neural Network's hyperparameters (number of layers, activation functions, dropout...)
-- [ ] Experiment with clustering
 - [X] Experiment with Gaussian Processes (check provided toolbox)
 - [ ] Experiment with SVM (check provided toolbox)
-- [ ] Generate learning curves
+- [ ] Experiment with Random Forest
+- [X] Implement kCV fastROC
+- [X] Generate learning curves (code to replicate for different methods)
 - [ ] Plot ROC Curves of different models for comparison
 - [ ] Experiment with the threshold once a model decided
-- [ ] Minimize the train and test error
+- [ ] Maximize the train and test avgTPR
 - [ ] Check the stability of the results with k-CV
 
 ### Song recommendation dataset

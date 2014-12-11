@@ -27,9 +27,9 @@ fprintf('Performing Principal Component Analysis..\n');
 [PCA.coeff, PCA.mu, PCA.latent] = pca(X');
 
 % Percentage of the total variance explained by each principal component
-PCA.explained = PCA.latent ./sum(PCA.latent);
+%PCA.explained = PCA.latent ./sum(PCA.latent);
 % Cumulative percentage of the total variance explained by each principal component
-PCA.explainedCum = (cumsum(PCA.latent)./sum(PCA.latent));
+%PCA.explainedCum = (cumsum(PCA.latent)./sum(PCA.latent));
 
 % Number of PC kept (to choose)
 PCA.kPC = 50;
@@ -48,9 +48,11 @@ clear pcompX pcompXhat;
 
 %% kCV
 
+plot_flag = 1;
 learn = @(y, X) learnNeuralNetwork(y, X, 0, 1, 'sigm', 0, 0, [size(X,2) 2]);
 predict = @(model, X) predictNeuralNetwork(model, X);
-[trAvgTPR, teAvgTPR, predTr, predTe] = kFoldCrossValidation(y, pcaX, 3, learn, predict, 0, 'Logistic Regression');
+computePerformance = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 1);
+[trAvgTPR, teAvgTPR, predTr, predTe] = kFoldCrossValidation(y, pcaX, 3, learn, predict, computePerformance, 'Logistic Regression');
 
 %TODO: kCV on other models
 %% Learn parameters using kCV

@@ -34,44 +34,17 @@ fprintf('Done! You can start playing with the features!\n');
 %% Principal Component Analysis
 fprintf('Performing Principal Component Analysis..\n');
 
-% Matlab PCA but it is too slow with so many features
-%[coeff, mu, eigenvalues] = pca(Tr.normX);
-%[train, test] = prinCompProjection(coeff, Tr.normX(1:500,:), Te.normX(1:200,:), 50);
-
-% Need to pass a DxN matrix with N # data example
-[PCA.coeff, PCA.mu, PCA.latent] = pca(Tr.normX');
+[PCA.coeff, PCA.mu, PCA.latent] = pcaCompute(Tr.normX);
 
 
 %% Plot PCA Representation
-fprintf('Plotting percentage of the total variance explained by each principal component..\n');
+fprintf('Computing percentage of the total variance explained by each principal component..\n');
 % Might be useful to choose how many PC we are keeping.
 % On lower dimension dataset we usually keep PC so that we have a
 % cumulative percentage of 95% of the total variance but here it would be
 % too many PC.
 
-% Percentage of the total variance explained by each principal component
-PCA.explained = PCA.latent ./sum(PCA.latent);
-
-% Cumulative percentage of the total variance explained by each principal component
-PCA.explainedCum = (cumsum(PCA.latent)./sum(PCA.latent));
-
-% Are we plotting on every PC?
-nPlot = size(PCA.explained,1) / 4;
-
-e1 = PCA.explained(1:nPlot);
-e2 = 100 * PCA.explainedCum(1:nPlot);
-
-figure();
-[ax,~,hLine] = plotyy(1:nPlot, e1, 1:nPlot, e2, 'bar', 'plot');
-title('PCA on Features')
-xlabel('Principal Component')
-ylabel(ax(1),'Variance Explained per PC')
-ylabel(ax(2),'Total Variance Explained (%)')
-hLine.LineWidth = 3;
-hLine.Color = [0,0.7,0.7];
-ylim(ax(2),[1 100]);
-
-clear e1 e2 nPlot ax hLine;
+[PCA.explained, PCA.cumExplained] = pcaExplainedVariance(PCA.latent, 0);
 
 %% Apply PCA to train and test data
 % Project train and test data in the space formed by the PC we have decided
@@ -82,18 +55,19 @@ fprintf('Projecting train and test data into the lower space..\n');
 
 % Number of PC kept (to choose)
 PCA.kPC = 50;
-fprintf('We are projecting on the first %d principal components..\n', PCA.kPC);
 
-[pcaXTrain, pcaXhatTrain, pcaAvsqTrain] = pcaApply(Tr.normX', PCA.coeff, PCA.mu, PCA.kPC);
-Tr.pcaX = pcaXTrain'; Tr.pcaXhatTrain = pcaXhatTrain'; Tr.pcaAvsq = pcaAvsqTrain;
-[pcaXTest, pcaXhatTest, pcaAvsqTest] = pcaApply(Te.normX', PCA.coeff, PCA.mu, PCA.kPC);
-Te.pcaX = pcaXTest'; Te.pcaXhatTrain = pcaXhatTest'; Te.pcaAvsq = pcaAvsqTest;
+if exist('PCA.cumExplained','var')
+   fprintf('We are projecting on the first %d principal components (%.2f%% explained variance)..\n', PCA.kPC, PCA.cumExplained(PCA.kPC)*100);
+else 
+   fprintf('We are projecting on the first %d principal components..\n', PCA.kPC);
+end
+
+[Tr.pcaX, Tr.pcaXhat, Tr.pcaAvsq] = pcaApplyOnData(Tr.normX, PCA.coeff, PCA.mu, PCA.kPC);
+[Te.pcaX, Te.pcaXhat, Te.pcaAvsq] = pcaApplyOnData(Te.normX, PCA.coeff, PCA.mu, PCA.kPC);
 
 % Normalize reduced input features
-[Tr.pcaX mu sigma] = zscore(Tr.pcaX);
+[Tr.pcaX, mu, sigma] = zscore(Tr.pcaX);
 Te.pcaX = normalize(Te.pcaX, mu, sigma);
-
-clear pcaXTrain pcaXhatTrain pcaAvsqTrain pcaXTest pcaXhatTest pcaAvsqTest;
 
 fprintf('Done! We have now reduced train and test set !\n');
 
@@ -107,7 +81,6 @@ fprintf('Training random forest with %d trees...\n', nTrees);
 % Train random forest
 B = TreeBagger(nTrees, Tr.X, Tr.y); % default implementation is for classification
 
-
 fprintf('Predicting on the test set...\n', nTrees);
 % Make predictions using the trained random forest
 [labels, scores] = B.predict(Te.X);
@@ -118,13 +91,10 @@ rfPred = scores(:,1) - scores(:,2);
 
 
 %% Logistic Regression
-% Logistic Regression implementation using NN: A simple layer NN is a
-% logistic regression
-
-%logRegPred = neuralNetworkPredict(Tr.y, Tr.normX, Te.normX, 0, 1, 'sigm', 0, 0, [size(Tr.normX,2) 2]);
-
+% Logistic Regression implementation using NN: A simple layer NN is a logistic regression
 % We use values from the PCA
-logRegPred = neuralNetworkPredict(Tr.y, Tr.normX, Te.normX, 0, 1, 'sigm', 0, 0, [size(Tr.normX,2) 2]);
+
+logRegPred = neuralNetworkPredict(Tr.y, Tr.pcaX, Te.pcaX, 0, 1, 'sigm', 0, 0, [size(Tr.pcaX,2) 2]);
 %logRegPredTrain = neuralNetworkPredict(Tr.y, Tr.pcaX, Tr.pcaX, 0, 1, 'sigm', 0, 0, [size(Tr.pcaX,2) 2]);
 
 
@@ -151,10 +121,6 @@ nnPred = predictNeuralNetwork(nn, Te.normX);
 
 %% GP large scale Classification
 
-% Note: if the dimensionality is too big (very fat x matrix) we only get
-% negative labels... -> PCA
-% [Tr.pcaNormX muPCA sigmaPCA] = zscore(Tr.pcaX);
-% Te.pcaNormX = normalize(Te.pcaX, muPCA, sigmaPCA);
 x = Tr.pcaNormX;
 y = Tr.y;
 t = Te.pcaNormX;
@@ -171,22 +137,20 @@ yHatGP = outputLabelsFromPrediction(gpPred, 0.5);
 % We do recover our large rate of negative VS positive images
 hist(yHatGP);
 
-%% Test GP
-% Methods names for legend
-methodNames = {'Random Forest','Random'};
-
-% Prediction performances on different models
-avgTPRList = evaluateMultipleMethods( Te.y > 0, [scores(:,2), randPred], true, methodNames );
-%avgTPRListTr = evaluateMultipleMethods( Tr.y > 0, [nnPred3, randPredTrain], true, methodNames );
-
-% TODO : Play with parameters
-
 %% Random Predictions
 
 fprintf('Random prediction\n');
 % Random prediction
 randPred = rand(size(Te.y)); 
 randPredTrain = rand(size(Tr.y)); 
+
+%% Test One Model
+% Methods names for legend
+methodNames = {'Model','Random'};
+
+% Prediction performances on different models
+avgTPRList = evaluateMultipleMethods( Te.y > 0, [logRegPred, randPred], true, methodNames );
+%avgTPRListTr = evaluateMultipleMethods( Tr.y > 0, [nnPred3, randPredTrain], true, methodNames );
 
 %% Test on threshold choice
 % TODO: how to plot a single point on ROC Curve for corresponding
@@ -208,18 +172,3 @@ methodNames = {'0.5 threshold','0.95 threshold', 'NN 0.5 t', 'NN 0.56 t', 'NN pr
 
 % Prediction performances on different models
 avgTPRList = evaluateMultipleMethods( trueLabels, [yHatRandom, yHatRandom2, yHatnnPred2, yHatnnPred2bis, nnPred2], true, methodNames );
-
-
-%% See prediction performance
-fprintf('Plotting performance..\n');
-
-% labels used to evaluate multiple methods
-trueLabels = Te.y > 0;
-
-% Methods names for legend
-methodNames = {'Log Reg','Pen Log Reg','Random'};
-
-% Prediction performances on different models
-avgTPRList = evaluateMultipleMethods( trueLabels, [nnPred2, nnPred3, randPred], true, methodNames );
-
-avgTPRList
