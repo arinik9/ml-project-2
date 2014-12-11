@@ -97,15 +97,35 @@ clear pcaXTrain pcaXhatTrain pcaAvsqTrain pcaXTest pcaXhatTest pcaAvsqTest;
 
 fprintf('Done! We have now reduced train and test set !\n');
 
+%% Random forest
+fprintf('Using random forest...\n');
+
+% Number of trees in the forest
+nTrees = 50;
+
+fprintf('Training random forest with %d trees...\n', nTrees);
+% Train random forest
+B = TreeBagger(nTrees, Tr.X, Tr.y); % default implementation is for classification
+
+
+fprintf('Predicting on the test set...\n', nTrees);
+% Make predictions using the trained random forest
+[labels, scores] = B.predict(Te.X);
+
+% Predictions is a char though. We want it to be a number.
+rfPred = scores(:,1) - scores(:,2);
+
+
+
 %% Logistic Regression
 % Logistic Regression implementation using NN: A simple layer NN is a
 % logistic regression
 
-logRegPred = neuralNetworkPredict(Tr.y, Tr.normX, Te.normX, 0, 1, 'sigm', 0, 0, [size(Tr.normX,2) 2]);
+%logRegPred = neuralNetworkPredict(Tr.y, Tr.normX, Te.normX, 0, 1, 'sigm', 0, 0, [size(Tr.normX,2) 2]);
 
 % We use values from the PCA
-logRegPred = neuralNetworkPredict(Tr.y, Tr.pcaX, Te.pcaX, 0, 1, 'sigm', 0, 0, [size(Tr.pcaX,2) 2]);
-logRegPredTrain = neuralNetworkPredict(Tr.y, Tr.pcaX, Tr.pcaX, 0, 1, 'sigm', 0, 0, [size(Tr.pcaX,2) 2]);
+logRegPred = neuralNetworkPredict(Tr.y, Tr.normX, Te.normX, 0, 1, 'sigm', 0, 0, [size(Tr.normX,2) 2]);
+%logRegPredTrain = neuralNetworkPredict(Tr.y, Tr.pcaX, Tr.pcaX, 0, 1, 'sigm', 0, 0, [size(Tr.pcaX,2) 2]);
 
 
 %% Prediction with different NN
@@ -153,10 +173,10 @@ hist(yHatGP);
 
 %% Test GP
 % Methods names for legend
-methodNames = {'Logistic Regression','Random'};
+methodNames = {'Random Forest','Random'};
 
 % Prediction performances on different models
-avgTPRList = evaluateMultipleMethods( Te.y > 0, [pred, randPred], true, methodNames );
+avgTPRList = evaluateMultipleMethods( Te.y > 0, [scores(:,2), randPred], true, methodNames );
 %avgTPRListTr = evaluateMultipleMethods( Tr.y > 0, [nnPred3, randPredTrain], true, methodNames );
 
 % TODO : Play with parameters

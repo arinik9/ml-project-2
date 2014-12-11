@@ -80,8 +80,8 @@ model = svmtrain(Tr.y, Tr.normX, '-t 0 -b 1 -e 0.01'); % linear kernel, with pro
 % predict on test data
 [predict_label, accuracy, prob_estimates] = svmpredict(Te.y, Te.normX, model, '-b 1');
 
-% get scores(not labels) for ROC
-svmPredict  = prob_estimates(:, 1) - prob_estimates(:, 2);
+% get scores for ROC
+svmPred  = prob_estimates(:, 1);
 
 %% See prediction performance
 fprintf('Plotting performance..\n');
@@ -90,7 +90,7 @@ randPred = rand(size(Te.y));
 
 % and plot all together, and get the performance of each
 methodNames = {'SVM', 'Random'}; % this is to show it in the legend
-avgTPRList = evaluateMultipleMethods( Te.y > 0, [svmPredict, randPred], true, methodNames ); % (true_labels, predictions, showPlot, legendNames) 
+avgTPRList = evaluateMultipleMethods( Te.y > 0, [svmPred,  randPred], true, methodNames ); % (true_labels, predictions, showPlot, legendNames) 
                                             
 
 % now you can see that the performance of each method

@@ -58,7 +58,7 @@ function model = learnNeuralNetwork(yTr, XTr, plot_flag, learningRate, activatio
 
     rng('default');
     rng(8339); % fix seed, this NN is very sensitive to initialization
-
+    
     % setup NN. The first layer needs to have number of features neurons,
     %  and the last layer the number of classes (here two).
     nn = nnsetup(nnArchitecture);

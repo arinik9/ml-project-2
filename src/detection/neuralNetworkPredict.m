@@ -100,6 +100,8 @@ function nnPred = neuralNetworkPredict(yTr, XTr, XTe, plot_flag, learningRate, a
     % predict on the test set
     nnPred = nn.a{end};
 
+    nnPred(:,1)
+    nnPred(:,2)
     % we want a single score, subtract the output sigmoids
     nnPred = nnPred(:,1) - nnPred(:,2);
     
