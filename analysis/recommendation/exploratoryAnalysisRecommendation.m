@@ -67,27 +67,9 @@ artistsIdx = unique(aIdx);
 % TODO: also need to handle artists who have 0 listenings
 
 %% Normalization
-% "Make the data more Gaussian"
-% Counts are positive integers only, so it would violate our Gaussian
-% distribution assumption.
+% "Make the data more Gaussian" by applying a log transform
 
-[Ynormalized, meanPerUser, devPerUser] = normalizedByUsers(Y);
-
-% Power transformation
-%transformedValues = nonzeros(Ynormalized) .^ 2;
-%Ytransformed = sparse(uIdx, aIdx, transformedValues, N, D);
-
-
-% Verify the result of normalization
-
-% Mean should be 0, deviation should be 1
-for i = 1:length(usersIdx)
-    if(nnz(Ynormalized(i, :)) > 1)
-        counts = nonzeros(Ynormalized(i, :));
-        assert(abs(mean(counts) - 0) < 1e-3);
-        assert(abs(std(counts) - 1) < 1e-1);
-    end;
-end;
+Ynormalized = normalizedSparse(Y);
 
 % --- Before
 figure;
@@ -97,11 +79,10 @@ title({'Initial repartition of listening counts', ''});
 
 % --- After
 % We observe a nicer Gaussian distribution of the counts
-% But we still have a "long tail" to the right.
 figure;
 hist(nonzeros(Ynormalized), 20);
 title({'Repartition of listening counts after outliers', 'removal and normalization'});
-%savePlot('./report/figures/recommendation/normalized-counts.pdf', 'Normalized count', 'Occurrences');
+savePlot('./report/figures/recommendation/normalized-counts.pdf', 'Normalized count', 'Occurrences');
 
 clear i counts;
 
