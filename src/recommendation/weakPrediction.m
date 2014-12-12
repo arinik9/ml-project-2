@@ -72,10 +72,10 @@ trPrediction = zeros(sz.tr.nnz, 1);
 tePrediction = zeros(sz.te.nnz, 1);
 for j = 1:sz.tr.unique.a
     artist = idx.tr.unique.a(j);
-    
+
     tXtrain = generateFeatures(artist, Ytrain, Gtrain, userDV, artistDV);
     tXtest = generateFeatures(artist, Ytest, Gtrain, userDV, artistDV);
-   
+
     % Since Xtrain has exactly as many lines as users listened to this
     % artist, this will automatically produce only the predictions we need
     trPrediction(idx.tr.a == artist) = tXtrain * betas(:, artist);
