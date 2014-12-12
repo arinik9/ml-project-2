@@ -10,9 +10,10 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
 %
 % INPUT:
 %   R: The sparse features matrix (N x D) to be factorized (e.g. ratings
-%      of D movies by N users).
+%      of D movies by N users). Should be normalized.
 %   Rtest: Test set on which to test the reconstruction error. Iterations
-%           will stop when train error starts going up ("early stopping").
+%          will stop when train error starts going up ("early stopping").
+%          Should *not* be normalized.
 %   k: Target (reduced) dimensionality
 %   lambda: Regulaziation parameter
 %   plotLearningCurve: Boolean flag to plot the learning curve
@@ -29,12 +30,15 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
     end;
     if(~exist('plotLearningCurve', 'var'))
         plotLearningCurve = 0;
-    end;
+    end
     
+    % TODO: use getRelevantIndices
     [N, D] = size(R);
     % Indices of nonzeros elements
     [rIdx, cIdx] = find(R);
-
+    [idx, sz] = getRelevantIndices(R);
+    Rdenormalized = denormalize(R, idx);
+    
     % Initialization: average over the features or small random numbers
     U = zeros(k, N);
     M = rand(k, D);
@@ -103,8 +107,8 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
         end;
         
         % Estimate the quality of our approximation
-        trError = computeRmse(R, reconstructFromLowRank(R, U, M));
-        teError = computeRmse(Rtest, reconstructFromLowRank(Rtest, U, M));
+        trError = computeRmse(Rdenormalized, denormalize(reconstructFromLowRank(R, U, M), idx));
+        teError = computeRmse(Rtest, denormalize(reconstructFromLowRank(Rtest, U, M), idx));
         
         if(plotLearningCurve)
             trErrors = [trErrors; trError];

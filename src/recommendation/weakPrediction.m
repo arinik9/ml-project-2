@@ -20,14 +20,10 @@ Yoriginal = Ytrain;
 Goriginal = Gtrain;
 clear artistName;
 
-%% Outliers removal & normalization
+%% Outliers removal
 % TODO: test removing more or less "outliers"
 nDev = 3;
 Y = removeOutliersSparse(Yoriginal, nDev);
-
-idx = getRelevantIndices(Y);
-[Y, newMean] = normalizedSparse(Y);
-% idx and newMean are useful to denormalize Y at prediction time
 
 clearvars nDev;
 
@@ -36,21 +32,21 @@ clearvars nDev;
 setSeed(1);
 % TODO: vary test / train proportions
 [~, Ytest, ~, Ytrain, Gtrain] = splitData(Y, Goriginal, 0, 0.1);
-
+YtrainDenormalized = Ytest;
 [idx, sz] = getRelevantIndices(Ytrain, Ytest);
+[Ytrain, overallMean] = normalizedSparse(Ytrain);
+% idx and newMean are useful to denormalize Y at prediction time
+
 [userDV, artistDV] = generateDerivedVariables(Ytrain);
 
 %% Baseline: constant predictor (overall mean of all observed counts)
-overallMean = mean(nonzeros(Ytrain));
-
 % Predict counts (only those for which we have reference data, to save memory)
-% TODO: should we predict *all* counts?
 trYhat0 = sparse(idx.tr.u, idx.tr.a, overallMean, sz.tr.u, sz.tr.a);
 teYhat0 = sparse(idx.te.u, idx.te.a, overallMean, sz.te.u, sz.te.a);
 
 % Compute train and test errors (prediction vs counts in test and training set)
-e.tr.constant = computeRmse(Ytrain, trYhat0);
-e.te.constant = computeRmse(Ytest, teYhat0);
+e.tr.constant = computeRmse(Ytrain, denormalize(trYhat0, idx));
+e.te.constant = computeRmse(Ytest, denormalize(teYhat0, idx));
 
 fprintf('RMSE with a constant predictor: %f | %f\n', e.tr.constant, e.te.constant);
 
@@ -132,8 +128,8 @@ end;
 trYhatLS = sparse(idx.tr.u, idx.tr.a, trPrediction, sz.tr.u, sz.tr.a);
 teYhatLS = sparse(idx.te.u, idx.te.a, tePrediction, sz.te.u, sz.te.a);
 
-e.tr.leastSquares = computeRmse(Ytrain, trYhatLS);
-e.te.leastSquares = computeRmse(Ytest, teYhatLS);
+e.tr.leastSquares = computeRmse(YtrainDenormalized, denormalize(trYhatLS, idx));
+e.te.leastSquares = computeRmse(Ytest, denormalize(teYhatLS, idx));
 
 fprintf('RMSE with Least-Squares on head only : %f | %f\n', e.tr.leastSquares, e.te.leastSquares);
 
