@@ -37,14 +37,15 @@ setSeed(1);
 [userDV, artistDV] = generateDerivedVariables(Ytrain);
 
 %% Baseline: constant predictor (overall mean of all observed counts)
-overallMean = mean(nonzeros(Ytrain));
+[Ynorm, newMean] = normalizedSparse(Ytrain);
+YtestNorm = normalizedSparse(Ytest);
 % Predict counts (only those for which we have reference data, to save memory)
-trYhat0 = sparse(idx.tr.u, idx.tr.a, overallMean, sz.tr.u, sz.tr.a);
-teYhat0 = sparse(idx.te.u, idx.te.a, overallMean, sz.te.u, sz.te.a);
+trYhat0 = sparse(idx.tr.u, idx.tr.a, newMean, sz.tr.u, sz.tr.a);
+teYhat0 = sparse(idx.te.u, idx.te.a, newMean, sz.te.u, sz.te.a);
 
 % Compute train and test errors (prediction vs counts in test and training set)
-e.tr.constant = computeRmse(Ytrain, trYhat0);
-e.te.constant = computeRmse(Ytest, teYhat0);
+e.tr.constant = computeRmse(Ynorm, trYhat0);
+e.te.constant = computeRmse(YtestNorm, teYhat0);
 
 fprintf('RMSE with a constant predictor: %f | %f\n', e.tr.constant, e.te.constant);
 
@@ -114,10 +115,11 @@ end;
 trYhatLS = sparse(idx.tr.u, idx.tr.a, trPrediction, sz.tr.u, sz.tr.a);
 teYhatLS = sparse(idx.te.u, idx.te.a, tePrediction, sz.te.u, sz.te.a);
 
-e.tr.leastSquares = computeRmse(YtrainDenormalized, denormalize(trYhatLS, idx));
+e.tr.leastSquares = computeRmse(Ytrain, denormalize(trYhatLS, idx));
 e.te.leastSquares = computeRmse(Ytest, denormalize(teYhatLS, idx));
 
 fprintf('RMSE with Least-Squares on head only : %f | %f\n', e.tr.leastSquares, e.te.leastSquares);
+diagnoseError(Ytrain, trYhatLS);
 
 % Cleanup
 clearvars j artist beta Xtrain tXtrain Xtest tXtest trPrediction tePrediction trVal teVal;

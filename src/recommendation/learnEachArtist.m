@@ -15,9 +15,9 @@ function betas = learnEachArtist(Y, G, userDV, artistDV)
     % TODO: do not hardcode the number of extracted features
     betas = zeros(11 + 1, sz.a);
 
-    for j = 1:length(idx.tr.unique.a)
-        artist = idx.tr.unique.a(j);
-        users = idx.tr.u(idx.tr.a == artist);
+    for j = 1:length(idx.unique.a)
+        artist = idx.unique.a(j);
+        users = idx.u(idx.a == artist);
 
         y = nonzeros(Y(users, artist));
 
