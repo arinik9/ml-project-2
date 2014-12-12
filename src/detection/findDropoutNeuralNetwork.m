@@ -1,5 +1,9 @@
 function [dropOutStar, trainTPR, testTPR] = findDropoutNeuralNetwork(y, X, k, dropOutFractions, seed)
 
+    if (nargin < 6)
+        seed = 1;
+    end
+
     nDf = length(dropOutFractions);
 
     trainTPR = zeros(nDf,1);

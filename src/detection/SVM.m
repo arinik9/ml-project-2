@@ -51,16 +51,21 @@ fprintf('Splitting into train/test with proportion %.2f..\n', prop);
 	%TODO : plot test/train error against different parameters to chose the best parameters
 	% svmtrain(Tr.y, Tr.X, '-t 0 -v 5'); % linear kernel, 5-fold cross validation
 
+%% SVM RBF Kernel: Learn Gamma
+    
+gammaValues = [(5/(size(pcaX,2))),(2/(size(pcaX,2))), (1/size(pcaX,2)), (1/(2*size(pcaX,2))), (1/(5*size(pcaX,2))), (1/(10*size(pcaX,2)))];
+[bestGamma, testTPR, trainTPR] = findGammaSVM(y, pcaX, 3, gammaValues);
+    
 
-%%
+%% kCV on different models
+%TODO: check accuracy message
 
 plot_flag = 1;
-%{
+
 learn = @(y, X) trainSVM(y, X, '-t 0 -b 1 -e 0.01');
 predict = @(model, X) predictSVM(model, X);
 computePerformance = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 1);
 [svm1.trAvgTPR, svm1.teAvgTPR, svm1.predTr, svm1.predTe] = kFoldCrossValidation(y, pcaX, 3, learn, predict, computePerformance, 'SVM Linear kernel');
-
 
 learn = @(y, X) trainSVM(y, X, '-t 1 -b 1 -e 0.01');
 predict = @(model, X) predictSVM(model, X);
@@ -71,15 +76,13 @@ learn = @(y, X) trainSVM(y, X, '-t 2 -b 1 -e 0.01');
 predict = @(model, X) predictSVM(model, X);
 computePerformance = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 1);
 [svm3.trAvgTPR, svm3.teAvgTPR, svm3.predTr, svm3.predTe] = kFoldCrossValidation(y, pcaX, 3, learn, predict, computePerformance, 'SVM RBF kernel');
-%}
-
 
 learn = @(y, X) trainSVM(y, X, '-t 2 -b 1 -e 0.01');
 predict = @(model, X) predictSVM(model, X);
 computePerformance = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 1);
 [svm4.trAvgTPR, svm4.teAvgTPR, svm4.predTr, svm4.predTe] = kFoldCrossValidation(y, pcaExpX, 3, learn, predict, computePerformance, 'SVM RBF kernel + Exp');
 
-%{
+%% Try different models
 
 fprintf('train SVM1...\n')
 svm1 = trainSVM(Tr.y, Tr.pcaX, '-t 0 -b 1 -e 0.01'); % C-SVC linear kernel, with probabilities, etc
@@ -100,7 +103,7 @@ fprintf('train SVMExp...\n')
 svmExp = trainSVM(Tr.expy, Tr.pcaExpX, '-t 2 -b 1 -e 0.01'); % C-SVC RFB kernel exp tranfo, with probabilities, etc
 fprintf('predict SVMExp...\n')
 svmPredExp = predictSVM(svmExp, Te.pcaExpX, Te.expy);
-%}
+
 
 %% See prediction performance
 fprintf('Plotting performance..\n');

@@ -25,6 +25,14 @@ dpFractions = [0.45 0.5 0.55 0.6];
 
 % bestDp: 0.2000 bestWd: 1.0000e-04
 
+%% Learn parameters using kCV
+
+dpFractions = [0.45 0.5 0.55 0.6];
+%wDecays = [1e-5 1e-4 1e-3 1e-2 1e-1];
+[bestDp, trainTPR, testTPR] = findDropoutNeuralNetwork(y, pcaX, 3, dpFractions, 1);
+
+% bestDp: 0.2000 bestWd: 1.0000e-04
+
 %% Test results
 
 % Methods names for legend
