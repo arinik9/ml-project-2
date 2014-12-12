@@ -4,33 +4,21 @@ function errors = diagnoseError(y, yHat)
 %   y: Real results (each data example can have several outputs)
 %   yHat: Predicted result
 % OUTPUT:
-%   errors: [number of available listening count, error made] (sorted)
-  [~, aIdx] = find(y);
-
-  % Error made for each artist
-  artistsIdx = unique(aIdx);
-  d = length(artistsIdx);
-  errors = zeros(d, 2);
-  for i = 1:d
-    errors(i, 1) = nnz(y(:, artistsIdx(i)));
-    errors(i, 2) = computeRmse(y(:, artistsIdx(i)), yHat(:, artistsIdx(i)));
-  end;
-
-  % Sort by number of ratings available
-  errors = sortrows(errors, 1);
+%   errors: [number of available listening count, average RMSE error made] (sorted)
   
-  % Take average for each number of observed data points
+  [averaged, errors] = computeErrorByCount(y, yHat);
   nCounts = unique(errors(:, 1));
-  n = length(nCounts);
-  averaged = zeros(n, 2);
-  for i = 1:n
-      idx = (errors(:, 1) == nCounts(i));
-      errs = errors(idx, 2);
-      averaged(i, :) = [mean(errs), std(errs)];
-  end;
   
+  % Baseline
+  nullMatrix = sparse(size(y, 1), size(y, 2));
+  [averagedNull, ~] = computeErrorByCount(y, nullMatrix);
+  
+  figure;
+  hold on;
   %errorbar(1:n, averaged(:, 1), averaged(:, 2));
   semilogx(nCounts, averaged(:, 1), '.');
+  semilogx(nCounts, averagedNull(:, 1), '.r');
+  
   set(gca,'Xdir','reverse')
   title('Average error made over artists with a given number of observations');
   xlabel('Number of available listening counts');
