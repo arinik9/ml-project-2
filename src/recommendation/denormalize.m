@@ -13,13 +13,13 @@ function [Y] = denormalize(Ynormalized, idx)
 
     % Note that some values initially non-null in the original Y
     % may have been nulled out in the process of normalization
-    values = zeros(size(idx.tr.a, 1), 1);
-    for i = 1:length(idx.tr.unique.u)
-        user = idx.tr.unique.u(i);
-        ii = (idx.tr.u == user);
-        values(ii) = exp(Ynormalized(user, idx.tr.a(ii)));
+    values = zeros(size(idx.a, 1), 1);
+    for i = 1:length(idx.unique.u)
+        user = idx.unique.u(i);
+        ii = (idx.u == user);
+        values(ii) = exp(Ynormalized(user, idx.a(ii)));
     end;
 
 
-    Y = sparse(idx.tr.u, idx.tr.a, values, N, D);
+    Y = sparse(idx.u, idx.a, values, N, D);
 end

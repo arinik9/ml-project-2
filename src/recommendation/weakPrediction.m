@@ -32,6 +32,7 @@ setSeed(1);
 % TODO: vary test / train proportions
 [~, Ytest, ~, Ytrain, Gtrain] = splitData(Y, Goriginal, 0, 0.1);
 [idx, sz] = getRelevantIndices(Ytrain, Ytest);
+[testIdx, testSz] = getRelevantIndices(Ytest);
 
 [userDV, artistDV] = generateDerivedVariables(Ytrain);
 
@@ -81,11 +82,10 @@ nFeatures = 50; % Target reduced dimensionality
 lambda = 0.05;
 displayLearningCurve = 1;
 
-
 [U, M] = alswr(Ytrain, Ytest, nFeatures, lambda, displayLearningCurve);
 
-e.tr.als = computeRmse(Ytrain, reconstructFromLowRank(Ytrain, U, M));
-e.te.als = computeRmse(Ytest, reconstructFromLowRank(Ytest, U, M));
+e.tr.als = computeRmse(Ytrain, reconstructFromLowRank(U, M, idx, sz));
+e.te.als = computeRmse(Ytest, reconstructFromLowRank(U, M, testIdx, testSz));
 
 fprintf('RMSE ALS-WR (low rank): %f | %f\n', e.tr.als, e.te.als);
 

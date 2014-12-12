@@ -38,14 +38,15 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
     Roriginal = R;
     R = normalizedSparse(R);
     [idx, sz] = getRelevantIndices(Roriginal);
+    [testIdx, testSz] = getRelevantIndices(Rtest);
     
     % Initialization: average over the features or small random numbers
     U = zeros(k, sz.u);
     M = rand(k, sz.a);
     for j = 1:sz.a
-        jj = (idx.tr.a == j);
+        jj = (idx.a == j);
         if(nnz(jj) > 0)
-            M(1, j) = mean(R(idx.tr.u(jj), j));
+            M(1, j) = mean(R(idx.u(jj), j));
         else
             M(1, j) = 0;
         end;
@@ -69,10 +70,10 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
         % Fix M, solve for U
         % For each row of R (e.g. users)
         for i = 1:sz.u
-            ii = (idx.tr.u == i);
+            ii = (idx.u == i);
             if(nnz(ii) > 0)
                 % Columns for which we have data from this user
-                columns = idx.tr.a(ii);
+                columns = idx.a(ii);
                 subM = M(:, columns);
                 % Number of data points available for this user
                 nObserved = nnz(Roriginal(i, columns));
@@ -90,10 +91,10 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
         % Fix U, solve for M
         % For each column of R (e.g. movies)
         for j = 1:sz.a
-            jj = (idx.tr.a == j);
+            jj = (idx.a == j);
             if(nnz(jj) > 0)
                 % Users for which we have data about this column
-                rows = idx.tr.u(jj);
+                rows = idx.u(jj);
                 subU = U(:, rows);
                 % Number of data points available for this user
                 nObserved = nnz(Roriginal(rows, j));
@@ -109,8 +110,8 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
         end;
         
         % Estimate the quality of our approximation
-        trError = computeRmse(Roriginal, denormalize(reconstructFromLowRank(R, U, M), idx));
-        teError = computeRmse(Rtest, denormalize(reconstructFromLowRank(Rtest, U, M), idx));
+        trError = computeRmse(Roriginal, denormalize(reconstructFromLowRank(U, M, idx, sz), idx));
+        teError = computeRmse(Rtest, denormalize(reconstructFromLowRank(U, M, testIdx, testSz), testIdx));
         
         if(plotLearningCurve)
             trErrors = [trErrors; trError];
