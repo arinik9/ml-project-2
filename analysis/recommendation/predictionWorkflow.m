@@ -11,13 +11,13 @@ trValues = zeros(sz.tr.nnz, 1);
 teValues = zeros(sz.te.nnz, 1);
 for i = 1:sz.u
     ii = (idx.tr.u == i);
-    if(~isempty(ii))
+    if(nnz(ii) > 0)
         jj = idx.tr.a(ii);
         trValues(ii) = Ynorm(i, jj) + 0.05;
     end
     
     ii = (idx.te.u == i);
-    if(~isempty(ii))
+    if(nnz(ii) > 0)
         jj = idx.te.a(ii);
         teValues(ii) = newMean * rand(1, length(jj));
     end
