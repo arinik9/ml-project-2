@@ -10,8 +10,10 @@ function [errorByCount, errors] = computeErrorByCount(y, yHat)
   d = size(y, 2);
   errors = zeros(d, 2);
   for i = 1:d
-    errors(i, 1) = nnz(y(:, i));
-    errors(i, 2) = computeRmse(y(:, i), yHat(:, i));
+      if(nnz(y(:, i)) > 0)
+        errors(i, 1) = nnz(y(:, i));
+        errors(i, 2) = computeRmse(y(:, i), yHat(:, i));
+      end;
   end;
   
   % Sort by number of ratings available

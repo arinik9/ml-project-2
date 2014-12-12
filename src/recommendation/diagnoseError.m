@@ -16,8 +16,8 @@ function errors = diagnoseError(y, yHat)
   figure;
   hold on;
   %errorbar(1:n, averaged(:, 1), averaged(:, 2));
-  semilogx(nCounts, averaged(:, 1), '.');
-  semilogx(nCounts, averagedNull(:, 1), '.r');
+  semilogx(nCounts, averaged(:, 1), 'b.');
+  semilogx(nCounts, averagedNull(:, 1), 'r+');
   
   set(gca,'Xdir','reverse')
   title('Average error made over artists with a given number of observations');
