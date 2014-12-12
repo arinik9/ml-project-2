@@ -23,7 +23,7 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
 %   M: (k x D) The dimensionality-reduced matrix representing the items
 %      (e.g. movies).
 % An approximation of the initial R can then be reconstructed using:
-%   Rapprox = U' * M
+%   Rapprox = denormalize(U' * M)
 
     if(~exist('lambda', 'var'))
         lambda = 0;
@@ -32,7 +32,8 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
         plotLearningCurve = 0;
     end
     
-    epsilon = 1e-1;
+    % TODO: smaller epsilon
+    epsilon = 1;
     
     % TODO: use getRelevantIndices
     Roriginal = R;

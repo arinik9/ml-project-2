@@ -84,13 +84,13 @@ displayLearningCurve = 1;
 
 [U, M] = alswr(Ytrain, Ytest, nFeatures, lambda, displayLearningCurve);
 
-e.tr.als = computeRmse(Ytrain, reconstructFromLowRank(U, M, idx, sz));
-e.te.als = computeRmse(Ytest, reconstructFromLowRank(U, M, testIdx, testSz));
+e.tr.als = computeRmse(Ytrain, denormalize(reconstructFromLowRank(U, M, idx, sz), idx));
+e.te.als = computeRmse(Ytest, denormalize(reconstructFromLowRank(U, M, testIdx, testSz), testIdx));
 
 fprintf('RMSE ALS-WR (low rank): %f | %f\n', e.tr.als, e.te.als);
 
 % Cleanup
-clearvars nFeatures lambda displayLearningCurve U M;
+clearvars nFeatures lambda displayLearningCurve;
 
 %% "Each Artist" predictions
 % Train a model for each item using derived variables
