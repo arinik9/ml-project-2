@@ -94,62 +94,73 @@
   \subsection{Dataset description}
   \textbf{Objective}: The people detection dataset consists of a set of images associated with a label that indicates whether there is a person or not in the image. Our goal is to predict whether people are present in unseen images.
 
-  \textbf{Data characteristics}: The training set is composed of $8545$ examples. For each of these images, we are provided with the Histogram of Oriented Gradient (HOG) features generated with Piotr's toolbox. In order to work with the HOG features we convert them into a vector. Hence for each image we get a vector of dimensionality equal to $9360$.
+  \textbf{Data characteristics}: The training set is composed of $8545$ examples. For each of these images, we are provided with the Histogram of Oriented Gradient (HOG) features generated with Piotr's toolbox. In order to work with the HOG features we convert them into a vector. Hence for each image we get a vector of dimensionality $9360$.
 
-  The training dataset includes $9360$ positive images (images with a person on it) encoded with the label $+1$ and $9360$ negative images encoded with the label $-1$. The dataset is heavily imbalanced between the two classes.
+  The training dataset includes $1237$ positive examples (images with a person on it) encoded with the label $+1$ and $7308$ negative examples encoded with the label $-1$. The distribution is thus heavily skewed towards negative examples.
 
   \subsection{Performance Evaluation}
-  As our dataset is imbalanced as mentioned above, we are relying on both true-positive (TP) and false-positive (FP) values as indicators of our performance. We are using a measure called Receiver Operating Characteristics and ROC Curves to compare and evaluate our classifiers' performances. The ideal working point is the top-left corner of the plot where no misclassification is made, thus a classifier that is closer to that point is doing better.
+  As our dataset is imbalanced, we are relying on both True Positive (TP) and False Positive (FP) values as indicators of our performance. We are using the Receiver Operating Characteristics (ROC) measure and associated \textbf{ROC curves} to compare and evaluate our classifiers' performances. The ideal working point is the top-left corner of the ROC curve, where no misclassification is made.
 
-    \subsection{Dataset pre-processing}
-  From our data exploration analysis, we did not spot any obvious outliers. All the examples of the training dataset lie between 2 and 3 standard deviations from the median.
+  \subsection{Dataset pre-processing}
+  From data exploratory analysis, we did not spot any obvious outlier. For all features, the examples of the training dataset lie between 2 and 3 standard deviations from the median.
 
-  We tried several feature transformations: $log$, $exp$, $sqrt$ and the square of the input features but none of those seemed to help so we decided to keep working with the original features.
+  We tried several feature transformations: $\log$, $\exp$, $\sqrt{.}$ and $.^2$ of the input features but none of those seemed to enhance performance so we decided to keep working with the original features.\\
   TODO: check exp might be useful when using PCA (at least with 50 features)
 
-  We normalized our data before applying any model to it.
+  We normalized our features before using them for training.
 
   \subsection{Principal Component Analysis}
-  Our features matrix is of dimensionality $9360$ for $8545$ examples which gives us a fat matrice. As several Machine Learning algorithms' time complexity grows fast with dimensionality we applied a Principal Component Analysis on our data in order to work with a low rank approximation of our features. To do so, we used Piotr's $pca()$ implementation which proved to be faster on big datasets. We decided to keep the $NTOREPLACE$ first principal components to project our data on. TODO: Plot explained variance + find value by kCV ?.
-  Using a reduced number of features also prevents our classifier to overfit.
+  Our features matrix is of dimensionality $9360$ for $8545$ examples which gives us a ``fat'' matrice. As several Machine Learning algorithms' time complexity grows fast with dimensionality, we applied a Principal Component Analysis (PCA) in order to work with lower dimensionality data. To do so, we used Piotr's \texttt{pca} implementation which proved to be faster than Matlab's default implementation. We decided to keep the $NTOREPLACE$ first principal components.\\
+  TODO: Plot explained variance + find value by kCV ?.
+  Using a reduced number of features also helps avoiding overfitting, as we are, to some extend, using only the signal (residing in the principal components).
 
-   \subsection{Model selection}
-   We applied several different classifiers on our data that we have compared to find the best model to make our predictions from. We started from a simple model which is Logistic Regression and then applied Gaussian Processes Classification using Rasmussen's GPML library, Support Vector Machines using LIBSVM toolbox, Neural Networks thanks to the Deep Learning toolbox, and Random Forests. [LIENS EN REF VERS LES TOOLBOXS]
+  \subsection{Model selection}
+  We learnt classifiers from several techniques and compared them to find the best performing model. We started with a simple Logistic Regression. Then, we applied Gaussian Processes classification using Rasmussen's GPML library, Support Vector Machines using LIBSVM toolbox, Neural Networks thanks to the Deep Learning toolbox, and finally Random Forests using Matlab's implementation.\\
+  TODO: add \texttt{cite} references to all toolboxes.
 
-   \textbf{General Approach}:
-     	\begin{itemize}
-		\item Applying a default implementation of the model to normalized input data or reduced input data after applying PCA depending on computation complexity and performance
-    		\item Tuning model parameters: for parameters that seemed relevant on our classifier improvement, we define a range of values to find the best combination thanks to cross validation. As training the different models is rather slow, we used 3-fold cross validation. Other parameters were set manually. We plot learning curves and select the parameter or the best parameter as the one that maximize the average TPR on the test set.
-		\item Validating the trained model using 3-fold cross-validation: we computed an average ROC curve over train and test data with a shadowed uncertainty set as 2 standard deviations in order to cover a 95\% confidence interval. This is performed through our kCVfastROC Matlab function.
-		\item Finally, we compare the model with other classifiers plotting a ROC Curve for each of them
+  \textbf{General approach}:
+   	\begin{itemize}
+	   	\item Applying a default implementation of the model to normalized input data or reduced input data after applying PCA depending on computation complexity and performance of the algorithm.
+    	\item Tuning model parameters: for parameters that seemed relevant, we chose a range of values to test on and find the best combination using to cross validation. As training the different models is rather slow, we used 3-fold cross validation. Other parameters were set manually. We plot learning curves and select parameters vlaues that maximize the average True Positive Rate (TPR) on the test set.
+		  \item Validating the trained model using 3-fold cross-validation: we computed an average ROC curve over train and test data. We represent the curve with its 95\% confidence interval (see our \texttt{kCVfastROC} function).
+  		\item Finally, we compare the candidate model with other classifiers plotting an ROC Curve for each of them.
 	\end{itemize}
 
-   \textbf{Logistic Regression}: It turns out that it is just a single-layer Neural Network which is how we implemented it using the Deep Learning toolbox. We added a regularization term, we will see in the Neural Network section how to do so.
+  \textbf{Logistic Regression}: Since it can be seen as a single-layer Neural Network, we used the Deep Learning toolbox. We added a regularization term (see below for details).
 
-   \textbf{Gaussian Processes}: Having a large number of data examples in our training set, we used large scale GP classification that relies on low-rank and diagonal approximation to the exact covariance using induction points. Solving a classification problem, we opted for a logistic function as a likelihood function. We did not had any intuition about the prior distribution so we used a 0-constant mean for our model. We selected a squared exponential covariance with isometric distance measure $covSEiso$ because it uses only two hyper-parameters in comparison to the squared exponential covariance with Automatic Relevant Distance that needs $D+1$ hyper parameters and thus might lead to overfitting. Finally we used Laplace approximation to infer on our data because it provided us with a fairly reasonable computation time compared to the Expectation-Propagation algorithm even if this previous one provided slightly better results.
-   ~ may not explain how each hyperparam works... [WHY ALL PARAMETERS?]
+  \textbf{Gaussian Processes}: Having a large number of data examples in our training set, we used ``large scale'' GP classification from Rasmussen's GPML library. It relies on low-rank and diagonal approximation to the exact covariance using induction points. Solving a classification problem, we opted for a logistic function as a likelihood function. We did not have specific intuition about the prior distribution so we used a constant 0-mean prior. We selected a squared exponential covariance with isometric distance measure \texttt{covSEiso} rather than the squared exponential. While yielding comparable performance, the former uses only two hyper-parameters, in contrast with the latter which needs $D+1$ hyper parameters and thus might be prone to overfitting. Finally we chose Laplace approximation to infer on our data because of its reasonable computation time (as opposed to Expectation-Propagation).\\
+  TODO: May need to explain how each hyperparam works... [WHY ALL PARAMETERS?]
 
-    \textbf{Support Vectors Machines}: We first tried to use different kernels: linear, polynomial and Radial Basis function. As the polynomial and RBF kernels are more complex models their computational complexity is much higher than the linear one. Hence we applied SVM with those kernels on our low-rank approximation data. We chose the RBF kernel because it was giving the best performance results [FIGURE?] and then we select the best smoothness parameter $\gamma$ over a range of possible values through cross validation.
+  \textbf{Support Vectors Machines}: We experimented with different kernels: linear, polynomial and Radial Basis Function (RBF). As the polynomial and RBF kernels are more complex models their computational complexity is much higher than the linear one. Hence we applied SVM with those kernels on our low-rank approximation data. We retained the RBF kernel because it was giving the best performance results and then we select the best smoothness parameter $\gamma$ over a range of possible values through cross validation.\\
+  TODO: figures (comparing the kernels, learning curves for the selected kernel).
 
-    \textbf{Random Forests}: TODO
-    number of trees
-    fraction of variables in random bagging
-    minLeaf
-    Learning parameters with kCV
+  \textbf{Random Forests}: TODO
+  \begin{itemize}
+    \item number of trees
+    \item fraction of variables in random bagging
+    \item minLeaf
+    \item Learning parameters with kCV
+  \end{itemize}
 
-   \textbf{Neural Networks}: We applied a 2-layered Neural Network on our full-dimension data. We were able to tune the number of activation functions on each layer as well as its type: A sigmoid activation function gives better results than the $tanh$[WHY?]. To prevent the Neural Network to overfit, we resort to balance between 2 regularization methods:
-   \begin{itemize}
-    	\item Applying a weight decay on the second layer which is a Tikhonov regularization
-	\item Defining a dropout fraction which removes randomly some activation functions during the training [REF PAPER + check formulation of what it does]
-    \end{itemize}
-	The best combination of weight decay and dropout fraction parameters has been selected from ranges of parameters using cross-validation as described in the general approach section [REF].
+  \textbf{Neural Networks}: We applied a 2-layered Neural Network on our full-dimension data. We were able to tune the number of activation functions on each layer as well as its type. A sigmoid activation function gives better results than the $\tanh$ function.\\
+  TODO: why?\\
+  To avoid overfitting, we leveraged two regularization methods:
+  \begin{itemize}
+   	\item Applying weight decay on the second layer (corresponding to Tikhonov regularization)
+	  \item Defining a ``dropout fraction'', which removes randomly some activation functions during the training\\
+    TODO: reference the paper + check formulation of what it does
+  \end{itemize}
+	The best combination of weight decay and dropout fraction parameters were selected from ranges of parameters using cross-validation as described in the general approach section.\\
+  TODO: ref, give the ranges, learning curves
 
-   \textbf{Models comparison}: TODO
-   - Plot ROC Curves with the different models, compare, check variance + Random guessing as a base model for comparison
-   + Discuss which was difficult or not
+  \textbf{Models comparison}: TODO\\
+  \begin{itemize}
+    \item Plot ROC Curves with the different models, compare, check variance (Random guessing as a base model for comparison)\\
+    \item Discuss which was difficult or not
+  \end{itemize}
 
   \subsection{Final model and predictions}
-
+  TODO
 
 
 \section{Summary}
