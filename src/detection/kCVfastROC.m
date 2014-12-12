@@ -1,13 +1,13 @@
-function [tprAtWPAvg,aucAvg,fprAvg,tprAvg] = kCVfastROC(allLabels, allScores, plot_flag, plotStyle)
+function [tprAtWPAvg,aucAvg,fprAvg,tprAvg] = kCVfastROC(allLabels, allScores, plot_title, plot_flag, plotStyle)
 
-    if ~exist('plot_flag','var')
+    if (~exist('plot_flag','var') && plot_flag ~= 0 && plot_flat ~= 1 )
         plot_flag = 0;
     end
-
+    
     if ~exist('plotStyle','var')
         plotStyle = 'b';
     end
-    
+        
     % Compute the fpr and tpr means to draw average curve
     n = size(allLabels,2);
     nPoints = size(allLabels,1);
@@ -34,11 +34,17 @@ function [tprAtWPAvg,aucAvg,fprAvg,tprAvg] = kCVfastROC(allLabels, allScores, pl
     if plot_flag==1
         uncert = 2*uncertScore; % +/- 2 sigma => 95% confidence interval
         figure();
-        semilogx(fprAvg,tprAvg,plotStyle,'LineWidth',2); hold on;
-        jbfill(fprAvg, tprAvg + uncert, tprAvg - uncert, 'b', 'b', 1, 0.2);
+        semilogx(fprAvg, tprAvg, plotStyle, 'LineWidth',2); hold on;
+        jbfill(fprAvg, tprAvg + uncert, tprAvg - uncert, plotStyle, plotStyle, 1, 0.2);
         %plot(fprAvg,tprAvg,plotStyle,'LineWidth',2);
         xlabel('False Positive Rate');
         ylabel('True Positive Rate');
+        title( ...
+            {plot_title, ...
+            sprintf('Average ROC Curve with %d cross validation (95%% interval)', size(allLabels,2))}...
+            );
+        legendName = sprintf('avgTPR = %.3f', mean(tprAtWPAvg));
+        legend( legendName, 'Location', 'NorthWest' );
     end
 
 end

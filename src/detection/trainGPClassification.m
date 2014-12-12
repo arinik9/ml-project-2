@@ -1,4 +1,4 @@
-function model = learnGPClassification(y, Xtr, likFunction, infFunction, covFunction, covHyp, nIndPoints)
+function model = trainGPClassification(y, Xtr, likFunction, infFunction, covFunction, covHyp, nIndPoints)
 % Takes input and output training data, test data and build model of
 % Gaussian Process large scale classification for binary classification
 % problems. Default parameters have been tuned to work on our data.

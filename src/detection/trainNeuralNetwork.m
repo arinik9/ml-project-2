@@ -1,4 +1,4 @@
-function model = learnNeuralNetwork(yTr, XTr, plot_flag, learningRate, activationFunction, dropoutFraction, weightPenaltyL2, nnArchitecture, numepochs, batchsize)
+function model = trainNeuralNetwork(yTr, XTr, plot_flag, learningRate, activationFunction, dropoutFraction, weightPenaltyL2, nnArchitecture, numepochs, batchsize)
 % Binary classification using Neural Network provided by the deepLearning toolbox
 % This function takes train and test data and apply NN model with given
 % parameters in order to test different parameters tuning instead of boilerplate code.
@@ -58,7 +58,7 @@ function model = learnNeuralNetwork(yTr, XTr, plot_flag, learningRate, activatio
 
     rng('default');
     rng(8339); % fix seed, this NN is very sensitive to initialization
-
+    
     % setup NN. The first layer needs to have number of features neurons,
     %  and the last layer the number of classes (here two).
     nn = nnsetup(nnArchitecture);
