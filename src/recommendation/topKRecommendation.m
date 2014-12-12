@@ -1,18 +1,61 @@
-function Yhat = topKRecommendation(Y, K, userDV)
+function YtestHat = topKRecommendation(Y, Ytest, K, userDV, S)
 % TOPNRECOMMENDATION Use counts from the K most similar users to generate predictions
-
-    % Matrix of similarities between each pair of user
-    S = computeSimilarityMatrix(Y, userDV);
-
-    % TODO
-    Yhat = S; % sparse(size(Y, 1), size(Y, 2));
-end
-
-function similarities = computeSimilarityMatrix(Y, userDV)
-    u = size(Y, 1);
+%
+% INPUT
+%
+% OUTPUT
+%
+    K = min(K, size(Y, 1));
 
     % Precompute useful values
     listenedBy = getListenedBy(Y);
+
+    % Matrix of similarities between each pair of user
+    if(~exist('S', 'var'))
+        S = computeSimilarityMatrix(Y, userDV, listenedBy);
+    end;
+    
+    % For each user, find the K most similar
+    % and predict entries based on their tastes
+    [idx, sz] = getRelevantIndices(Ytest);
+    
+    values = zeros(sz.nnz, 1);
+    for user = 1:sz.u
+        listenedTo = listenedBy{user};
+        if(~isempty(listenedTo))
+            % Get K most similar users from the similarity matrix
+            [userSimilarities, userNeighbors] = sort(S(user, :), 'descend');
+            % [index of neighbor, similarity measure]
+            neighbors = [full(userNeighbors(1:K))', full(userSimilarities(1:K))'];
+            
+            % For each artist to predict
+            jj = idx.a(idx.u == user);
+            for j = 1:length(jj)
+                % Place the value carefully
+                artist = jj(j);
+                selector = (idx.u == user) & (idx.a == artist);
+                
+                values(selector) = aggregate(Y, user, artist, neighbors, userDV);
+                % TODO: fix aggregate to prevent negative predictions
+                values(selector) = max(0, values(selector));
+            end;
+        end;
+    end;
+    
+    YtestHat = sparse(idx.u, idx.a, values, sz.u, sz.a);
+end
+
+function prediction = aggregate(Y, user, artist, neighbors, userDV)
+% AGGREGATE Use preferences of neighbors to predict the unseen count
+    neighborsCounts = full(Y(neighbors(:, 1), artist));
+    neighborsDev = neighborsCounts - userDV(neighbors(:, 1), 2);
+    normalization = 1 / sum(abs(neighbors(:, 2)));
+    
+    prediction = userDV(user, 1) + normalization * sum(neighbors(:, 2) .* neighborsDev, 1);
+end
+
+function similarities = computeSimilarityMatrix(Y, userDV, listenedBy)
+    u = size(Y, 1);
 
     % The similarity matrix is going to be very sparse
     values = [];

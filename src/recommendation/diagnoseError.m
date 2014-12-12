@@ -15,7 +15,7 @@ function errors = diagnoseError(y, yHat)
 
     rmse = computeRmse(y, yHat);
     baselineRmse = computeRmse(y, nullMatrix);
-    fprintf('RMSE: %f (compared to constant predictor: %f\n', rmse, baselineRmse);
+    fprintf('RMSE: %f (compared to constant predictor: %f)\n', rmse, baselineRmse);
     
     % Error plot
     figure;
