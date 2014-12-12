@@ -4,48 +4,18 @@ addpath(genpath('./data'), genpath('../data'));
 addpath(genpath('./src'), genpath('../src'));
 clearvars;
 
-%% Dataset pre-processing
-% TODO: make a common preprocessing script
-
-% Cell array holding the errors made with various methods
-e = {};
-e.tr = {}; e.te = {};
-
-% Load dataset
-load('./data/recommendation/songTrain.mat');
-
-% Listening counts matrix:
-% Each (i, j) corresponds to the listening count of user i for artist j
-Yoriginal = Ytrain;
-Goriginal = Gtrain;
-clear artistName;
-
-%% Outliers removal
-% TODO: test removing more or less "outliers"
-nDev = 3;
-Y = removeOutliersSparse(Yoriginal, nDev);
-clearvars nDev;
-
-%% Train / test split
-% TODO: cross-validate all the things!
-setSeed(1);
-% TODO: vary test / train proportions
-[~, Ytest, ~, Ytrain, Gtrain] = splitData(Y, Goriginal, 0, 0.1);
-[idx, sz] = getRelevantIndices(Ytrain, Ytest);
-[testIdx, testSz] = getRelevantIndices(Ytest);
-
+loadDataset;
 [userDV, artistDV] = generateDerivedVariables(Ytrain);
 
 %% Baseline: constant predictor (overall mean of all observed counts)
-[Ynorm, newMean] = normalizedSparse(Ytrain);
-YtestNorm = normalizedSparse(Ytest);
+overallMean = mean(nonzeros(Ytrain));
 % Predict counts (only those for which we have reference data, to save memory)
-trYhat0 = sparse(idx.tr.u, idx.tr.a, newMean, sz.tr.u, sz.tr.a);
-teYhat0 = sparse(idx.te.u, idx.te.a, newMean, sz.te.u, sz.te.a);
+trYhat0 = sparse(idx.tr.u, idx.tr.a, overallMean, sz.tr.u, sz.tr.a);
+teYhat0 = sparse(idx.te.u, idx.te.a, overallMean, sz.te.u, sz.te.a);
 
 % Compute train and test errors (prediction vs counts in test and training set)
-e.tr.constant = computeRmse(Ynorm, trYhat0);
-e.te.constant = computeRmse(YtestNorm, teYhat0);
+e.tr.constant = computeRmse(Ytrain, trYhat0);
+e.te.constant = computeRmse(Ytest, teYhat0);
 
 fprintf('RMSE with a constant predictor: %f | %f\n', e.tr.constant, e.te.constant);
 
@@ -74,7 +44,7 @@ fprintf('RMSE with a constant predictor per artist: %f | %f\n', e.tr.mean, e.te.
 
 % Cleanup
 clearvars i k nCountsObserved meanPerArtist trPrediction tePrediction;
-clearvars trYhatMean teYhatMean;
+%clearvars trYhatMean teYhatMean;
 
 %% ALS-WR
 % TODO: experiment different lambdas and number of features
