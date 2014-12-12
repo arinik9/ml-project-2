@@ -15,11 +15,11 @@ computePerformance = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(true
 %%
 
 % Methods names for legend
-methodNames = {'Train','Test','Nul'};
+methodNames = {'Train','Test'};
 
 % Prediction performances on different models
-avgTPRList = kCVEvaluateMultipleMethods( cat(3, trueTe, trueTe, trueTe), cat(3,predTr(1:size(predTe,1),:), predTe,predTe), true, methodNames );
-
+avgTPRList = kCVevaluateMultipleMethods( cat(3, trueTr(1:size(predTe,1),:), trueTe), cat(3,predTr(1:size(predTe,1),:), predTe), true, methodNames );
+avgTPRList
 %TODO: kCV on other models
 %% Learn parameters using kCV
 

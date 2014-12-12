@@ -11,7 +11,7 @@
 % Returns tprAtWP where each element is the tprAtWP of each prediction
 % vector given as input.
 %
-function tprAtWP = kCVEvaluateMultipleMethods( labels, predictions, ...
+function avgTprAtWP = kCVevaluateMultipleMethods( labels, predictions, ...
                                             showPlot, legendNames )                                   
                                         
     if nargin < 3
@@ -61,7 +61,7 @@ function tprAtWP = kCVEvaluateMultipleMethods( labels, predictions, ...
     if showPlot && ~isempty(legendNames)
         % add tprAtWP to legend names
         for i=1:M
-            legendNames{i} = sprintf('%s: %.3f', legendNames{i}, tprAtWP(i));
+            legendNames{i} = sprintf('%s: %.3f', legendNames{i}, avgTprAtWP(i));
         end
         legend( legendNames, 'Location', 'NorthWest' );
         title('Coucou');

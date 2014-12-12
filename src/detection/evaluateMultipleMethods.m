@@ -52,14 +52,14 @@ function tprAtWP = evaluateMultipleMethods( labels, predictions, ...
             hold on;
         end
     end
-%{
+
     if showPlot && ~isempty(legendNames)
         % add tprAtWP to legend names
         for i=1:M
-            legendNames{i} = sprintf('%s: %.3f', legendNames{i}, avgTprAtWP(i));
+            legendNames{i} = sprintf('%s: %.3f', legendNames{i}, tprAtWP(i));
         end
 
         legend( legendNames, 'Location', 'NorthWest' );
     end
-%}
+
 end
