@@ -25,9 +25,9 @@ clear artistName;
 nDev = 3;
 Y = removeOutliersSparse(Yoriginal, nDev);
 
-% TODO: denormalize after prediction to obtain the correct scale
-% TODO: we're normalizing before the train/test split, is this correct?
-Y = normalizedByUsers(Y);
+idx = getRelevantIndices(Y);
+[Y, newMean] = normalizedSparse(Y);
+% idx and newMean are useful to denormalize Y at prediction time
 
 clearvars nDev;
 
