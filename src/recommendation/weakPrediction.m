@@ -24,7 +24,6 @@ clear artistName;
 % TODO: test removing more or less "outliers"
 nDev = 3;
 Y = removeOutliersSparse(Yoriginal, nDev);
-
 clearvars nDev;
 
 %% Train / test split
@@ -32,21 +31,19 @@ clearvars nDev;
 setSeed(1);
 % TODO: vary test / train proportions
 [~, Ytest, ~, Ytrain, Gtrain] = splitData(Y, Goriginal, 0, 0.1);
-YtrainDenormalized = Ytest;
 [idx, sz] = getRelevantIndices(Ytrain, Ytest);
-[Ytrain, overallMean] = normalizedSparse(Ytrain);
-% idx and newMean are useful to denormalize Y at prediction time
 
 [userDV, artistDV] = generateDerivedVariables(Ytrain);
 
 %% Baseline: constant predictor (overall mean of all observed counts)
+overallMean = mean(nonzeros(Ytrain));
 % Predict counts (only those for which we have reference data, to save memory)
 trYhat0 = sparse(idx.tr.u, idx.tr.a, overallMean, sz.tr.u, sz.tr.a);
 teYhat0 = sparse(idx.te.u, idx.te.a, overallMean, sz.te.u, sz.te.a);
 
 % Compute train and test errors (prediction vs counts in test and training set)
-e.tr.constant = computeRmse(Ytrain, denormalize(trYhat0, idx));
-e.te.constant = computeRmse(Ytest, denormalize(teYhat0, idx));
+e.tr.constant = computeRmse(Ytrain, trYhat0);
+e.te.constant = computeRmse(Ytest, teYhat0);
 
 fprintf('RMSE with a constant predictor: %f | %f\n', e.tr.constant, e.te.constant);
 
@@ -55,28 +52,15 @@ clear overallMean trYhat0 teYhat0;
 
 %% Simple model: predict the average listening count of the artist
 
-% Compute corresponding mean value for each artist
-meanPerArtist = zeros(sz.tr.a, 1);
-for j = 1:sz.tr.unique.a
-    artist = idx.tr.unique.a(j);
-    nCountsObserved = nnz(Ytrain(:, artist));
-    if(nCountsObserved > 0)
-        meanPerArtist(j) = sum(Ytrain(:, artist)) / nCountsObserved;
-    else
-        meanPerArtist(j) = 0;
-    end;
-end
-
-% Predict counts (only those for which we have reference data, to save memory)
+% Predict counts based on the artist's average listening count
+% (which is one of the derived variables)
 trPrediction = zeros(sz.tr.nnz, 1);
-for k = 1:sz.tr.nnz
-    trPrediction(k) = meanPerArtist(idx.tr.a(k));
-end;
 tePrediction = zeros(sz.te.nnz, 1);
-for k = 1:sz.te.nnz
-    tePrediction(k) = meanPerArtist(idx.te.a(k));
+for k = 1:sz.tr.unique.a
+    artist = idx.tr.unique.a(k);
+    trPrediction(idx.tr.a == artist) = artistDV(artist, 1);
+    tePrediction(idx.te.a == artist) = artistDV(artist, 1);
 end;
-
 trYhatMean = sparse(idx.tr.u, idx.tr.a, trPrediction, sz.tr.u, sz.tr.a);
 teYhatMean = sparse(idx.te.u, idx.te.a, tePrediction, sz.te.u, sz.te.a);
 
@@ -96,6 +80,8 @@ clearvars trYhatMean teYhatMean;
 nFeatures = 50; % Target reduced dimensionality
 lambda = 0.05;
 displayLearningCurve = 1;
+
+
 [U, M] = alswr(Ytrain, Ytest, nFeatures, lambda, displayLearningCurve);
 
 e.tr.als = computeRmse(Ytrain, reconstructFromLowRank(Ytrain, U, M));
