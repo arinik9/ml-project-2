@@ -1,10 +1,14 @@
-function [tprAtWPAvg,aucAvg,fprAvg,tprAvg] = kCVfastROC(allLabels, allScores, plot_flag, info_flag, plot_title, plotStyle)
+function [tprAtWPAvg,aucAvg,fprAvg,tprAvg] = kCVfastROC(allLabels, allScores, plot_flag, info_flag, uncert_flag, plot_title, plotStyle)
 
     if (~exist('plot_flag','var') && plot_flag ~= 0 && plot_flat ~= 1 )
         plot_flag = 0;
     end
     
     if (~exist('info_flag','var') && info_flag ~= 0 && info_flag ~= 1 )
+        info_flag = 0;
+    end
+    
+    if (~exist('uncert_flag','var') && uncert_flag ~= 0 && uncert_flag ~= 1 )
         info_flag = 0;
     end
     
@@ -42,8 +46,10 @@ function [tprAtWPAvg,aucAvg,fprAvg,tprAvg] = kCVfastROC(allLabels, allScores, pl
     if plot_flag==1
         uncert = 2*uncertScore; % +/- 2 sigma => 95% confidence interval
         %figure();
-        semilogx(fprAvg, tprAvg, plotStyle, 'LineWidth',2); hold on;
-        jbfill(fprAvg, tprAvg + uncert, tprAvg - uncert, plotStyle, plotStyle, 1, 0.2);
+        semilogx(fprAvg, tprAvg, plotStyle, 'LineWidth',2);
+        if uncert_flag == 1
+            jbfill(fprAvg, tprAvg + uncert, tprAvg - uncert, plotStyle, plotStyle, 1, 0.2);
+        end;
         %plot(fprAvg,tprAvg,plotStyle,'LineWidth',2);
         xlabel('False Positive Rate');
         ylabel('True Positive Rate');

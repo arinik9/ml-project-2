@@ -33,7 +33,7 @@ function avgTprAtWP = kCVevaluateMultipleMethods( labels, predictions, ...
     M = size(predictions,3);
 
     % list of plotting styles
-    styles = {'r','b','k','m','g','r--', 'b--', 'k--','m--','g--'};
+    styles = ['r','b','k','m','g', 'y', 'c','r--', 'b--', 'k--','m--','g--'];
 
     if showPlot && (M > length(styles))
         error('Number of lines to show exceeds possible styles');
@@ -50,21 +50,35 @@ function avgTprAtWP = kCVevaluateMultipleMethods( labels, predictions, ...
     end
 
     for i=1:M
-        tprAtWP(:,i) = kCVfastROC( labels(:,:,i), predictions(:,:,i), 1, 0, '', styles{i} );
+        %tprAtWP(i) = fastROC( labels(:,1,i) > 0, predictions(:,1,i), styles{i});
+        tprAtWP(:,i) = kCVfastROC( labels(:,:,i), predictions(:,:,i), 1, 0, 0, '', styles(i) );
         avgTprAtWP(i) = mean(tprAtWP(:,i));
         fprintf('avgTprAtWP: %d \n', avgTprAtWP(i));
+        %plot(10,10+i,'+');
         if showPlot
             hold on;
         end
     end
-
+    
     if showPlot && ~isempty(legendNames)
         % add tprAtWP to legend names
         for i=1:M
-            legendNames{i} = sprintf('%s: %.3f', legendNames{i}, avgTprAtWP(i));
+            legendROC{i} = sprintf('%s: %.3f', legendNames{i}, tprAtWP(i));
         end
-        legend( legendNames, 'Location', 'NorthWest' );
-        title('Coucou');
+
+        legend( legendROC, 'Location', 'SouthEast' );
+        %savePlot('./report/figures/detection/pca-curve.pdf','False Positive Rate','True Positive Rate');
     end
+
+    
+    if showPlot
+        figure;
+        boxplot(tprAtWP, 'colors', styles(1:M), 'labels', legendNames, 'whisker', 1);
+        title('TPR at WP of different methods');
+        xlabel('Applied methods');
+        ylabel('Average TPR');
+        %savePlot('./report/figures/detection/pca-boxplots.pdf','Applied methods','Average TPR');
+    end
+    
 
 end
