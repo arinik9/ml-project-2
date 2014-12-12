@@ -1,78 +1,62 @@
 getStartedDetection;
 
-%% Split
+%%
 
-prop = 2/3;
-fprintf('Splitting into train/test with proportion %.2f..\n', prop);
-[Tr.X, Tr.y, Te.X, Te.y] = splitDataDetection(y, X, prop);
+[PCA.explained, PCA.cumExplained] = pcaExplainedVariance(PCA.latent, 1, 1000);
+savePlot('./report/figures/detection/pca-varianceExplained.pdf','Principal Components','Variance Explained');
 
 %% Different projections
 
 fprintf('PCA > Projecting train and test data on the first %d PC..\n', 50);
-[Tr.pcaX50, ~, ~] = pcaApplyOnData(Tr.X, PCA.coeff, PCA.mu, 50);
-[Te.pcaX50, ~, ~] = pcaApplyOnData(Te.X, PCA.coeff, PCA.mu, 50);
-% Normalize PCA features
-fprintf('PCA > Normalizing PCA features..\n');
-[Tr.pcaX50, mu50, sigma50] = zscore(Tr.pcaX50);
-Te.pcaX50 = normalize(Te.pcaX50, mu50, sigma50);
+[pcaX50, ~, ~] = pcaApplyOnData(X, PCA.coeff, PCA.mu, 50);
+[pcaX50, ~, ~] = zscore(pcaX50);
+
+fprintf('PCA > Projecting train and test data on the first %d PC..\n', 75);
+[pcaX75, ~, ~] = pcaApplyOnData(X, PCA.coeff, PCA.mu, 50);
+[pcaX75, ~, ~] = zscore(pcaX75);
 
 fprintf('PCA > Projecting train and test data on the first %d PC..\n', 100);
-[Tr.pcaX100, ~, ~] = pcaApplyOnData(Tr.X, PCA.coeff, PCA.mu, 100);
-[Te.pcaX100, ~, ~] = pcaApplyOnData(Te.X, PCA.coeff, PCA.mu, 100);
-% Normalize PCA features
-fprintf('PCA > Normalizing PCA features..\n');
-[Tr.pcaX100, mu100, sigma100] = zscore(Tr.pcaX100);
-Te.pcaX100 = normalize(Te.pcaX100, mu100, sigma100);
+[pcaX100, ~, ~] = pcaApplyOnData(X, PCA.coeff, PCA.mu, 100);
+[pcaX100, ~, ~] = zscore(pcaX100);
 
 fprintf('PCA > Projecting train and test data on the first %d PC..\n', 300);
-[Tr.pcaX300, ~, ~] = pcaApplyOnData(Tr.X, PCA.coeff, PCA.mu, 300);
-[Te.pcaX300, ~, ~] = pcaApplyOnData(Te.X, PCA.coeff, PCA.mu, 300);
-% Normalize PCA features
-fprintf('PCA > Normalizing PCA features..\n');
-[Tr.pcaX300, mu300, sigma300] = zscore(Tr.pcaX300);
-Te.pcaX300 = normalize(Te.pcaX300, mu300, sigma300);
+[pcaX300, ~, ~] = pcaApplyOnData(X, PCA.coeff, PCA.mu, 300);
+[pcaX300, ~, ~] = zscore(pcaX300);
 
 fprintf('PCA > Projecting train and test data on the first %d PC..\n', 500);
-[Tr.pcaX500, ~, ~] = pcaApplyOnData(Tr.X, PCA.coeff, PCA.mu, 500);
-[Te.pcaX500, ~, ~] = pcaApplyOnData(Te.X, PCA.coeff, PCA.mu, 500);
-% Normalize PCA features
-fprintf('PCA > Normalizing PCA features..\n');
-[Tr.pcaX500, mu500, sigma500] = zscore(Tr.pcaX500);
-Te.pcaX500 = normalize(Te.pcaX500, mu500, sigma500);
+[pcaX500, ~, ~] = pcaApplyOnData(X, PCA.coeff, PCA.mu, 500);
+[pcaX500, ~, ~] = zscore(pcaX500);
 
 fprintf('PCA > Projecting train and test data on the first %d PC..\n', 1000);
-[Tr.pcaX1000, ~, ~] = pcaApplyOnData(Tr.X, PCA.coeff, PCA.mu, 1000);
-[Te.pcaX1000, ~, ~] = pcaApplyOnData(Te.X, PCA.coeff, PCA.mu, 1000);
-% Normalize PCA features
-fprintf('PCA > Normalizing PCA features..\n');
-[Tr.pcaX1000, mu1000, sigma1000] = zscore(Tr.pcaX1000);
-Te.pcaX1000 = normalize(Te.pcaX1000, mu1000, sigma1000);
+[pcaX1000, ~, ~] = pcaApplyOnData(X, PCA.coeff, PCA.mu, 1000);
+[pcaX1000, ~, ~] = zscore(pcaX1000);
 
+%% Train and predict Logistic Regression model
 
-%%
+plot_flag = 0;
+learn = @(y, X) trainNeuralNetwork(y, X, 0, 1, 'sigm', 0, 0, [size(X,2),2]);
+predict = @(model, X) predictNeuralNetwork(model, X);
+computePerformance = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
 
-model50 = trainNeuralNetwork(Tr.y, Tr.pcaX50, 0, 1, 'sigm', 0, 1.e-4, [size(Tr.pcaX50,2), 2]);
-predict50 = predictNeuralNetwork(model50, Te.pcaX50);
+[trAvgTPR_50, teAvgTPR_50, predTr_50, predTe_50, trueTr_50, trueTe_50] = kFoldCrossValidation(y, pcaX50, 3, learn, predict, computePerformance, plot_flag, 'Logistic Regression');
 
-model100 = trainNeuralNetwork(Tr.y, Tr.pcaX100, 0, 1, 'sigm', 0, 1.e-4, [size(Tr.pcaX100,2), 2]);
-predict100 = predictNeuralNetwork(model100, Te.pcaX100);
+[trAvgTPR_75, teAvgTPR_75, predTr_75, predTe_75, trueTr_75, trueTe_75] = kFoldCrossValidation(y, pcaX75, 3, learn, predict, computePerformance, plot_flag, 'Logistic Regression');
 
-model300 = trainNeuralNetwork(Tr.y, Tr.pcaX300, 0, 1, 'sigm', 0, 1.e-4, [size(Tr.pcaX300,2), 2]);
-predict300 = predictNeuralNetwork(model300, Te.pcaX300);
+[trAvgTPR_100, teAvgTPR_100, predTr_100, predTe_100, trueTr_100, trueTe_100] = kFoldCrossValidation(y, pcaX100, 3, learn, predict, computePerformance, plot_flag, 'Logistic Regression');
 
-model500 = trainNeuralNetwork(Tr.y, Tr.pcaX500, 0, 1, 'sigm', 0, 1.e-4, [size(Tr.pcaX500,2), 2]);
-predict500 = predictNeuralNetwork(model500, Te.pcaX500);
+[trAvgTPR_300, teAvgTPR_300, predTr_300, predTe_300, trueTr_300, trueTe_300] = kFoldCrossValidation(y, pcaX300, 3, learn, predict, computePerformance, plot_flag, 'Logistic Regression');
 
-model1000 = trainNeuralNetwork(Tr.y, Tr.pcaX1000, 0, 1, 'sigm', 0, 1.e-4, [size(Tr.pcaX1000,2), 2]);
-predict1000 = predictNeuralNetwork(model1000, Te.pcaX1000);
+[trAvgTPR_500, teAvgTPR_500, predTr_500, predTe_500, trueTr_500, trueTe_500] = kFoldCrossValidation(y, pcaX500, 3, learn, predict, computePerformance, plot_flag, 'Logistic Regression');
+
+[trAvgTPR_1000, teAvgTPR_1000, predTr_1000, predTe_1000, trueTr_1000, trueTe_1000] = kFoldCrossValidation(y, pcaX1000, 3, learn, predict, computePerformance, plot_flag, 'Logistic Regression');
 
 %% Evaluate multiple results
 
-predictRandom = rand(size(Te.y)); 
+predictRandom = rand(size(trueTe_1000)); 
 
 % Methods names for legend
-methodNames = {'50PC','100PC', '300PC', '500PC', '1000PC', 'Random'};
+methodNames = {'50PC', '75PC', '100PC', '300PC', '500PC', '1000PC'};
 
 % Prediction performances on different models
-avgTPRList = evaluateMultipleMethods( Te.y > 0, [predict50, predict100, predict300, predict500, predict1000, predictRandom], true, methodNames );
+avgTPRList = kCVevaluateMultipleMethods( cat(3, trueTe_50, trueTe_75, trueTe_100, trueTe_300, trueTe_500, trueTe_1000), cat(3, predTe_50, predTe_75, predTe_100, predTe_300, predTe_500, predTe_1000), true, methodNames );
 

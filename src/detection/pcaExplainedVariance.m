@@ -45,6 +45,8 @@ function [explained, cumExplained, nPC] = pcaExplainedVariance(latent, plot_flag
         hLine.LineWidth = 3;
         hLine.Color = [0,0.7,0.7];
         ylim(ax(2),[1 100]);
+        xlim([1 nPConplot]);
+
     end
 
 end
