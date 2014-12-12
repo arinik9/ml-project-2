@@ -1,4 +1,4 @@
-function YtestHat = topKRecommendation(Y, Ytest, K, userDV, S)
+function [YtestHat, S] = topKRecommendation(Y, Ytest, K, userDV, S)
 % TOPNRECOMMENDATION Use counts from the K most similar users to generate predictions
 %
 % INPUT
@@ -6,13 +6,17 @@ function YtestHat = topKRecommendation(Y, Ytest, K, userDV, S)
 % OUTPUT
 %
     K = min(K, size(Y, 1));
-
+    % Use less than K neighbors if they're not similar enough
+    similarityThreshold = 0.1;
+    
     % Precompute useful values
     listenedBy = getListenedBy(Y);
 
     % Matrix of similarities between each pair of user
     if(~exist('S', 'var'))
+        fprintf('Computing similarity matrix between %d users...', size(Y, 1));
         S = computeSimilarityMatrix(Y, userDV, listenedBy);
+        fprintf(' done.\n');
     end;
     
     % For each user, find the K most similar
@@ -21,12 +25,13 @@ function YtestHat = topKRecommendation(Y, Ytest, K, userDV, S)
     
     values = zeros(sz.nnz, 1);
     for user = 1:sz.u
-        listenedTo = listenedBy{user};
-        if(~isempty(listenedTo))
+        if(~isempty(listenedBy{user}))
             % Get K most similar users from the similarity matrix
             [userSimilarities, userNeighbors] = sort(S(user, :), 'descend');
             % [index of neighbor, similarity measure]
             neighbors = [full(userNeighbors(1:K))', full(userSimilarities(1:K))'];
+            % Use less than K neighbors if they're not similar enough
+            neighbors = neighbors(neighbors(:, 2) > similarityThreshold, :);
             
             % For each artist to predict
             jj = idx.a(idx.u == user);
@@ -37,6 +42,7 @@ function YtestHat = topKRecommendation(Y, Ytest, K, userDV, S)
                 
                 values(selector) = aggregate(Y, user, artist, neighbors, userDV);
                 % TODO: fix aggregate to prevent negative predictions
+                % Or use centered data to leverage this?
                 values(selector) = max(0, values(selector));
             end;
         end;
@@ -47,11 +53,17 @@ end
 
 function prediction = aggregate(Y, user, artist, neighbors, userDV)
 % AGGREGATE Use preferences of neighbors to predict the unseen count
-    neighborsCounts = full(Y(neighbors(:, 1), artist));
-    neighborsDev = neighborsCounts - userDV(neighbors(:, 1), 2);
-    normalization = 1 / sum(abs(neighbors(:, 2)));
-    
-    prediction = userDV(user, 1) + normalization * sum(neighbors(:, 2) .* neighborsDev, 1);
+    % TODO: handle 0 neighbors case as gracefully as possible
+    if(~isempty(neighbors))
+        %fprintf('User %d has %d neighbors, worst similarity %f\n', user, size(neighbors, 1), neighbors(end));   
+        neighborsCounts = full(Y(neighbors(:, 1), artist));
+        neighborsDev = neighborsCounts - userDV(neighbors(:, 1), 1);
+        normalization = 1 / sum(abs(neighbors(:, 2)));
+
+        prediction = userDV(user, 1) + normalization * sum(neighbors(:, 2) .* neighborsDev, 1);
+    else
+        prediction = userDV(user, 1);
+    end;
 end
 
 function similarities = computeSimilarityMatrix(Y, userDV, listenedBy)
@@ -65,7 +77,7 @@ function similarities = computeSimilarityMatrix(Y, userDV, listenedBy)
         for b = 1:u
             if (a ~= b)
                 v = computeSimilarity(Y, a, b, userDV, listenedBy);
-                if(v > eps)
+                if(abs(v) > eps)
                     values = [values; v];
                     idxa = [idxa; a];
                     idxb = [idxb; b];
