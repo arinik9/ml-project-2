@@ -29,7 +29,7 @@ fprintf('PCA > Projecting train and test data on the first %d PC..\n', PCA.kPC);
 fprintf('PCA > Normalizing PCA features..\n');
 [pcaX, ~, ~] = zscore(pcaX);
 
-
+%{
 % Feature transformations
 fprintf('Feature tranformation: exp(X)..\n');
 expX = exp(X);

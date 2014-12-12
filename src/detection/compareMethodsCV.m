@@ -4,17 +4,21 @@ getStartedDetection;
 
 %% Feature transformations
 
-
 %% kCV
 
 plot_flag = 1;
 learn = @(y, X) trainNeuralNetwork(y, X, 0, 1, 'sigm', 0, 1.e-4);
 predict = @(model, X) predictNeuralNetwork(model, X);
-computePerformance = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 1);
-[trAvgTPR, teAvgTPR, predTr, predTe] = kFoldCrossValidation(y, X, 3, learn, predict, computePerformance, 'Logistic Regression');
+computePerformance = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 1, model_name);
+[trAvgTPR, teAvgTPR, predTr, predTe, trueTr, trueTe] = kFoldCrossValidation(y, pcaX, 3, learn, predict, computePerformance, plot_flag, 'Logistic Regression');
 
-trAvgTPR
-teAvgTPR
+%%
+
+% Methods names for legend
+methodNames = {'Train','Test','Nul'};
+
+% Prediction performances on different models
+avgTPRList = kCVEvaluateMultipleMethods( cat(3, trueTe, trueTe, trueTe), cat(3,predTr(1:size(predTe,1),:), predTe,predTe), true, methodNames );
 
 %TODO: kCV on other models
 %% Learn parameters using kCV
