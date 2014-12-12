@@ -18,8 +18,6 @@ function [trAvgTPR, teAvgTPR, predTr, predTe, trueTr, trueTe] = kFoldCrossValida
 %   - teAvgTPR: average true positive rate on all test splits (test
 %   performance estimate)
 
-% TODO: kCVfastROC outside so that kCV is plot_flag, model_name etc free?
-
     if (~exist('plot_flag','var') && plot_flag ~= 0 && plot_flat ~= 1 )
         plot_flag = 0;
     end
@@ -36,9 +34,6 @@ function [trAvgTPR, teAvgTPR, predTr, predTe, trueTr, trueTe] = kFoldCrossValida
     for k = 1:K
         cvIndices(k, :) = idx( (1 + (k-1)*Nk):(k * Nk) );
     end;
-    
-    %subTrAvgTPR = zeros(K, 1);
-    %subTeAvgTPR = subTrAvgTPR;
     
     % For each fold, compute the train and test predictions with the learnt model
     for k = 1:K

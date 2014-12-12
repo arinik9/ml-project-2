@@ -14,6 +14,14 @@ computePerformance = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(true
 
 %%
 
+dpFractions = [0.45 0.9];
+trainModel = @(y, X, param) trainNeuralNetwork(y, X, 0, 1, 'sigm', param, 0, [size(X,2),2]);
+predictModel = @(model, X) predictNeuralNetwork(model, X);
+[dp, trTPR, teTPR] = find1Param(y, pcaX, 2, trainModel, predictModel, dpFractions, 1);
+
+
+%%
+
 % Methods names for legend
 methodNames = {'Train', 'coucou', 'test'};
 

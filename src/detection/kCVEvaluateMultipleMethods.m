@@ -1,18 +1,18 @@
-% Automatically calls fastROC() to show multiple curves, one for each
+function avgTprAtWP = kCVevaluateMultipleMethods( labels, predictions, ...
+                                            showPlot, legendNames )                                   
+% Automatically calls kCVfastROC() to show multiple curves, one for each
 % prediction vector provided.
 %
-% labels        Nx1 vector
-% predictions   NxM vector, M being the number of predictions to show
+% labels        NxDxM vector, D number of folds
+% predictions   NxDxM vector, D number of folds, M being the number of predictions to show
 %
 % if showPlot == true => single plot with multiple curves is shown.
 % legendNames is a cell list (optional) with the name to show for each
 % prediction in the legend.
 %
-% Returns tprAtWP where each element is the tprAtWP of each prediction
-% vector given as input.
-%
-function avgTprAtWP = kCVevaluateMultipleMethods( labels, predictions, ...
-                                            showPlot, legendNames )                                   
+% Returns avgTprAtWP where each element is the avgTprAtWP of each prediction
+% vector given as input over its folds, plot average ROC curves for each method 
+% and associated boxplot to visualize variance
                                         
     if nargin < 3
         showPlot = false;
