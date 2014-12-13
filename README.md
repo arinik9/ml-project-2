@@ -49,11 +49,11 @@ Project's TODO
 - [X] Experiment with the Neural Network's hyperparameters (number of layers, activation functions, dropout...)
 - [X] Experiment with Gaussian Processes (check provided toolbox)
 - [X] Experiment with SVM (check provided toolbox)
-- [ ] Experiment with Random Forest
+- [X] Experiment with Random Forest
 - [X] Implement kCV fastROC
 - [X] Generate learning curves (code to replicate for different methods)
-- [ ] Plot ROC Curves of different models for comparison
-- [ ] Maximize the train and test avgTPR
+- [X] Plot ROC Curves of different models for comparison
+- [X] Maximize the train and test avgTPR
 - [X] Check the stability of the results with k-CV
 
 ### Song recommendation dataset
@@ -86,7 +86,7 @@ Recall we must achieve both **weak** (new ratings for existing users) and **stro
 ### Report
 
 - [ ] Describe and discuss the methods used and show that we understand their inner working and the influence of each hyperparameter (especially for methods we did not implement ourselves)
-- [ ] Produce figures for the detection dataset
+- [X] Produce figures for the detection dataset
 - [ ] Report work done for the detection dataset and the corresponding results
 - [ ] Produce figures for the recommendation dataset
 - [ ] Report work done for the recommendation dataset and the corresponding results
