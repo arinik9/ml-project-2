@@ -27,6 +27,5 @@ function [trError, teError] = evaluateMethod(getPredictor, Ytrain, Ytest, userDV
 
 
     % fprintf('RMSE for method TODO: %f | %f\n', trError, teError);
-    % diagnoseError(Ytrain, trYhat);
-    % diagnoseError(Ytest, teYhat);
+    diagnoseError(Ytrain, trYhat, Ytest, teYhat);
 end
