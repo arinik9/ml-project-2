@@ -5,8 +5,10 @@ function cost = computeRmse(y, yHat)
 end
 
 function err = computeMse(y, yHat)
+% COMPUTEMSE Compute error only on nonzero entries of y
     % Vector of residuals (nnz x 1)
-    residuals = nonzeros(y - yHat);
+    idx = (y ~= 0);
+    residuals = nonzeros(y(idx) - yHat(idx));
     % Overall MSE (1 x 1)
     err = sum(residuals .^ 2) / (2 * nnz(y));
 end

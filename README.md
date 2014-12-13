@@ -79,10 +79,8 @@ Recall we must achieve both **weak** (new ratings for existing users) and **stro
 
 ### Predictions
 
-- [ ] `predictions_detection.csv`: Each row contains probability `p(y=1|data)` for a data example in the test set
-- [ ] `predictions_recommendation.csv`: Each row contains predicted count for a data example in the test set
-- [ ] `test_errors_detection.csv`: Report expected test error (which error measure?)
-- [ ] `test_errors_recommendation.csv`: Report expected test error (which error measure?)
+- [ ] `songPred.mat` contains the two matrices `Ytest_weak_pred` (size 1774x15082) and `Ytest_strong_pred` (size 93x15082)
+- [ ] `personPred.mat` contains a vector 'Ytest_score' (8743x1) with the prediction score for each test sample
 
 ### Report
 

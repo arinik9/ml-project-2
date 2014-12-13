@@ -1,4 +1,4 @@
-function betas = learnEachArtist(Y, G, userDV, artistDV)
+function betas = learnEachArtist(Y, G, headThreshold, userDV, artistDV)
 % LEARNEACHARTIST Train a linear model for each nonzero artist
 %
 % INPUT
@@ -11,19 +11,19 @@ function betas = learnEachArtist(Y, G, userDV, artistDV)
     [idx, sz] = getRelevantIndices(Y);
 
     % Head / tail split
-    headThreshold = 100;
     % TODO: do not hardcode the number of extracted features
+    % TODO: do better than a simple Least Squares
     betas = zeros(11 + 1, sz.a);
 
-    for j = 1:length(idx.tr.unique.a)
-        artist = idx.tr.unique.a(j);
-        users = idx.tr.u(idx.tr.a == artist);
+    for j = 1:length(idx.unique.a)
+        artist = idx.unique.a(j);
+        users = idx.u(idx.a == artist);
 
         y = nonzeros(Y(users, artist));
 
         if(length(users) > headThreshold)
             % Train a linear model for artist j
-            tX = generateFeatures(artist, Y, G, userDV, artistDV);
+            tX = generateFeatures(artist, users, Y, G, userDV, artistDV);
 
             % Simple least squares
             betas(:, artist) = (tX' * tX) \ (tX' * y);

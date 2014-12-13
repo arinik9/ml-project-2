@@ -32,16 +32,15 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
         plotLearningCurve = 0;
     end
     
-    % TODO: smaller epsilon
-    epsilon = 1;
+    % TODO: smaller epsilon?
+    epsilon = 1e-2;
+    maxIterations = 100;
     
-    % TODO: use getRelevantIndices
-    Roriginal = R;
-    R = normalizedSparse(R);
-    [idx, sz] = getRelevantIndices(Roriginal);
+    [idx, sz] = getRelevantIndices(R);
     [testIdx, testSz] = getRelevantIndices(Rtest);
     
-    % Initialization: average over the features or small random numbers
+    % Initialization: average over the features (if available)
+    % or small random numbers
     U = zeros(k, sz.u);
     M = rand(k, sz.a);
     for j = 1:sz.a
@@ -62,8 +61,7 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
     % or even negative (i.e. we start overfitting)
     trErrors = [];
     teErrors = [];
-
-    maxIterations = 100;
+    
     it = 0;
     while true
         it = it + 1;
@@ -77,7 +75,7 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
                 columns = idx.a(ii);
                 subM = M(:, columns);
                 % Number of data points available for this user
-                nObserved = nnz(Roriginal(i, columns));
+                nObserved = nnz(R(i, columns));
 
                 A = (subM * subM') + lambda * nObserved * eye(k);
                 V = subM * R(i, columns)';
@@ -98,7 +96,7 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
                 rows = idx.u(jj);
                 subU = U(:, rows);
                 % Number of data points available for this user
-                nObserved = nnz(Roriginal(rows, j));
+                nObserved = nnz(R(rows, j));
 
                 A = (subU * subU') + lambda * nObserved * eye(k);
                 V = subU * R(rows, j);
@@ -111,8 +109,8 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
         end;
         
         % Estimate the quality of our approximation
-        trError = computeRmse(Roriginal, denormalize(reconstructFromLowRank(U, M, idx, sz), idx));
-        teError = computeRmse(Rtest, denormalize(reconstructFromLowRank(U, M, testIdx, testSz), testIdx));
+        trError = computeRmse(R, reconstructFromLowRank(U, M, idx, sz));
+        teError = computeRmse(Rtest, reconstructFromLowRank(U, M, testIdx, testSz));
         
         if(plotLearningCurve)
             trErrors = [trErrors; trError];
