@@ -36,7 +36,7 @@ function [trAvgTPR, teAvgTPR, predTr, predTe, trueTr, trueTe] = kFoldCrossValida
     end;
     
     % For each fold, compute the train and test predictions with the learnt model
-    for k = 1:K
+    parfor k = 1:K
         % Get k'th subgroup in test, others in train
         idxTe = cvIndices(k, :);
         idxTr = cvIndices([1:k-1 k+1:end], :);

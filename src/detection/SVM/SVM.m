@@ -1,12 +1,4 @@
-%getStartedDetection;
-
-% Split data into train and test set given a proportion
-prop = 2/3;
-fprintf('Splitting into train/test with proportion %.2f..\n', prop);
-[Tr.pcaX, Tr.y, Te.pcaX, Te.y] = splitDataDetection(y, pcaX, prop);
-
-fprintf('Splitting into train/test with proportion %.2f..\n', prop);
-[Tr.pcaExpX, Tr.expy, Te.pcaExpX, Te.expy] = splitDataDetection(y, pcaExpX, prop);
+getStartedDetection;
 
 %% SVM Model
 %  no need to scale features since all the features are in the range [0, 0.2]
@@ -51,58 +43,49 @@ fprintf('Splitting into train/test with proportion %.2f..\n', prop);
 	%TODO : plot test/train error against different parameters to chose the best parameters
 	% svmtrain(Tr.y, Tr.X, '-t 0 -v 5'); % linear kernel, 5-fold cross validation
 
-%% SVM RBF Kernel: Learn Gamma
-    
-gammaValues = [(5/(size(pcaX,2))),(2/(size(pcaX,2))), (1/size(pcaX,2)), (1/(2*size(pcaX,2))), (1/(5*size(pcaX,2))), (1/(10*size(pcaX,2)))];
-[bestGamma, testTPR, trainTPR] = findGammaSVM(y, pcaX, 3, gammaValues);
-    
+plot_flag = 0;
+predict = @(model, X) predictSVM(model, X);    
+computePerformance = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 1, 1, model_name);
 
+learn = @(y, X) trainSVM(y, X, '-t 2 -b 1 -e 0.01');
+[svmPCA.trAvgTPR, svmPCA.teAvgTPR, svmPCA.predTr, svmPCA.predTe, svmPCA.trueTr, svmPCA.trueTe] = kFoldCrossValidation(y, pcaX, 3, learn, predict, computePerformance, 'SVM RBF kernel + Exp');
+
+learn = @(y, X) trainSVM(y, X, '-t 2 -b 1 -e 0.01');
+[svmPCAexp.trAvgTPR, svmPCAexp.teAvgTPR, svmPCAexp.predTr, svmPCAexp.predTe, svmPCAexp.trueTr, svmPCAexp.trueTe] = kFoldCrossValidation(y, pcaExpX, 3, learn, predict, computePerformance, 'SVM RBF kernel + Exp');
+
+methodNames = {'pca(X)', 'pca(exp(X))'};
+avgTPRList = kCVevaluateMultipleMethods( cat(3, svmPCA.trueTe, svmPCAexp.trueTe), cat(3, svmPCA.predTe, svmPCAexp.predTe), true, methodNames );
+
+    
 %% kCV on different models
 %TODO: check accuracy message
 
-plot_flag = 1;
 
+% Linear kernel
 learn = @(y, X) trainSVM(y, X, '-t 0 -b 1 -e 0.01');
-predict = @(model, X) predictSVM(model, X);
-computePerformance = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 1);
-[svm1.trAvgTPR, svm1.teAvgTPR, svm1.predTr, svm1.predTe] = kFoldCrossValidation(y, pcaX, 3, learn, predict, computePerformance, 'SVM Linear kernel');
-
+[svm1.trAvgTPR, svm1.teAvgTPR, svm1.predTr, svm1.predTe, svm1.trueTr, svm1.trueTe] = kFoldCrossValidation(y, pcaExpX, 3, learn, predict, computePerformance, 'SVM Linear kernel');
+ 
+% Quadratic kernel
 learn = @(y, X) trainSVM(y, X, '-t 1 -b 1 -e 0.01');
+[svm2.trAvgTPR, svm2.teAvgTPR, svm2.predTr, svm2.predTe, svm2.trueTr, svm2.trueTe] = kFoldCrossValidation(y, pcaExpX, 3, learn, predict, computePerformance, 'SVM Polynomial kernel');
+%%
+% RBF kernel
+plot_flag = 0;
 predict = @(model, X) predictSVM(model, X);
-computePerformance = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 1);
-[svm2.trAvgTPR, svm2.teAvgTPR, svm2.predTr, svm2.predTe] = kFoldCrossValidation(y, pcaX, 3, learn, predict, computePerformance, 'SVM Polynomial kernel');
+computePerformance = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 1, 1, model_name);
 
 learn = @(y, X) trainSVM(y, X, '-t 2 -b 1 -e 0.01');
-predict = @(model, X) predictSVM(model, X);
-computePerformance = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 1);
-[svm3.trAvgTPR, svm3.teAvgTPR, svm3.predTr, svm3.predTe] = kFoldCrossValidation(y, pcaX, 3, learn, predict, computePerformance, 'SVM RBF kernel');
+[svm3.trAvgTPR, svm3.teAvgTPR, svm3.predTr, svm3.predTe, svm3.trueTr, svm3.trueTe] = kFoldCrossValidation(y, pcaExpX, 3, learn, predict, computePerformance, 'SVM RBF kernel');
+%%
+methodNames = {'Linear kernel', 'Polynomial kernel', 'RBF kernel'};
+avgTPRList = kCVevaluateMultipleMethods( cat(3, svm1.trueTe, svm2.trueTe, svm3.trueTe), cat(3, svm1.predTe, svm2.predTe, svm3.predTe), true, methodNames );
 
-learn = @(y, X) trainSVM(y, X, '-t 2 -b 1 -e 0.01');
-predict = @(model, X) predictSVM(model, X);
-computePerformance = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 1);
-[svm4.trAvgTPR, svm4.teAvgTPR, svm4.predTr, svm4.predTe] = kFoldCrossValidation(y, pcaExpX, 3, learn, predict, computePerformance, 'SVM RBF kernel + Exp');
 
-%% Try different models
-
-fprintf('train SVM1...\n')
-svm1 = trainSVM(Tr.y, Tr.pcaX, '-t 0 -b 1 -e 0.01'); % C-SVC linear kernel, with probabilities, etc
-fprintf('predict SVM1...\n')
-svmPred1 = predictSVM(svm1, Te.pcaX, Te.y);
-
-fprintf('train SVM2...\n')
-svm2 = trainSVM(Tr.y, Tr.pcaX, '-t 1 -b 1 -e 0.01'); % C-SVC quadratic kernel, with probabilities, etc
-fprintf('predict SVM2...\n')
-svmPred2 = predictSVM(svm2, Te.pcaX, Te.y);
-
-fprintf('train SVM3...\n')
-svm3 = trainSVM(Tr.y, Tr.pcaX, '-t 2 -b 1 -e 0.01'); % C-SVC RFB kernel, with probabilities, etc
-fprintf('predict SVM3...\n')
-svmPred3 = predictSVM(svm3, Te.pcaX, Te.y);
-
-fprintf('train SVMExp...\n')
-svmExp = trainSVM(Tr.expy, Tr.pcaExpX, '-t 2 -b 1 -e 0.01'); % C-SVC RFB kernel exp tranfo, with probabilities, etc
-fprintf('predict SVMExp...\n')
-svmPredExp = predictSVM(svmExp, Te.pcaExpX, Te.expy);
+%% SVM RBF Kernel: Learn Gamma
+    
+gammaValues = [(5/(size(pcaExpX,2))),(2/(size(pcaExpX,2))), (1/size(pcaExpX,2)), (1/(2*size(pcaExpX,2))), (1/(5*size(pcaExpX,2))), (1/(10*size(pcaExpX,2)))];
+[bestGamma, testTPR, trainTPR] = findGammaSVM(y, pcaExpX, 3, gammaValues);
+savePlot('./report/figures/detection/svm-gamma-learningcurve.pdf','Gamma values','TPR on train (blue) and test (red)');
 
 
 %% See prediction performance

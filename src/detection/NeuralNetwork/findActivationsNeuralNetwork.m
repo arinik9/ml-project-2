@@ -28,7 +28,7 @@ function [nActivationStar, trainTPR, testTPR] = findActivationsNeuralNetwork(y, 
         end
         
         % Status
-        fprintf('TPR for dropout = %f: train %f | test %f\n', a, trainTPR(i), testTPR(i));
+        fprintf('TPR for # activation = %f: train %f | test %f\n', a, trainTPR(i), testTPR(i));
         
     end
     
@@ -37,7 +37,7 @@ function [nActivationStar, trainTPR, testTPR] = findActivationsNeuralNetwork(y, 
     plot(activationValues, trainTPR, '.-b');
     hold on;
     plot(activationValues, testTPR, '.-r');
-    xlabel('Drop out');
+    xlabel('Activation functions number on L2');
     ylabel('Training (blue) and test (red) TPR');
     
 end

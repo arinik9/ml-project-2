@@ -1,17 +1,17 @@
-function [nTreesStar, trainTPR, testTPR] = findnTreesRF(y, X, k, nTreesValues, seed)
+function [nMinLeafStar, trainTPR, testTPR] = findminLeafRF(y, X, k, leafValues, seed)
 
-    nDf = length(nTreesValues);
+    nDf = length(leafValues);
 
     trainTPR = zeros(nDf,1);
     testTPR = zeros(nDf,1);
     bestTPR = 0;
-    nTreesStar = 0;
+    nMinLeafStar = 0;
     
     for i=1:nDf
         
-        nTrees = nTreesValues(i);
+        nLeaf = leafValues(i);
         
-        learn = @(y, X) trainRandomForest(y, X, nTrees);
+        learn = @(y, X) trainRandomForest(y, X, 100, sqrt(size(X,2)), nLeaf);
         predict = @(model, X) predictRandomForest(model, X);
         computePerformances = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
         
@@ -19,20 +19,20 @@ function [nTreesStar, trainTPR, testTPR] = findnTreesRF(y, X, k, nTreesValues, s
         [trainTPR(i), testTPR(i)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances, 0);
   
         if (testTPR(i) > bestTPR)
-            nTreesStar = nTrees;
+            nMinLeafStar = nLeaf;
             bestTPR = testTPR(i);
         end
         
         % Status
-        fprintf('TPR for nTrees = %f: train %f | test %f\n', nTrees, trainTPR(i), testTPR(i));
+        fprintf('TPR for nTrees = %f: train %f | test %f\n', nLeaf, trainTPR(i), testTPR(i));
         
     end
     
     % Plot evolution of train and test error with respect to lambda
     figure;
-    plot(nTreesValues, trainTPR, '.-b');
+    plot(leafValues, trainTPR, '.-b');
     hold on;
-    plot(nTreesValues, testTPR, '.-r');
+    plot(leafValues, testTPR, '.-r');
     xlabel('number of Trees');
     ylabel('Training (blue) and test (red) TPR');
     

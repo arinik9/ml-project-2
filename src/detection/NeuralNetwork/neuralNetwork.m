@@ -1,6 +1,6 @@
 getStartedDetection;
 
-%% Try out on X or pcaX
+%% Try out on X or pcaX and pcaExpX
 
 plot_flag = 0;
 predict = @(model, X) predictNeuralNetwork(model, X);
@@ -9,11 +9,13 @@ computePerformance = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(true
 learn = @(y, X) trainNeuralNetwork(y, X, 0, 1, 'sigm', 0, 0);
 [trAvgTPR_pcaX, teAvgTPR_pcaX, predTr_pcaX, predTe_pcaX, trueTr_pcaX, trueTe_pcaX] = kFoldCrossValidation(y, pcaX, 3, learn, predict, computePerformance, plot_flag, 'Neural Network');
 
+[trAvgTPR_pcaExpX, teAvgTPR_pcaExpX, predTr_pcaExpX, predTe_pcaExpX, trueTr_pcaExpX, trueTe_pcaExpX] = kFoldCrossValidation(y, pcaExpX, 3, learn, predict, computePerformance, plot_flag, 'Neural Network');
+
 [trAvgTPR_X, teAvgTPR_X, predTr_X, predTe_X, trueTr_X, trueTe_X] = kFoldCrossValidation(y, X, 3, learn, predict, computePerformance, plot_flag, 'Neural Network');
 
 % Prediction performances on the two different models
-methodNames = {'pca(X)', 'X'};
-avgTPRList = kCVevaluateMultipleMethods( cat(3, trueTe_pcaX, trueTe_X), cat(3, predTe_pcaX, predTe_X), true, methodNames );
+methodNames = {'pca(X)', 'pca(exp(X))','X'};
+avgTPRList = kCVevaluateMultipleMethods( cat(3, trueTe_pcaX, trueTe_pcaExpX, trueTe_X), cat(3, predTe_pcaX, predTe_pcaExpX, predTe_X), true, methodNames );
 %savePlot('./report/figures/detection/pca-varianceExplained.pdf','Principal Components','Variance Explained');
 
 
@@ -51,8 +53,8 @@ savePlot('./report/figures/detection/nn-activation-learningcurve-fulldata-bis.pd
 %% Find the best regularization
 
 dpFractions = [0 0.2 0.3 0.4 0.5];
-weightDecays = [0 1e-4 1e-3 1e-2];
-[bestDropout, bestWeight, trainTPR_dw, testTPR_dw] = findParamsNeuralNetwork(y, X, 3, dpFractions, weightDecays);
+weightDecays = [0 1e-5 1e-4 1e-3];
+[bestDropout2, bestWeight2, trainTPR_dw2, testTPR_dw2] = findParamsNeuralNetwork(y, X, 2, dpFractions, weightDecays);
 savePlot('./report/figures/detection/nn-regu-learningcurve-fulldata.pdf','Drop out fraction','TPR on test');
 
-% bestDropout: 0.3, bestWeight: 1e-03
+% bestDropout: 0, bestWeight: 1e-03

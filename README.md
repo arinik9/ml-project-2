@@ -48,13 +48,13 @@ Project's TODO
 - [X] Implement Logistic Regression
 - [X] Experiment with the Neural Network's hyperparameters (number of layers, activation functions, dropout...)
 - [X] Experiment with Gaussian Processes (check provided toolbox)
-- [ ] Experiment with SVM (check provided toolbox)
+- [X] Experiment with SVM (check provided toolbox)
 - [ ] Experiment with Random Forest
 - [X] Implement kCV fastROC
 - [X] Generate learning curves (code to replicate for different methods)
 - [ ] Plot ROC Curves of different models for comparison
 - [ ] Maximize the train and test avgTPR
-- [ ] Check the stability of the results with k-CV
+- [X] Check the stability of the results with k-CV
 
 ### Song recommendation dataset
 

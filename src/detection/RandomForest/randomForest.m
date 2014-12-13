@@ -1,10 +1,5 @@
 %getStartedDetection;
 
-% Split data into train and test set given a proportion
-prop = 2/3;
-fprintf('Splitting into train/test with proportion %.2f..\n', prop);
-[Tr.pcaX, Tr.y, Te.pcaX, Te.y] = splitDataDetection(y, pcaX, prop);
-
 %% Model
 
 % Parameters to play with:
@@ -15,19 +10,51 @@ fprintf('Splitting into train/test with proportion %.2f..\n', prop);
 % - 'FBoot': Fraction of input data to sample with replacement from the input data for growing each new tree.
 %            set 'SampleWithReplacement' to off to play with it
 
+%% Test on pca dataset or full dataset
+
+plot_flag = 0;
+learn = @(y, X) trainRandomForest(y, X, 100);
+predict = @(model, X) predictRandomForest(model, X);
+computePerformance = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 1, 1, model_name);
+
+fprintf('Random forest on pca(X)\n')
+[trAvgTPR_pcaX, teAvgTPR_pcaX, predTr_pcaX, predTe_pcaX, trueTr_pcaX, trueTe_pcaX] = kFoldCrossValidation(y, pcaX, 3, learn, predict, computePerformance, plot_flag, 'Random Forest');
+
+fprintf('Random forest on pca(exp(X))\n')
+[trAvgTPR_pcaExpX, teAvgTPR_pcaExpX, predTr_pcaExpX, predTe_pcaExpX, trueTr_pcaExpX, trueTe_pcaExpX] = kFoldCrossValidation(y, pcaExpX, 3, learn, predict, computePerformance, plot_flag, 'Random Forest');
+
+fprintf('Random forest on X\n')
+[trAvgTPR_X, teAvgTPR_X, predTr_X, predTe_X, trueTr_X, trueTe_X] = kFoldCrossValidation(y, X, 3, learn, predict, computePerformance, plot_flag, 'Random Forest');
+
+
+% Prediction performances on the two different models
+methodNames = {'pca(X)', 'pca(exp(X))'};
+avgTPRList = kCVevaluateMultipleMethods( cat(3, trueTe_pcaX, trueTe_pcaExpX), cat(3, predTe_pcaX, predTe_pcaExpX), true, methodNames );
+
+
 %% Number of trees in the forest
 nTreesValues = [50 100 200 300 400 500];
-[bestnTree, trainTPR, testTPR] = findnTreesRF(y, pcaX, 3, nTreesValues, 1);
+[bestnTree, trainTPR, testTPR] = findnTreesRF(y, pcaExpX, 3, nTreesValues, 1);
+savePlot('./report/figures/detection/rf-nbtrees-learningcurve.pdf','Number of trees','Train (blue) and test (red) TPR');
 
-% TODO: Try to run it on non-PCA values
-% Clearly overfitting on PCA train data with just nTreesValues used Best
-% values for 400 Trees, but 100 gives good results as well.
+% Clearly overfitting on PCA train data with just 50 used Best
+% values for 400 Trees, but 100 gives good results as well and is a good
+% compromise between computation complexity and performance. So we finally
+% kept 100.
 
-%% kCV Parameters validation
+%% Number of features for bagging
 
-nTreesValues = [50 100];
-nMinLeafs = [1 10];
-[bestnTree, bestMinLeaf, trainTPR, testTPR] = findParamsRF(y(1:500), pcaX(1:500,:), 3, nTreesValues, nMinLeafs, 1);
+baggingRange = [2*sqrt(size(pcaExpX,2)), sqrt(size(pcaExpX,2)), sqrt(size(pcaExpX,2)) / 2, (size(pcaExpX,2)) / 10];
+[bestVarSample, trainTPR, testTPR] = findnVarSampleRF(y, pcaExpX, 3, baggingRange, 1);
+savePlot('./report/figures/detection/rf-nbvarsample-learningcurve.pdf','Features to sample','Train (blue) and test (red) TPR');
+
+
+%% minLeaf value
+
+leafRange = [1, 10, 50, 100, 500];
+[bestVarSample, trainTPR, testTPR] = findminLeafRF(y, pcaExpX, 3, leafRange, 1);
+%savePlot('./report/figures/detection/rf-minleaf-learningcurve.pdf','Minimum observation per leaf','Train (blue) and test (red) TPR');
+
 
 %% Random prediction
 randPred = rand(size(Te.y)); 

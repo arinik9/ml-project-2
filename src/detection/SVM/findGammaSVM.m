@@ -17,11 +17,11 @@ function [bestGamma, testTPR, trainTPR] = findGammaSVM(y, X, k, gammaValues, see
         
         learn = @(y, X) trainSVM(y, X, strcat('-t 2 -b 1 -e 0.01', sprintf(' -g %.4f',gamma)));
         predict = @(model, X) predictSVM(model, X);
-        computePerformances = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 0);
+        computePerformances = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
         
         setSeed(seed);
-        [trainTPR(i), testTPR(i)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances);
-        
+        [trainTPR(i), testTPR(i)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances, 0);
+         
         if (testTPR(i) > bestTPR || bestTPR < 0)
             bestGamma = gamma;
             bestTPR = testTPR(i);
