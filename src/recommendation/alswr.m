@@ -126,7 +126,7 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
     end;
 
     if(plotLearningCurve)
-        fprintf('Done!\n');
+        fprintf('ALSWR is done!\n');
         plot(1:it, trErrors, 'b.-');
         hold on;
         plot(1:it, teErrors, 'r.-');

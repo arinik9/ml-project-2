@@ -43,12 +43,12 @@ learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, u
 [e.tr.eachArtist, e.te.eachArtist] = evaluate(learnHeadTail);
 fprintf('RMSE with head / tail (threshold = %d): %f | %f\n', headThreshold, e.tr.eachArtist, e.te.eachArtist);
 
-%% Top-K recommendation
-K = 20;
+%% Top-K recommendation (on a reduced dataset)
+% TODO: select K with cross-validation
+K = 50;
 topUsersThreshold = 38;
 
-% For now, we use a reduced dataset because similarity measure computation is too slow
-% TODO: use the full dataset (reduce dimensionality with ALS-WR?)
+% Use a reduced dataset because similarity measure computation is too slow
 if(~exist('Ysmall', 'var'))
     topUsers = find(userDV(:, 2) > topUsersThreshold);
     Ysmall = Ytrain(topUsers, :);
@@ -59,13 +59,32 @@ end;
 % Precompute the similarity matrix (only once)
 if(~exist('S', 'var'))
     fprintf('Computing similarity matrix of %d users...', size(Ysmall, 1));
-    S = computeSimilarityMatrix(Ysmall, userDVsmall);
+    S = computeSimilarityMatrix(Ysmall, YtestSmall, userDVsmall);
     fprintf(' done.\n');
 end;
 
 learnTopK = @(Y, Ytest, userDV, artistDV) learnTopKPredictor(Y, Ytest, userDV, artistDV, K, S);
 [e.tr.topK, e.te.topK] = evaluateMethod(learnTopK, Ysmall, YtestSmall, userDV, artistDV);
-fprintf('[REDUCED DATASET] RMSE with Top-K recommendation (K = %d): %f | %f\n', K, e.tr.topK, e.te.topK);
+fprintf('[Reduced dataset] RMSE with Top-K recommendation (K = %d): %f | %f\n', K, e.tr.topK, e.te.topK);
+
+%% Top-K recommendation (on the full dataset using dim-reduction)
+% Precompute the similarity matrix (only once)
+if(~exist('Sals', 'var'))
+    nFeatures = 10;
+    lambda = 0.05;
+    reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 1)';
+    
+    fprintf('Computing similarity matrix of %d users projected with ALS-WR...\n', size(Ytrain, 1));
+    Sals = computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
+    fprintf('Similarity matrix computation is done.\n');
+    
+    clearvars nFeatures lambda;
+end;
+
+learnTopKALS = @(Y, Ytest, userDV, artistDV) learnTopKPredictor(Y, Ytest, userDV, artistDV, K, Sals);
+[e.tr.topKALS, e.te.topKALS] = evaluate(learnTopKALS);
+fprintf('RMSE with Top-K recommendation (K = %d): %f | %f\n', K, e.tr.topKALS, e.te.topKALS);
+
 
 %% Gaussian Mixture Model clustering
 % (soft clustering)

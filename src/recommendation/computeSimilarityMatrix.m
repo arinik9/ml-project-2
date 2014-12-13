@@ -1,41 +1,67 @@
-function similarities = computeSimilarityMatrix(Y, userDV)
+function similarities = computeSimilarityMatrix(Y, Ytest, userDV, reduceDimensionality)
 % COMPUTESIMILARITYMATRIX Generate the similarity matrix for all users
 %
 % INPUT
 %   Y:            (users x artists)
+%   Ytest:        (users x artists)
 %   userDV:       precomputed Derived Variables
+%   [reduceSpace] function(Y, Ytest) returning Y projected on a space of lower dimensionality
+%                 The projected Y must still have one line per user, but fewer features.
+%                 It is assumed to be dense.
 % OUTPUT
 %   similarities: (users x users) Symmetric matrix giving the similarity
 %                 for each pair of users
 
     u = size(Y, 1);
 
-    listenedBy = getListenedBy(Y);
+    % TODO: is it necessary to make a difference?
 
-    % The similarity matrix is going to be very sparse
-    values = [];
-    idxa = [];
-    idxb = [];
-    for a = 1:u
-        for b = 1:u
-            % Only need to compute one half
-            if (a > b)
-                v = computeSimilarity(Y, a, b, userDV, listenedBy);
-                if(abs(v) > eps)
-                    values = [values; v];
-                    idxa = [idxa; a];
-                    idxb = [idxb; b];
+    if(exist('reduceDimensionality', 'var'))
+        % ----- Dense mode
+        Yreduced = reduceDimensionality(Y, Ytest);
+        similarities = zeros(u, u);
+
+        % TODO: parallelize
+        for a = 1:u
+            for b = 1:u
+                % Only need to compute one half
+                if (a > b)
+                    similarities(a, b) = computeSimilarity(Yreduced, a, b, userDV);
                 end;
             end;
         end;
+
+    else
+        % ----- Sparse mode
+        listenedBy = getListenedBy(Y);
+
+        % The similarity matrix is going to be very sparse
+        values = [];
+        idxa = [];
+        idxb = [];
+        for a = 1:u
+            for b = 1:u
+                % Only need to compute one half
+                if (a > b)
+                    v = computeSimilaritySparse(Y, a, b, userDV, listenedBy);
+                    if(abs(v) > eps)
+                        values = [values; v];
+                        idxa = [idxa; a];
+                        idxb = [idxb; b];
+                    end;
+                end;
+            end;
+        end;
+
+        similarities = sparse(idxa, idxb, values, u, u);
     end;
 
-    similarities = sparse(idxa, idxb, values, u, u);
+    % The similarity matrix is always symmetric
     similarities = similarities + similarities';
 end
 
-function similarity = computeSimilarity(Y, a, b, userDV, listenedBy)
-% COMPUTESIMILARITY Pearson correlation
+function similarity = computeSimilaritySparse(Y, a, b, userDV, listenedBy)
+% COMPUTESIMILARITYSPARSE Pearson correlation
 % Compute the similarity between users a and b
 % based on artists that they have both listened to.
 %
@@ -59,14 +85,27 @@ function similarity = computeSimilarity(Y, a, b, userDV, listenedBy)
 
     if(c > 0)
         Ysub = [full(Y(a, common)); full(Y(b, common))];
-
-        % Deviations of the common ratings to the average rating of the user
-        Ydev = [Ysub(1, :) - userDV(a, 1); Ysub(2, :) - userDV(b, 1)];
-        % Squared deviation to the average listening counts
-        deviations = sum(Ydev .^ 2, 2);
-
-        similarity = sum(Ydev(1, :) .* Ydev(2, :), 2) / sqrt(deviations(1) * deviations(2));
+        means = [userDV(a, 1); userDV(b, 1)];
+        similarity = computePearsonCoefficient(Ysub, means);
     else
         similarity = 0;
     end;
+end
+
+function similarity = computeSimilarity(Y, a, b, userDV)
+% COMPUTESIMILARITY
+% INPUT:
+%   Y: Y is assumed to be dense
+    Ysub = [Y(a, :); Y(b, :)];
+    means = [userDV(a, 1); userDV(b, 1)];
+    similarity = computePearsonCoefficient(Ysub, means);
+end
+
+function similarity = computePearsonCoefficient(Ysub, means)
+    % Deviations of the common ratings to the average rating of the user
+    Ydev = [Ysub(1, :) - means(1); Ysub(2, :) - means(2)];
+    % Squared deviation to the average listening counts
+    deviations = sum(Ydev .^ 2, 2);
+
+    similarity = sum(Ydev(1, :) .* Ydev(2, :), 2) / sqrt(deviations(1) * deviations(2));
 end
