@@ -1,8 +1,9 @@
-function [YtestHat, S] = topKRecommendation(Y, Ytest, K, userDV, S)
+function [YtestHat, S] = topKRecommendation(Y, idx, K, userDV, S)
 % TOPNRECOMMENDATION Use counts from the K most similar users to generate predictions
 %
 % INPUT
-%
+%   Y
+%   idx Indices to predict on
 % OUTPUT
 %
     K = min(K, size(Y, 1));
@@ -21,9 +22,9 @@ function [YtestHat, S] = topKRecommendation(Y, Ytest, K, userDV, S)
     
     % For each user, find the K most similar
     % and predict entries based on their tastes
-    [idx, sz] = getRelevantIndices(Ytest);
+    [~, sz] = getRelevantIndices(Y);
     
-    values = zeros(sz.nnz, 1);
+    values = zeros(length(idx.u), 1);
     for user = 1:sz.u
         if(~isempty(listenedBy{user}))
             % Get K most similar users from the similarity matrix
@@ -43,12 +44,12 @@ function [YtestHat, S] = topKRecommendation(Y, Ytest, K, userDV, S)
                 values(selector) = aggregate(Y, user, artist, neighbors, userDV);
                 % TODO: fix aggregate to prevent negative predictions
                 % Or use centered data to leverage this?
-                values(selector) = max(0, values(selector));
             end;
         end;
     end;
     
-    YtestHat = sparse(idx.u, idx.a, values, sz.u, sz.a);
+    overallMean = mean(nonzeros(Y));
+    YtestHat = sparse(idx.u, idx.a, values + overallMean, sz.u, sz.a);
 end
 
 function prediction = aggregate(Y, user, artist, neighbors, userDV)
@@ -75,8 +76,8 @@ function similarities = computeSimilarityMatrix(Y, userDV, listenedBy)
     idxb = [];
     for a = 1:u
         for b = 1:u
-            % TODO: only compute the upper half!
-            if (a ~= b)
+            % Only need to compute one half
+            if (a > b)
                 v = computeSimilarity(Y, a, b, userDV, listenedBy);
                 if(abs(v) > eps)
                     values = [values; v];
@@ -88,6 +89,7 @@ function similarities = computeSimilarityMatrix(Y, userDV, listenedBy)
     end;
 
     similarities = sparse(idxa, idxb, values, u, u);
+    similarities = similarities + similarities';
 end
 
 function similarity = computeSimilarity(Y, a, b, userDV, listenedBy)

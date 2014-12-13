@@ -20,8 +20,8 @@ function errors = diagnoseError(y, yHat)
     figure;
     % Plot reparition of log(RMSE)
     subplot(1, 2, 1);
-    hist(log(errors(:, 2)), 20);
-    title('Repartition of log(RMSE)');
+    hist(errors(:, 2), 20);
+    title('Repartition of RMSE');
     
     % Plot error made VS quantity of data available
     subplot(1, 2, 2);
