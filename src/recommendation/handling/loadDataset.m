@@ -20,7 +20,8 @@ clear artistName;
 % TODO: average over many train / test splits (use bootstrapping?)
 setSeed(1);
 % TODO: vary test / train proportions
-[~, Ytest, ~, Ytrain, Gtrain] = splitData(Yoriginal, Goriginal, 0, 0.1);
+weakRatio = 0.1;
+[~, Ytest, ~, Ytrain, Gtrain] = splitData(Yoriginal, Goriginal, 0, weakRatio);
 [idx, sz] = getRelevantIndices(Ytrain, Ytest);
 [testIdx, testSz] = getRelevantIndices(Ytest);
 

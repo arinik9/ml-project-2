@@ -7,108 +7,67 @@ clearvars;
 loadDataset;
 [userDV, artistDV] = generateDerivedVariables(Ytrain);
 
+% Shortcut
+evaluate = @(learn) evaluateMethod(learn, Ytrain, Ytest, userDV, artistDV);
+
 %% Baseline: constant predictor (overall mean of all observed counts)
-overallMean = mean(nonzeros(Ytrain));
-% Predict counts (only those for which we have reference data, to save memory)
-trYhat0 = sparse(idx.tr.u, idx.tr.a, overallMean, sz.tr.u, sz.tr.a);
-teYhat0 = sparse(idx.te.u, idx.te.a, overallMean, sz.te.u, sz.te.a);
-
-% Compute train and test errors (prediction vs counts in test and training set)
-e.tr.constant = computeRmse(Ytrain, trYhat0);
-e.te.constant = computeRmse(Ytest, teYhat0);
-
+[e.tr.constant, e.te.constant] = evaluate(@learnConstantPredictor);
 fprintf('RMSE with a constant predictor: %f | %f\n', e.tr.constant, e.te.constant);
-%diagnoseError(Ytest, trYhat0);
-%diagnoseError(Ytest, teYhat0);
-
-% Cleanup
-clear overallMean trYhat0 teYhat0;
 
 %% Simple model: predict the average listening count of the artist
-
-% Predict counts based on the artist's average listening count
 % (which is one of the derived variables)
-trPrediction = zeros(sz.tr.nnz, 1);
-tePrediction = zeros(sz.te.nnz, 1);
-for k = 1:sz.tr.unique.a
-    artist = idx.tr.unique.a(k);
-    trPrediction(idx.tr.a == artist) = artistDV(artist, 1);
-    tePrediction(idx.te.a == artist) = artistDV(artist, 1);
-end;
-trYhatMean = sparse(idx.tr.u, idx.tr.a, trPrediction, sz.tr.u, sz.tr.a);
-teYhatMean = sparse(idx.te.u, idx.te.a, tePrediction, sz.te.u, sz.te.a);
-
-% Compute train and test errors (prediction vs counts in test and training set)
-e.tr.mean = computeRmse(Ytrain, trYhatMean);
-e.te.mean = computeRmse(Ytest, teYhatMean);
-
+[e.tr.mean, e.te.mean] = evaluate(@learnAveragePerArtistPredictor);
 fprintf('RMSE with a constant predictor per artist: %f | %f\n', e.tr.mean, e.te.mean);
-%diagnoseError(Ytrain, trYhatMean);
-%diagnoseError(Ytest, teYhatMean);
-
-% Cleanup
-clearvars i k nCountsObserved meanPerArtist trPrediction tePrediction;
-clearvars trYhatMean teYhatMean;
 
 %% ALS-WR
 % TODO: experiment different lambdas and number of features
-% TODO: choose the number of features by cross-validation
-nFeatures = 50; % Target reduced dimensionality
-lambda = 0.05;
+% TODO: select hyper-parameters by cross-validation
+nFeatures = 100; % Target reduced dimensionality
+lambda = 1;
 displayLearningCurve = 1;
+learnAlsWr = @(Y, Ytest, userDV, artistDV) learnAlsWrPredictor(Y, Ytest, userDV, artistDV, nFeatures, lambda, displayLearningCurve);
 
-[U, M] = alswr(Ytrain, Ytest, nFeatures, lambda, displayLearningCurve);
-
-e.tr.als = computeRmse(Ytrain, reconstructFromLowRank(U, M, idx, sz));
-e.te.als = computeRmse(Ytest, reconstructFromLowRank(U, M, testIdx, testSz));
-
+[e.tr.als, e.te.als] = evaluate(learnAlsWr);
 fprintf('RMSE ALS-WR (low rank): %f | %f\n', e.tr.als, e.te.als);
-diagnoseError(Ytrain, reconstructFromLowRank(U, M, idx, sz));
-diagnoseError(Ytest, reconstructFromLowRank(U, M, testIdx, testSz));
-
-% Cleanup
-clearvars nFeatures lambda displayLearningCurve; % U M
 
 %% "Each Artist" predictions
-headThreshold = 100;
-% Train a model for each item using derived variables
-% TODO: handle tail as well!
-betas = learnEachArtist(Ytrain, Gtrain, headThreshold, userDV, artistDV);
-%%
-% Generage predictions
-trPrediction = zeros(sz.tr.nnz, 1);
-tePrediction = zeros(sz.te.nnz, 1);
-for j = 1:sz.tr.unique.a
-    artist = idx.tr.unique.a(j);
-    users = idx.tr.u(idx.tr.a == artist);
-    
-    % TODO: are we generating the predictions correctly here?
-    tXtrain = generateFeatures(artist, users, Ytrain, Gtrain, userDV, artistDV);
-    % Since Xtrain has exactly as many lines as users listened to this
-    % artist, this will automatically produce only the predictions we need
-    trPrediction(idx.tr.a == artist) = tXtrain * betas(:, artist);
-    
-    
-    usersTest = idx.te.u(idx.te.a == artist);
-    if(~isempty(usersTest))
-        tXtest = generateFeatures(artist, usersTest, Ytest, Gtrain, userDV, artistDV);
+% Train a separate model for each artist using derived variables
+[e.tr.eachArtist, e.te.eachArtist] = evaluate(@learnEachArtistPredictor);
+fprintf('RMSE with Each Artist (one model per artist): %f | %f\n', e.tr.eachArtist, e.te.eachArtist);
 
-        tePrediction(idx.te.a == artist) = tXtest * betas(:, artist);
-    end;
+%% Head / tail predictor
+% Train a separate model for each artist of the head
+% Train a common model for each cluster of tail artists
+headThreshold = 50;
+learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThreshold);
+
+[e.tr.eachArtist, e.te.eachArtist] = evaluate(learnHeadTail);
+fprintf('RMSE with head / tail (threshold = %d): %f | %f\n', headThreshold, e.tr.eachArtist, e.te.eachArtist);
+
+%% Top-K recommendation (on the full dataset using dim-reduction)
+% TODO: select K with cross-validation
+K = 50;
+
+% Precompute the similarity matrix (only once)
+if(~exist('S', 'var'))
+    nFeatures = 20;
+    lambda = 0.05;
+    reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 1)';
+
+    fprintf('Computing similarity matrix of %d users projected with ALS-WR...\n', size(Ytrain, 1));
+    S = computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
+    fprintf('Similarity matrix computation is done.\n');
+
+    clearvars nFeatures lambda;
 end;
 
-trYhatLS = sparse(idx.tr.u, idx.tr.a, trPrediction, sz.tr.u, sz.tr.a);
-teYhatLS = sparse(idx.te.u, idx.te.a, tePrediction, sz.te.u, sz.te.a);
+learnTopKALS = @(Y, Ytest, userDV, artistDV) learnTopKPredictor(Y, Ytest, userDV, artistDV, K, S);
+[e.tr.topKALS, e.te.topKALS] = evaluate(learnTopKALS);
+fprintf('RMSE with Top-K recommendation (K = %d): %f | %f\n', K, e.tr.topKALS, e.te.topKALS);
 
-e.tr.leastSquares = computeRmse(Ytrain, trYhatLS);
-e.te.leastSquares = computeRmse(Ytest, teYhatLS);
 
-fprintf('RMSE with Least-Squares on head only : %f | %f\n', e.tr.leastSquares, e.te.leastSquares);
-diagnoseError(Ytrain, trYhatLS);
-
-% Cleanup
-clearvars j artist beta Xtrain tXtrain Xtest tXtest trPrediction tePrediction trVal teVal;
-clearvars yTrain yTest trYhatLS teYhatLS;
+%% Gaussian Mixture Model clustering
+% (soft clustering)
 
 %% Other predictions
 % TODO

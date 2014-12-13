@@ -3,7 +3,7 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
 % Low-rank matrix factorization using the technique described by:
 %   Zhou, Y., Wilkinson, D., Schreiber, R., & Pan, R. (2008).
 %   Large-scale parallel collaborative filtering for the netflix prize.
-% 
+%
 % Input matrices are expected to be normalized.
 % Warning: for very small values of k (e.g. 3),
 % the algorithm may not converge.
@@ -22,8 +22,8 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
 %      individuals (e.g. users).
 %   M: (k x D) The dimensionality-reduced matrix representing the items
 %      (e.g. movies).
-% An approximation of the initial R can then be reconstructed using:
-%   Rapprox = denormalize(U' * M)
+% An approximation of the initial R (in normalized space) can then be reconstructed using:
+%   Rapprox = U' * M
 
     if(~exist('lambda', 'var'))
         lambda = 0;
@@ -31,14 +31,14 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
     if(~exist('plotLearningCurve', 'var'))
         plotLearningCurve = 0;
     end
-    
+
     % TODO: smaller epsilon?
     epsilon = 1e-2;
     maxIterations = 100;
-    
+
     [idx, sz] = getRelevantIndices(R);
     [testIdx, testSz] = getRelevantIndices(Rtest);
-    
+
     % Initialization: average over the features (if available)
     % or small random numbers
     U = zeros(k, sz.u);
@@ -51,24 +51,24 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
             M(1, j) = 0;
         end;
     end;
-    
+
     if(plotLearningCurve)
         fprintf('Starting ALS-WR with k = %d...\n', k);
     end;
-    
+
     % Until convergence, make ALS steps
     % Convergence criterion: test RMSE reduction becomes insignificant
     % or even negative (i.e. we start overfitting)
     trErrors = [];
     teErrors = [];
-    
+
     it = 0;
     while true
         it = it + 1;
-        
+
         % Fix M, solve for U
         % For each row of R (e.g. users)
-        for i = 1:sz.u
+        parfor i = 1:sz.u
             ii = (idx.u == i);
             if(nnz(ii) > 0)
                 % Columns for which we have data from this user
@@ -86,10 +86,10 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
                 U(:, i) = zeros(k, 1);
             end;
         end;
-        
+
         % Fix U, solve for M
         % For each column of R (e.g. movies)
-        for j = 1:sz.a
+        parfor j = 1:sz.a
             jj = (idx.a == j);
             if(nnz(jj) > 0)
                 % Users for which we have data about this column
@@ -107,26 +107,28 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
                 M(:, j) = zeros(k, 1);
             end;
         end;
-        
+
         % Estimate the quality of our approximation
         trError = computeRmse(R, reconstructFromLowRank(U, M, idx, sz));
         teError = computeRmse(Rtest, reconstructFromLowRank(U, M, testIdx, testSz));
-        
+
         if(plotLearningCurve)
             trErrors = [trErrors; trError];
             teErrors = [teErrors; teError];
             fprintf('Iteration %d: reconstruction RMSE %f | %f\n', it, trError, teError);
         end;
-        
+
         % Stopping criterion
         if (it > 5 && previousError - teError < epsilon) || (it > maxIterations)
             break;
         end;
         previousError = teError;
     end;
-    
+
     if(plotLearningCurve)
-        fprintf('Done!\n');
+        fprintf('ALSWR is done!\n');
+        
+        figure;
         plot(1:it, trErrors, 'b.-');
         hold on;
         plot(1:it, teErrors, 'r.-');
