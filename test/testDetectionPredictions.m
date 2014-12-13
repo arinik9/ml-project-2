@@ -13,7 +13,7 @@
 % Once you have the file, running this file will check if the sizes are correct or not.
 
 clear all;
-load personPred.mat;
+load('./results/personPred.mat');
 
 % exists?
 if ~exist('Ytest_score', 'var')

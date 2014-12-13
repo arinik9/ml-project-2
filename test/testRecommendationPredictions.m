@@ -1,4 +1,4 @@
- %Store your predictions in a mat file named 'songPred.mat'. 
+% Store your predictions in a mat file named 'songPred.mat'. 
 % This mat file should contain two matrices 'Ytest_weak_pred'
 % and 'Ytest_strong_pred'. It is clear what names mean.
 % Ytest_weak_pred should be a sparse matrix of size 1774x15082
@@ -14,8 +14,8 @@
 % Once you have the file, running this file will check if the sizes are correct or not.
 
 clear all;
-load songPred; % your file
-load songTestPairs; % test data
+load('./results/songPred.mat'); % your file
+load('./data/recommendation/songTestPairs.mat'); % test data
 
 % for  Ytest_weak_pred
 % exists?
