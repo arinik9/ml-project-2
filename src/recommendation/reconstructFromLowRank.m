@@ -7,7 +7,9 @@ function Yhat = reconstructFromLowRank(U, M, idx, sz)
 %   sz: Size of the output target matrix
 % OUTPUT:
 %   Yhat: Reconstructed sparse matrix (estimating the original Y)
-    
+
+    % TODO: deprecated
+
     % We compute only nonzero entries of Y
     values = zeros(sz.nnz, 1);
     % TODO: could most likely be optimized

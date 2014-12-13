@@ -23,7 +23,7 @@ function betas = learnEachArtist(Y, G, headThreshold, userDV, artistDV)
 
         if(length(users) > headThreshold)
             % Train a linear model for artist j
-            tX = generateFeatures(artist, users, Y, G, userDV, artistDV);
+            tX = generateFeatures(artist, users, G, userDV, artistDV);
 
             % Simple least squares
             betas(:, artist) = (tX' * tX) \ (tX' * y);
