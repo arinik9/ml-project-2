@@ -18,6 +18,8 @@ e.tr.constant = computeRmse(Ytrain, trYhat0);
 e.te.constant = computeRmse(Ytest, teYhat0);
 
 fprintf('RMSE with a constant predictor: %f | %f\n', e.tr.constant, e.te.constant);
+%diagnoseError(Ytest, trYhat0);
+%diagnoseError(Ytest, teYhat0);
 
 % Cleanup
 clear overallMean trYhat0 teYhat0;
@@ -41,8 +43,8 @@ e.tr.mean = computeRmse(Ytrain, trYhatMean);
 e.te.mean = computeRmse(Ytest, teYhatMean);
 
 fprintf('RMSE with a constant predictor per artist: %f | %f\n', e.tr.mean, e.te.mean);
-diagnoseError(Ytrain, trYhatMean);
-diagnoseError(Ytest, teYhatMean);
+%diagnoseError(Ytrain, trYhatMean);
+%diagnoseError(Ytest, teYhatMean);
 
 % Cleanup
 clearvars i k nCountsObserved meanPerArtist trPrediction tePrediction;
@@ -68,9 +70,10 @@ diagnoseError(Ytest, reconstructFromLowRank(U, M, testIdx, testSz));
 clearvars nFeatures lambda displayLearningCurve; % U M
 
 %% "Each Artist" predictions
+headThreshold = 100;
 % Train a model for each item using derived variables
 % TODO: handle tail as well!
-betas = learnEachArtist(Ytrain, Gtrain, userDV, artistDV);
+betas = learnEachArtist(Ytrain, Gtrain, headThreshold, userDV, artistDV);
 %%
 % Generage predictions
 trPrediction = zeros(sz.tr.nnz, 1);
