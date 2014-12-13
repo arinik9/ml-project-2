@@ -63,11 +63,11 @@ function avgTprAtWP = kCVevaluateMultipleMethods( labels, predictions, ...
     if showPlot && ~isempty(legendNames)
         % add tprAtWP to legend names
         for i=1:M
-            legendROC{i} = sprintf('%s: %.3f', legendNames{i}, tprAtWP(i));
+            legendROC{i} = sprintf('%s: %.3f', legendNames{i}, avgTprAtWP(i));
         end
 
         legend( legendROC, 'Location', 'SouthEast' );
-        %savePlot('./report/figures/detection/pca-curve.pdf','False Positive Rate','True Positive Rate');
+        %savePlot('./report/figures/detection/logreg-pcaVSfull-curve.pdf','False Positive Rate','True Positive Rate');
     end
 
     
@@ -77,7 +77,7 @@ function avgTprAtWP = kCVevaluateMultipleMethods( labels, predictions, ...
         title('TPR at WP of different methods');
         xlabel('Applied methods');
         ylabel('Average TPR');
-        %savePlot('./report/figures/detection/pca-boxplots.pdf','Applied methods','Average TPR');
+        %savePlot('./report/figures/detection/logreg-pcaVSfull-boxplots.pdf','Applied methods','Average TPR');
     end
     
 
