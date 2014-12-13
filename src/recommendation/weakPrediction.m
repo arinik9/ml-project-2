@@ -38,7 +38,7 @@ fprintf('RMSE with Each Artist (one model per artist): %f | %f\n', e.tr.eachArti
 %% Head / tail predictor
 % Train a separate model for each artist of the head
 % Train a common model for each cluster of tail artists
-headThreshold = 50;
+headThreshold = 30;
 learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThreshold);
 
 [e.tr.eachArtist, e.te.eachArtist] = evaluate(learnHeadTail);
@@ -46,24 +46,37 @@ fprintf('RMSE with head / tail (threshold = %d): %f | %f\n', headThreshold, e.tr
 
 %% Top-K recommendation (on the full dataset using dim-reduction)
 % TODO: select K with cross-validation
-K = 50;
+K = 300;
 
 % Precompute the similarity matrix (only once)
 if(~exist('S', 'var'))
-    nFeatures = 20;
-    lambda = 0.05;
-    reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 1)';
-
+    % Our goal here is to obtain a version of Ytrain but with lower
+    % dimensionality. We're not trying to predict from the result, so we 
+    % can overfit completely.
+    nFeatures = 200;
+    lambda = 0.000001;
+    reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 0)';
+    
     fprintf('Computing similarity matrix of %d users projected with ALS-WR...\n', size(Ytrain, 1));
     S = computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
+    Sfisher = applyFisherTransform(S);
     fprintf('Similarity matrix computation is done.\n');
 
+    figure; hist(nonzeros(S));
+    figure; hist(nonzeros(Sfisher));
+    
     clearvars nFeatures lambda;
 end;
 
 learnTopKALS = @(Y, Ytest, userDV, artistDV) learnTopKPredictor(Y, Ytest, userDV, artistDV, K, S);
 [e.tr.topKALS, e.te.topKALS] = evaluate(learnTopKALS);
 fprintf('RMSE with Top-K recommendation (K = %d): %f | %f\n', K, e.tr.topKALS, e.te.topKALS);
+
+%% Top-K recommendation with Fisher Transform
+% Doesn't seem to change anything.
+learnTopKFisher = @(Y, Ytest, userDV, artistDV) learnTopKPredictor(Y, Ytest, userDV, artistDV, K, Sfisher);
+[e.tr.topKFisher, e.te.topKFisher] = evaluate(learnTopKFisher);
+fprintf('RMSE with Top-K recommendation (K = %d) with Fisher transform: %f | %f\n', K, e.tr.topKFisher, e.te.topKFisher);
 
 
 %% Gaussian Mixture Model clustering

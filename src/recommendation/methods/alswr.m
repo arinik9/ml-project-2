@@ -34,6 +34,7 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
 
     % TODO: smaller epsilon?
     epsilon = 1e-2;
+    minIterations = 3;
     maxIterations = 100;
 
     [idx, sz] = getRelevantIndices(R);
@@ -119,7 +120,7 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
         end;
 
         % Stopping criterion
-        if (it > 5 && previousError - teError < epsilon) || (it > maxIterations)
+        if (it > minIterations && previousError - teError < epsilon) || (it > maxIterations)
             break;
         end;
         previousError = teError;
