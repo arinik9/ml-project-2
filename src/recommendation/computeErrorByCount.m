@@ -6,27 +6,26 @@ function [errorByCount, errors] = computeErrorByCount(y, yHat)
 %   errors: acual RMSE
   % TODO: allow to choose dimension along which to compute error
 
-  % Error made for each artist
-  d = size(y, 2);
-  errors = zeros(d, 2);
-  for i = 1:d
-      if(nnz(y(:, i)) > 0)
-        errors(i, 1) = nnz(y(:, i));
-        errors(i, 2) = computeRmse(y(:, i), yHat(:, i));
-      end;
-  end;
-  
-  % Sort by number of ratings available
-  errors = sortrows(errors, 1);
-  
-  % Take average for each number of observed data points
-  nCounts = unique(errors(:, 1));
-  n = length(nCounts);
-  errorByCount = zeros(n, 2);
-  for i = 1:n
-      idx = (errors(:, 1) == nCounts(i));
+    % Error made for each artist
+    [idx, sz] = getRelevantIndices(y);
+    errors = zeros(sz.unique.a, 2);
+    for j = 1:sz.unique.a
+        artist = idx.unique.a(j);
+        errors(j, 1) = nnz(y(:, artist));
+        errors(j, 2) = computeRmse(y(:, artist), yHat(:, artist));
+    end;
+
+    % Sort by number of ratings available
+    errors = sortrows(errors, 1);
+
+    % Take average for each number of observed data points
+    nCounts = unique(errors(:, 1));
+    n = length(nCounts);
+    errorByCount = zeros(n, 2);
+    for j = 1:n
+      idx = (errors(:, 1) == nCounts(j));
       errs = errors(idx, 2);
-      errorByCount(i, :) = [mean(errs), std(errs)];
-  end;
-  
+      errorByCount(j, :) = [mean(errs), std(errs)];
+    end;
+
 end

@@ -75,6 +75,7 @@ function similarities = computeSimilarityMatrix(Y, userDV, listenedBy)
     idxb = [];
     for a = 1:u
         for b = 1:u
+            % TODO: only compute the upper half!
             if (a ~= b)
                 v = computeSimilarity(Y, a, b, userDV, listenedBy);
                 if(abs(v) > eps)
