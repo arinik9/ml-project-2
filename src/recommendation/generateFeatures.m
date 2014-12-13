@@ -1,10 +1,11 @@
-function [X] = generateFeatures(j, Y, G, userFeatures, artistFeatures)
+function [X] = generateFeatures(j, uIdx, Y, G, userFeatures, artistFeatures)
 % GENERATEFEATURES Generate a feature matrix for a given artist
 %
 % See `generateDerivedVariables`.
 %
 % INPUT:
 %   j: index of the artist to generate features for
+%   uIdx: indices of users who have listened to this artist
 %   Y: (n x d) listening counts for all artists
 %   G: (n x n) social network (friendship relationships between users)
 %   userFeatures: (n x ..) precomputed features for each user
@@ -15,7 +16,6 @@ function [X] = generateFeatures(j, Y, G, userFeatures, artistFeatures)
 %      - m = number of users who have listened to the given artist
 %      - d = number of extracted features (1+ 8 + 3 + ?)
 
-    [uIdx, ~] = find(Y(:, j));
     m = length(uIdx);
 
     dUser = size(userFeatures, 2);

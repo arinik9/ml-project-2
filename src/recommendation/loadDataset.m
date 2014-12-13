@@ -16,7 +16,7 @@ clear artistName;
 % TODO: when predicting the actual target data, first check if the pair is
 % available in the training data. It yields 0 error for free!
 
-%% Outliers removal
+%% Outliers removal & normalization
 % TODO: test removing more or less "outliers"
 nDev = 3;
 Y = removeOutliersSparse(Yoriginal, nDev);
@@ -29,3 +29,6 @@ setSeed(1);
 [~, Ytest, ~, Ytrain, Gtrain] = splitData(Y, Goriginal, 0, 0.1);
 [idx, sz] = getRelevantIndices(Ytrain, Ytest);
 [testIdx, testSz] = getRelevantIndices(Ytest);
+
+Ytrain = normalizedSparse(Ytrain);
+Ytest = normalizedSparse(Ytest);
