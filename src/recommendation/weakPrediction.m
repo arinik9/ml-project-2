@@ -45,6 +45,7 @@ fprintf('RMSE with head / tail (threshold = %d): %f | %f\n', headThreshold, e.tr
 
 %% Top-K recommendation (on a reduced dataset)
 % TODO: select K with cross-validation
+%{
 K = 50;
 topUsersThreshold = 38;
 
@@ -66,11 +67,15 @@ end;
 learnTopK = @(Y, Ytest, userDV, artistDV) learnTopKPredictor(Y, Ytest, userDV, artistDV, K, S);
 [e.tr.topK, e.te.topK] = evaluateMethod(learnTopK, Ysmall, YtestSmall, userDV, artistDV);
 fprintf('[Reduced dataset] RMSE with Top-K recommendation (K = %d): %f | %f\n', K, e.tr.topK, e.te.topK);
+%}
 
 %% Top-K recommendation (on the full dataset using dim-reduction)
+% TODO: select K with cross-validation
+K = 50;
+
 % Precompute the similarity matrix (only once)
 if(~exist('Sals', 'var'))
-    nFeatures = 10;
+    nFeatures = 20;
     lambda = 0.05;
     reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 1)';
     

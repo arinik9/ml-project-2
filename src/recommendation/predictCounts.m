@@ -12,7 +12,7 @@ function Yhat = predictCounts(predict, idx, sz)
 
     % For each required (user, artist) pair
     values = zeros(length(idx.u), 1);
-    for i = 1:length(idx.u)
+    parfor i = 1:length(idx.u)
         user = idx.u(i);
         artist = idx.a(i);
         values(i) = predict(user, artist);

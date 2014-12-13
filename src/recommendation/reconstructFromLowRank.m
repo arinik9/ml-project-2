@@ -11,7 +11,7 @@ function Yhat = reconstructFromLowRank(U, M, idx, sz)
     % We compute only nonzero entries of Y
     values = zeros(sz.nnz, 1);
     % TODO: could most likely be optimized
-    for i = 1:sz.nnz
+    parfor i = 1:sz.nnz
         values(i) = U(:, idx.u(i))' * M(:, idx.a(i));
     end;
 

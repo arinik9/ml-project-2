@@ -21,8 +21,7 @@ function similarities = computeSimilarityMatrix(Y, Ytest, userDV, reduceDimensio
         Yreduced = reduceDimensionality(Y, Ytest);
         similarities = zeros(u, u);
 
-        % TODO: parallelize
-        for a = 1:u
+        parfor a = 1:u
             for b = 1:u
                 % Only need to compute one half
                 if (a > b)

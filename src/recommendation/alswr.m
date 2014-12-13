@@ -68,7 +68,7 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
 
         % Fix M, solve for U
         % For each row of R (e.g. users)
-        for i = 1:sz.u
+        parfor i = 1:sz.u
             ii = (idx.u == i);
             if(nnz(ii) > 0)
                 % Columns for which we have data from this user
@@ -89,7 +89,7 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
 
         % Fix U, solve for M
         % For each column of R (e.g. movies)
-        for j = 1:sz.a
+        parfor j = 1:sz.a
             jj = (idx.a == j);
             if(nnz(jj) > 0)
                 % Users for which we have data about this column
@@ -127,6 +127,8 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
 
     if(plotLearningCurve)
         fprintf('ALSWR is done!\n');
+        
+        figure;
         plot(1:it, trErrors, 'b.-');
         hold on;
         plot(1:it, teErrors, 'r.-');
