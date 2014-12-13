@@ -1,9 +1,13 @@
 function setSeed(seed)
-% set seed
-    global RNDN_STATE  RND_STATE
-    RNDN_STATE = randn('state');
-    randn('state',seed);
-    RND_STATE = rand('state');
-    %rand('state',seed);
-    rand('twister',seed);
+% INPUT
+%   seed: Positive integer to obtain reproducible random numbers generation
+%         Or -1 to switch back to unpredictable results
+%
+% SEE ALSO
+%   http://fr.mathworks.com/help/matlab/math/updating-your-random-number-generator-syntax.html
+    if(seed > 0)
+        rng(seed);
+    else
+        rng('shuffle');
+    end;
 end
