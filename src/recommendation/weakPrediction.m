@@ -39,7 +39,7 @@ fprintf('RMSE with Each Artist (one model per artist): %f | %f\n', e.tr.eachArti
 % Train a separate model for each artist of the head
 % Train a common model for each cluster of tail artists
 clc;
-headThreshold = 10;
+headThreshold = 50;
 learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThreshold);
 
 [e.tr.eachArtist, e.te.eachArtist] = evaluate(learnHeadTail);

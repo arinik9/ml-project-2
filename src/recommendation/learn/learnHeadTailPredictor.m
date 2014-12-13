@@ -46,7 +46,7 @@ function predictor = learnTailPredictor(Y, G, Ytest, userDV, artistDV, headThres
 % SEE ALSO
 %   Park, Yoon-Joo, and Alexander Tuzhilin.
 %   "The long tail of recommender systems and how to leverage it."
-
+    overallMean = mean(nonzeros(Y));
     nArtists = size(artistDV, 1);
 
     % TODO: what happens to artists having 0 counts? Maybe we should handle
@@ -58,7 +58,7 @@ function predictor = learnTailPredictor(Y, G, Ytest, userDV, artistDV, headThres
     % TODO: tweak the number of clusters
     % TODO: use more info to cluster on?
     % TODO: use GMM (soft clustering)?
-    K = 20;
+    K = 10;
     [tailClusters, ~] = kmeans2(tailSpace, K);
 
     % Convert cluster assignments back to "all artists" indexing
@@ -71,25 +71,32 @@ function predictor = learnTailPredictor(Y, G, Ytest, userDV, artistDV, headThres
     betas = cell(K, 1);
     for k = 1:K
         artistsInThisCluster = find(clusters == k);
-        [uIdx, ~] = find(Y(:, artistsInThisCluster));
-        correspondingUsers = unique(uIdx);
-
-        % TODO: more subtle target for the learning?
-        Ysub = Y(:, artistsInThisCluster);
-        y = zeros(length(correspondingUsers), 1);
-        for i = 1:length(correspondingUsers)
-            y(i) = mean(nonzeros(Ysub(correspondingUsers(i), :)));
-        end
-        tX = getFeaturesForCluster(artistsInThisCluster, correspondingUsers, userDV, artistDV);
-
-        nnz(y)
         
-        % TODO: choose lambda by cross-validation
-        % TODO: do better than a simple ridge regression
-        lambda = 0.1;
-        betas{k} = ridgeRegression(y, tX, lambda);
+        fprintf('Cluster %d has %d artists (yielding %d counts)\n', ...
+            k, length(artistsInThisCluster), nnz(Y(:, artistsInThisCluster)));
         
-        fprintf('Cluster %d has %d artists\n', k, length(artistsInThisCluster));
+        if(~isempty(artistsInThisCluster))
+            [uIdx, ~] = find(Y(:, artistsInThisCluster));
+            correspondingUsers = unique(uIdx);
+
+            % TODO: more subtle target for the learning?
+            Ysub = Y(:, artistsInThisCluster);
+            y = zeros(length(correspondingUsers), 1);
+            for i = 1:length(correspondingUsers)
+                y(i) = mean(nonzeros(Ysub(correspondingUsers(i), :)));
+            end
+            tX = getFeaturesForCluster(artistsInThisCluster, correspondingUsers, userDV, artistDV);
+
+            % If we have no information whatsoever, shoot for the overall mean
+            if(nnz(y) < 1)
+                y(:) = overallMean;
+            end;
+
+            % TODO: choose lambda by cross-validation
+            % TODO: do better than a simple ridge regression
+            lambda = 1000;
+            betas{k} = ridgeRegression(y, tX, lambda);
+        end;
     end;
 
 
