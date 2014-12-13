@@ -1,5 +1,5 @@
-function betas = learnEachArtist(Y, G, headThreshold, userDV, artistDV)
-% LEARNEACHARTIST Train a linear model for each nonzero artist
+function betas = modelEachArtist(Y, G, headThreshold, userDV, artistDV)
+% MODELEACHARTIST Train a linear model for each nonzero artist
 %
 % INPUT
 %   Y: (n x d) Listening counts matrix

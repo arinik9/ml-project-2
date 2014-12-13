@@ -17,7 +17,7 @@ function predictor = learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThre
     Gtrain = sparse(size(Y, 1), size(Y, 1));
 
     % Each prediction uses a model learnt from all users having listened to the artist
-    betas = learnEachArtist(Y, Gtrain, headThreshold, userDV, artistDV);
+    betas = modelEachArtist(Y, Gtrain, headThreshold, userDV, artistDV);
     getFeatures = @(user, artist) generateFeatures(artist, user, Gtrain, userDV, artistDV);
 
     % TODO: handle the tail! This takes care of the head only
