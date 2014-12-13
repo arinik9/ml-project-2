@@ -20,7 +20,7 @@ fprintf('Normalizing features..\n');
 fprintf('Performing Principal Component Analysis..\n');
 [PCA.coeff, PCA.mu, PCA.latent] = pcaCompute(X);
 
-PCA.kPC = 50; % Number of PC kept (to choose)
+PCA.kPC = 100; % Number of PC kept (to choose). Chosen from the PCAselection study
 
 fprintf('PCA > Projecting train and test data on the first %d PC..\n', PCA.kPC);
 [pcaX, pcaXhat, pcaAvsq] = pcaApplyOnData(X, PCA.coeff, PCA.mu, PCA.kPC);

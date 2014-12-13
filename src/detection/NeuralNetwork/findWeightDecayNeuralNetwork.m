@@ -11,11 +11,12 @@ function [weightDecayStar, trainTPR, testTPR] = findWeightDecayNeuralNetwork(y, 
         
         weightDecay = weightDecaysValues(i);
         
-        learn = @(y, X) learnNeuralNetwork(y, X, 0, 1, 'sigm', 0, weightDecay);
+        learn = @(y, X) trainNeuralNetwork(y, X, 0, 1, 'sigm', 0, weightDecay);
         predict = @(model, X) predictNeuralNetwork(model, X);
+        computePerformances = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
         
         setSeed(seed);
-        [trainTPR(i), testTPR(i)] = kFoldCrossValidation(y, X, k, learn, predict, 0);
+        [trainTPR(i), testTPR(i)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances, 0);
         
         if (testTPR(i) > bestTPR)
             weightDecayStar = weightDecay;

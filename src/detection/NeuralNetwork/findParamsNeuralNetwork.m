@@ -1,5 +1,9 @@
 function [dropOutStar, weightDecayStar, trainTPR, testTPR] = findParamsNeuralNetwork(y, X, k, dropOutFractions, weightDecays,seed)
 
+    if (nargin < 6)
+        seed = 1;
+    end
+
     nDf = length(dropOutFractions);
     nWd = length(weightDecays);
 
@@ -17,11 +21,12 @@ function [dropOutStar, weightDecayStar, trainTPR, testTPR] = findParamsNeuralNet
             
             weightDecay = weightDecays(w);
 
-            learn = @(y, X) learnNeuralNetwork(y, X, 0, 1, 'sigm', dpFraction, weightDecay);
+            learn = @(y, X) trainNeuralNetwork(y, X, 0, 1, 'sigm', dpFraction, weightDecay, [size(X,2) 15 2]);
             predict = @(model, X) predictNeuralNetwork(model, X);
-
+            computePerformances = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
+       
             setSeed(seed);
-            [trainTPR(d,w), testTPR(d,w)] = kFoldCrossValidation(y, X, k, learn, predict, 0);
+            [trainTPR(d,w), testTPR(d,w)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances, 0);
 
             if (testTPR(d,w) > bestTPR)
                 dropOutStar = dpFraction;
@@ -37,13 +42,13 @@ function [dropOutStar, weightDecayStar, trainTPR, testTPR] = findParamsNeuralNet
         % Plot evolution of train and test error with respect to lambda
     styles = {'r','b','k','m','g','y','r--', 'b--', 'k--','m--','g--','y--'};
     
-    for n=1:nLeafs
+    for n=1:nWd
         legendNames{n} = sprintf('weightDecay = %d', weightDecays(n));
     end
     
     figure(1);
     for n=1:nWd
-        semilogx(dropOutFractions, trainTPR(:,n), styles{n});
+        plot(dropOutFractions, trainTPR(:,n), styles{n});
         hold on;
     end;
     xlabel('drop out fraction');
@@ -53,7 +58,7 @@ function [dropOutStar, weightDecayStar, trainTPR, testTPR] = findParamsNeuralNet
     
     figure(2);
     for n=1:nWd
-        semilogx(dropOutFractions, testTPR(:,n), styles{n});
+        plot(dropOutFractions, testTPR(:,n), styles{n});
         hold on;
     end;
     xlabel('drop out fraction');

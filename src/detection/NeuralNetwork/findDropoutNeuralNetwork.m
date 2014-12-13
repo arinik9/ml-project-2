@@ -17,10 +17,10 @@ function [dropOutStar, trainTPR, testTPR] = findDropoutNeuralNetwork(y, X, k, dr
         
         learn = @(y, X) trainNeuralNetwork(y, X, 0, 1, 'sigm', dpFraction, 0);
         predict = @(model, X) predictNeuralNetwork(model, X);
-        computePerformances = @(trueOutputs, pred, model_name) kCVfastROC(trueOutputs, pred, model_name, 0);
+        computePerformances = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
         
         setSeed(seed);
-        [trainTPR(i), testTPR(i)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances);
+        [trainTPR(i), testTPR(i)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances, 0);
         
         if (testTPR(i) > bestTPR)
             dropOutStar = dpFraction;
