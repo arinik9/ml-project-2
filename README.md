@@ -24,12 +24,12 @@ Project's TODO
 - [X] Generic k-fold Cross Validation
 - [X] Support Vector Machine
 - [X] Gaussian process and several kernels
-- [ ] K-means clustering
+- [X] K-means clustering
 - [ ] Gaussian Mixture Model and EM algo
 - [x] Principal Components Analysis (as a low-rank approximation) using alternating least squares
 - [X] Neural Networks (implementation from the [DeepLearn toolbox](https://github.com/rasmusbergpalm/DeepLearnToolbox/archive/))
 - [ ] Generic learning curve plotting function
-- [ ] Generic ML method comparison function (for each method, plot achieved test error & stability with a boxplot)
+- [X] Generic ML method comparison function (for each method, plot achieved test error & stability with a boxplot)
 
 ### Dataset pre-processing
 
@@ -65,16 +65,17 @@ Recall we must achieve both **weak** (new ratings for existing users) and **stro
 - [x] Train / test split (particular for weak and strong prediction)
 - [x] Feature engineering: implement derived variables
 - [x] Get a baseline error value
+- [x] Implement Top-N recommendation (cluster with Pearson similarity measure)
+- [ ] Experiment with Gaussian Mixture Models (soft clustering)
 - [ ] Implement the simple [Slope One](http://arxiv.org/pdf/cs/0702144v2.pdf) method
 - [ ] Cluster the tail items (head / tail cutoff point to be chosen carefully)
+- [X] Try clustering in reduced-dimensionality space
 - [ ] Experiment with SVM
-- [ ] Experiment with Gaussian processes
-- [ ] Experiment with clustering
 - [ ] Determine if using the social graph helps weak prediction (then, we will be able to know if we can use it for strong prediction as well)
-- [ ] Use the social network for strong prediction (clustering ?)
+- [ ] Use the social network and generic artist informations for strong prediction (clustering ?)
 - [ ] Generate learning curves
 - [ ] Minimize the train and test error
-- [ ] Check the stability of the results with k-CV
+- [ ] Check the stability of the results with random train / test splits
 - [ ] Use the artists name to output fun facts
 
 ### Predictions
