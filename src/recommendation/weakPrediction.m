@@ -7,48 +7,19 @@ clearvars;
 loadDataset;
 [userDV, artistDV] = generateDerivedVariables(Ytrain);
 
+% Shortcut
+evaluate = @(learn) evaluateMethod(learn, Ytrain, Ytest, userDV, artistDV);
+
 %% Baseline: constant predictor (overall mean of all observed counts)
-overallMean = mean(nonzeros(Ytrain));
-% Predict counts (only those for which we have reference data, to save memory)
-trYhat0 = sparse(idx.tr.u, idx.tr.a, overallMean, sz.tr.u, sz.tr.a);
-teYhat0 = sparse(idx.te.u, idx.te.a, overallMean, sz.te.u, sz.te.a);
-
-% Compute train and test errors (prediction vs counts in test and training set)
-e.tr.constant = computeRmse(Ytrain, trYhat0);
-e.te.constant = computeRmse(Ytest, teYhat0);
-
+[e.tr.constant, e.te.constant] = evaluate(@learnConstantPredictor);
 fprintf('RMSE with a constant predictor: %f | %f\n', e.tr.constant, e.te.constant);
-%diagnoseError(Ytest, trYhat0);
-%diagnoseError(Ytest, teYhat0);
-
-% Cleanup
-clear overallMean trYhat0 teYhat0;
 
 %% Simple model: predict the average listening count of the artist
 
 % Predict counts based on the artist's average listening count
 % (which is one of the derived variables)
-trPrediction = zeros(sz.tr.nnz, 1);
-tePrediction = zeros(sz.te.nnz, 1);
-for k = 1:sz.tr.unique.a
-    artist = idx.tr.unique.a(k);
-    trPrediction(idx.tr.a == artist) = artistDV(artist, 1);
-    tePrediction(idx.te.a == artist) = artistDV(artist, 1);
-end;
-trYhatMean = sparse(idx.tr.u, idx.tr.a, trPrediction, sz.tr.u, sz.tr.a);
-teYhatMean = sparse(idx.te.u, idx.te.a, tePrediction, sz.te.u, sz.te.a);
-
-% Compute train and test errors (prediction vs counts in test and training set)
-e.tr.mean = computeRmse(Ytrain, trYhatMean);
-e.te.mean = computeRmse(Ytest, teYhatMean);
-
+[e.tr.mean, e.te.mean] = evaluate(@learnAveragePerArtistPredictor);
 fprintf('RMSE with a constant predictor per artist: %f | %f\n', e.tr.mean, e.te.mean);
-%diagnoseError(Ytrain, trYhatMean);
-%diagnoseError(Ytest, teYhatMean);
-
-% Cleanup
-clearvars i k nCountsObserved meanPerArtist trPrediction tePrediction;
-clearvars trYhatMean teYhatMean;
 
 %% ALS-WR
 % TODO: experiment different lambdas and number of features
@@ -81,14 +52,14 @@ tePrediction = zeros(sz.te.nnz, 1);
 for j = 1:sz.tr.unique.a
     artist = idx.tr.unique.a(j);
     users = idx.tr.u(idx.tr.a == artist);
-    
+
     % TODO: are we generating the predictions correctly here?
     tXtrain = generateFeatures(artist, users, Ytrain, Gtrain, userDV, artistDV);
     % Since Xtrain has exactly as many lines as users listened to this
     % artist, this will automatically produce only the predictions we need
     trPrediction(idx.tr.a == artist) = tXtrain * betas(:, artist);
-    
-    
+
+
     usersTest = idx.te.u(idx.te.a == artist);
     if(~isempty(usersTest))
         tXtest = generateFeatures(artist, usersTest, Ytest, Gtrain, userDV, artistDV);

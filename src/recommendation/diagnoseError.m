@@ -15,21 +15,21 @@ function errors = diagnoseError(y, yHat)
 
     rmse = computeRmse(y, yHat);
     baselineRmse = computeRmse(y, nullMatrix);
-    fprintf('RMSE: %f (compared to constant predictor: %f)\n', rmse, baselineRmse);
-    
+    %fprintf('RMSE: %f (compared to constant predictor: %f)\n', rmse, baselineRmse);
+
     figure;
     % Plot reparition of log(RMSE)
     subplot(1, 2, 1);
     hist(errors(:, 2), 20);
     title('Repartition of RMSE');
-    
+
     % Plot error made VS quantity of data available
     subplot(1, 2, 2);
     hold on;
     %errorbar(1:n, averaged(:, 1), averaged(:, 2));
     semilogx(nCounts, averaged(:, 1), 'b.');
     semilogx(nCounts, averagedNull(:, 1), 'r+');
-    
+
     set(gca,'Xdir','reverse')
     title('Average error made over artists with a given number of observations');
     xlabel('Number of available listening counts');
