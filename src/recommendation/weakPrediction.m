@@ -37,9 +37,11 @@ fprintf('RMSE with Each Artist (one model per artist): %f | %f\n', e.tr.eachArti
 
 %% Head / tail predictor
 % Train a separate model for each artist of the head
-% handle the tail differently
-headThreshold = 15;
+% Train a common model for each cluster of tail artists
+clc;
+headThreshold = 10;
 learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThreshold);
+
 [e.tr.eachArtist, e.te.eachArtist] = evaluate(learnHeadTail);
 fprintf('RMSE with head / tail (threshold = %d): %f | %f\n', headThreshold, e.tr.eachArtist, e.te.eachArtist);
 
@@ -78,11 +80,11 @@ if(~exist('Sals', 'var'))
     nFeatures = 20;
     lambda = 0.05;
     reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 1)';
-    
+
     fprintf('Computing similarity matrix of %d users projected with ALS-WR...\n', size(Ytrain, 1));
     Sals = computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
     fprintf('Similarity matrix computation is done.\n');
-    
+
     clearvars nFeatures lambda;
 end;
 

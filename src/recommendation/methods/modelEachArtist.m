@@ -11,7 +11,6 @@ function betas = modelEachArtist(Y, G, headThreshold, userDV, artistDV)
     [idx, sz] = getRelevantIndices(Y);
 
     % TODO: do not hardcode the number of extracted features
-    % TODO: do better than a simple Least Squares
     betas = zeros(11 + 1, sz.a);
 
     for j = 1:length(idx.unique.a)
@@ -21,7 +20,7 @@ function betas = modelEachArtist(Y, G, headThreshold, userDV, artistDV)
         y = nonzeros(Y(users, artist));
 
         % We're only responsible of learning models for the head
-        if(length(users) > headThreshold)
+        if(length(users) >= headThreshold)
             % Train a linear model for artist j
             tX = generateFeatures(artist, users, G, userDV, artistDV);
 
@@ -29,6 +28,7 @@ function betas = modelEachArtist(Y, G, headThreshold, userDV, artistDV)
             %betas(:, artist) = (tX' * tX) \ (tX' * y);
             % Ridge regression
             % TODO: choose lambda by cross-validation
+            % TODO: do better than a simple ridge regression
             lambda = 0.01;
             betas(:, artist) = ridgeRegression(y, tX, lambda);
         end;
