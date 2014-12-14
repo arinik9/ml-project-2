@@ -3,12 +3,12 @@ function avgTprAtWP = kCVevaluateMultipleMethods( labels, predictions, ...
 % Automatically calls kCVfastROC() to show multiple curves, one for each
 % prediction vector provided.
 %
-% labels        NxDxM vector, D number of folds
-% predictions   NxDxM vector, D number of folds, M being the number of predictions to show
-%
-% if showPlot == true => single plot with multiple curves is shown.
-% legendNames is a cell list (optional) with the name to show for each
-% prediction in the legend.
+% Inputs:
+%   - labels        NxDxM vector, D number of folds
+%   - predictions   NxDxM vector, D number of folds, M being the number of predictions to show
+%   - if showPlot == true => single plot with multiple curves is shown.
+%   - legendNames is a cell list (optional) with the name to show for each
+%     prediction in the legend.
 %
 % Returns avgTprAtWP where each element is the avgTprAtWP of each prediction
 % vector given as input over its folds, plot average ROC curves for each method 
@@ -67,7 +67,7 @@ function avgTprAtWP = kCVevaluateMultipleMethods( labels, predictions, ...
         end
 
         legend( legendROC, 'Location', 'SouthEast' );
-        savePlot('./report/figures/detection/rf-pcaVSfull-curve.pdf','False Positive Rate','True Positive Rate');
+        savePlot('./report/figures/detection/compareall-5fold-curve.pdf','False Positive Rate','True Positive Rate');
     end
 
     
@@ -77,7 +77,7 @@ function avgTprAtWP = kCVevaluateMultipleMethods( labels, predictions, ...
         title('TPR at WP of different methods');
         xlabel('Applied methods');
         ylabel('Average TPR');
-        savePlot('./report/figures/detection/rf-pcaVSfull-boxplots.pdf','Applied methods','Average TPR');
+        savePlot('./report/figures/detection/compareall-5fold-boxplots.pdf','Applied methods','Average TPR');
     end
     
 

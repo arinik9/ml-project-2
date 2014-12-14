@@ -1,4 +1,6 @@
 function [ellStar, sfStar, trainTPR, testTPR] = findCovHypGP(y, X, k, ellValues, sfValues, seed)
+% Finds the best length-scale and signal magnitude hyper parameters of the covariance function
+% from given ranges ellValues and sfValues relying on the average TPR computed with k-fold CV
 
     if (nargin < 6)
         seed = 1;
@@ -25,6 +27,7 @@ function [ellStar, sfStar, trainTPR, testTPR] = findCovHypGP(y, X, k, ellValues,
             predict = @(model, X) predictGPClassification(model, X);
             computePerformances = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
        
+            rng('default');
             setSeed(seed);
             [trainTPR(d,w), testTPR(d,w)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances, 0);
 
@@ -39,7 +42,7 @@ function [ellStar, sfStar, trainTPR, testTPR] = findCovHypGP(y, X, k, ellValues,
         end
     end
     
-        % Plot evolution of train and test error with respect to lambda
+    % Plot evolution of train and test error with respect to lambda
     styles = {'r','b','k','m','g','y','r--', 'b--', 'k--','m--','g--','y--'};
     
     for n=1:nSf

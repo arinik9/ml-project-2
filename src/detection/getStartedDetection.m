@@ -1,6 +1,6 @@
 clearvars;
 
-% add path to source files and toolboxs -------------
+% Add path and load data ---------------------------
 addpath(genpath('./toolbox/'));
 addpath(genpath('./src/'));
 
@@ -25,12 +25,15 @@ PCA.kPC = 100; % Number of PC kept (to choose). Chosen from the PCAselection stu
 fprintf('PCA > Projecting train and test data on the first %d PC..\n', PCA.kPC);
 [pcaX, pcaXhat, pcaAvsq] = pcaApplyOnData(X, PCA.coeff, PCA.mu, PCA.kPC);
 
-% Normalize PCA features
+% Normalize PCA features ----------------------------
 fprintf('PCA > Normalizing PCA features..\n');
 [pcaX, ~, ~] = zscore(pcaX);
 
+% ---------------------------------------------------
+% Working with the exp() transform
+% ---------------------------------------------------
 
-% Feature transformations
+% Feature transformations ---------------------------
 fprintf('Feature tranformation: exp(X)..\n');
 expX = exp(X);
 
@@ -38,12 +41,13 @@ expX = exp(X);
 fprintf('Normalizing features..\n');
 [expX, ~, ~] = zscore(expX); % train, get mu and std
 
+% Principal Component Analysis ----------------------
 fprintf('Performing Principal Component Analysis on Exp(X)..\n');
 [PCAexpX.coeff, PCAexpX.mu, PCAexpX.latent] = pcaCompute(expX);
 
 fprintf('PCA > Projecting train and test data on the first %d PC..\n', PCA.kPC);
 [pcaExpX, ~, ~] = pcaApplyOnData(expX, PCAexpX.coeff, PCAexpX.mu, PCA.kPC);
 
-% Normalize PCA features
+% Normalize PCA features ----------------------------
 fprintf('PCA > Normalizing PCA features..\n');
 [pcaExpX, ~, ~] = zscore(pcaExpX);

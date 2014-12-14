@@ -5,34 +5,34 @@ function model = trainGPClassification(y, Xtr, likFunction, infFunction, covFunc
 % Outputs:
 %   - model: Gaussian Process Model for large scale classification
 % Inputs:
-%   - y: train outputs
-%   - Xtr: train inputs
-%   - Xte: test inputs
-%   - likFunction: likelihood function for GP Classification. It can be: 
-%       - @likErf: Probit regression (cumulative density function of a
-%       standard normal distribution)
-%       - @likLogistic: Logistic Function (linear model with logistic
-%       response function)
-%   - infFunction: Inference Function. As we are doing large scale
-%   classification it must be an FITC approximation function:
-%       - @infFITC_Laplace: Laplace approximation (which is faster)
-%       - @infFITC_EP: Expectation Propagation approximation (which seems
-%       more accurate but much slower)
-%   - covFunction: covariance function that we are using. So far we have
-%   tried:
-%       - @covSEiso: Squared Exponential covariance function with isotropic
-%       distance measure (less hyperparameters) which acts as the default
-%       covariance function
-%       - @covSEard: Squared exponential with automatic relevance determination
-%       that has one characteristic length-scale parameter for each dimension
-%       of the input space, and a signal magnitude parameter. i.e hyp.cov of
-%       dimenion 1 x (D+1) (lot of parameters to estimate)
-%   - covHyp: hyper parameters associated with the covariance function
-%     This may prove useful with our data:
-%       - covFunction = @covSEiso; ell = 2.0; sf = 2.0; covHyp = log([ell sf]);
-%       - covFunction = @covSEard; ell = 2.0; sf = 2.0; covHyp = log([ell * ones(1,size(Xtr,2)) sf]);
+%   - y:            train outputs
+%   - Xtr:          train inputs
+%   - Xte:          test inputs
+%   - likFunction:  likelihood function for GP Classification. It can be: 
+%           - @likErf: Probit regression (cumulative density function of a
+%                      standard normal distribution)
+%           - @likLogistic: Logistic Function (linear model with logistic
+%                      response function)
+%   - infFunction:  Inference Function. As we are doing large scale
+%                   classification it must be an FITC approximation function:
+%           - @infFITC_Laplace: Laplace approximation (which is faster)
+%           - @infFITC_EP: Expectation Propagation approximation (which seems
+%                          more accurate but much slower)
+%   - covFunction:  covariance function that we are using. So far we have
+%                   tried:
+%           - @covSEiso: Squared Exponential covariance function with isotropic
+%                        distance measure (less hyperparameters) which acts as the default
+%                        covariance function
+%           - @covSEard: Squared exponential with automatic relevance determination
+%                        that has one characteristic length-scale parameter for each 
+%                        dimension of the input space, and a signal magnitude parameter. 
+%                        i.e hyp.cov of dimenion 1 x (D+1) (lot of parameters to estimate)
+%   - covHyp:       hyper parameters associated with the covariance function
+%                   This may prove useful with our data:
+%                    - covFunction = @covSEiso; ell = 2.0; sf = 2.0; covHyp = log([ell sf]);
+%                    - covFunction = @covSEard; ell = 2.0; sf = 2.0; covHyp = log([ell * ones(1,size(Xtr,2)) sf]);
 %   - nInductionPoints: number of induction points used. It should follow
-%   the order of magnitude of the train input data.
+%                       the order of magnitude of the train input data.
         
     if (nargin < 4)
        % Default likelihood function 

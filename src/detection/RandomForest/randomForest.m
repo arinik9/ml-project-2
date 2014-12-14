@@ -38,37 +38,23 @@ methodNames = {'pca(X)', 'pca(exp(X))', 'X'};
 avgTPRList = kCVevaluateMultipleMethods( cat(3, trueTe_pcaX, trueTe_pcaExpX, trueTe_X), cat(3, predTe_pcaX, predTe_pcaExpX, predTe_X), true, methodNames );
 
 % Working with pca(exp(X)) provide better results
-%% Number of trees in the forest
+%% Learning: Number of trees in the forest
 nTreesValues = [50 100 200 300 400 500];
 [bestnTree, trainTPR, testTPR] = findnTreesRF(y, pcaExpX, 3, nTreesValues, 1);
 savePlot('./report/figures/detection/rf-nbtrees-learningcurve.pdf','Number of trees','Train (blue) and test (red) TPR');
 
-% Clearly overfitting on PCA train data with just 50 used Best
-% values for 400 Trees, but 100 gives good results as well and is a good
-% compromise between computation complexity and performance. So we finally
-% kept 100.
+% 100 gives good results as well and is a good compromise between computation complexity and performance
+%% Learning: Number of features for bagging
 
-%% Number of features for bagging
-
-baggingRange = [size(pcaExpX,2), 5*sqrt(size(pcaExpX,2)), 2*sqrt(size(pcaExpX,2)), sqrt(size(pcaExpX,2)), sqrt(size(pcaExpX,2)) / 2];
+baggingRange = [size(pcaExpX,2), 5*sqrt(size(pcaExpX,2)), 2*sqrt(size(pcaExpX,2)), sqrt(size(pcaExpX,2)), sqrt(size(pcaExpX,2)) / 2, sqrt(size(pcaExpX,2)) / 5];
 [bestVarSample, trainTPR, testTPR] = findnVarSampleRF(y, pcaExpX, 3, baggingRange, 1);
 savePlot('./report/figures/detection/rf-nbvarsample-learningcurve.pdf','Features to sample','Train (blue) and test (red) TPR');
 
-
-%% minLeaf value
+% sqrt(size(pcaExpX,2)) / 2 gives us the best result
+%% Learning: MinLeaf value
 
 leafRange = [1, 10, 50, 100, 500];
 [bestVarSample, trainTPR, testTPR] = findminLeafRF(y, pcaExpX, 3, leafRange, 1);
-%savePlot('./report/figures/detection/rf-minleaf-learningcurve.pdf','Minimum observation per leaf','Train (blue) and test (red) TPR');
+savePlot('./report/figures/detection/rf-minleaf-learningcurve.pdf','Minimum observation per leaf','Train (blue) and test (red) TPR');
 
-%% Random prediction
-randPred = rand(size(Te.y)); 
-
-%% Evaluate
-
-% Methods names for legend
-methodNames = {'Random Forest','Random'};
-
-% Prediction performances on different models
-avgTPRList = evaluateMultipleMethods( Te.y > 0, [rfPred, randPred], true, methodNames );
-
+% 1 gives us the best result

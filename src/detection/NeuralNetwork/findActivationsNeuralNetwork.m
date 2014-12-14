@@ -1,4 +1,6 @@
 function [nActivationStar, trainTPR, testTPR] = findActivationsNeuralNetwork(y, X, k, activationValues, seed)
+% Finds the best activation functions number on L2 and for NN from a given range of values 
+% activationValues over k-fold CV and plots learning curves on train and test data
 
     if (nargin < 6)
         seed = 1;
@@ -19,6 +21,7 @@ function [nActivationStar, trainTPR, testTPR] = findActivationsNeuralNetwork(y, 
         predict = @(model, X) predictNeuralNetwork(model, X);
         computePerformances = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
         
+        rng('default');
         setSeed(seed);
         [trainTPR(i), testTPR(i)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances, 0);
         

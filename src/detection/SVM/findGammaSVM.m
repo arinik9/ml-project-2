@@ -1,4 +1,6 @@
 function [bestGamma, testTPR, trainTPR] = findGammaSVM(y, X, k, gammaValues, seed)
+% Finds the best gamma parameter for RBF kernel SVM from a given range of
+% values gammaValues over k-fold CV and plots learning curves on train and test data
 
     if (nargin < 5)
         seed = 1;
@@ -19,6 +21,7 @@ function [bestGamma, testTPR, trainTPR] = findGammaSVM(y, X, k, gammaValues, see
         predict = @(model, X) predictSVM(model, X);
         computePerformances = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
         
+        rng('default');
         setSeed(seed);
         [trainTPR(i), testTPR(i)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances, 0);
          

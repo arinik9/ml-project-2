@@ -1,4 +1,7 @@
 function [dropOutStar, weightDecayStar, trainTPR, testTPR] = findParamsNeuralNetwork(y, X, k, dropOutFractions, weightDecays,seed)
+% Finds the best dropout and weight decay parameters for NN from given ranges of
+% values dropoutFractions and weightDecays over k-fold CV and plots learning curves 
+% on train and test data
 
     if (nargin < 6)
         seed = 1;
@@ -25,6 +28,7 @@ function [dropOutStar, weightDecayStar, trainTPR, testTPR] = findParamsNeuralNet
             predict = @(model, X) predictNeuralNetwork(model, X);
             computePerformances = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
        
+            rng('default');
             setSeed(seed);
             [trainTPR(d,w), testTPR(d,w)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances, 0);
 

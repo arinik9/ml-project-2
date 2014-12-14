@@ -2,9 +2,9 @@ function svmModel = trainSVM(y, X, params)
 % SVM train wrapper (to match other training models). Returns a trained SVM
 % model from given training data and arguments
 % Inputs:
-%   - y: training outputs
-%   - X: training inputs
-%   - params: string of parameters
+%   - y:        training outputs
+%   - X:        training inputs
+%   - params:   string of parameters
 %
 % % Options:
 	% -s svm_type : set type of SVM (default 0)

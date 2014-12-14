@@ -1,4 +1,6 @@
 function [bestNvarToSample, trainTPR, testTPR] = findnVarSampleRF(y, X, k, rangeValues, seed)
+% Finds the best nVarToSample parameter from a given rangeValues relying on
+% the average TPR computed with k-fold CV
 
     if (nargin < 6)
         seed = 1;
@@ -19,6 +21,7 @@ function [bestNvarToSample, trainTPR, testTPR] = findnVarSampleRF(y, X, k, range
         predict = @(model, X) predictRandomForest(model, X);
         computePerformances = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
         
+        rng('default');
         setSeed(seed);
         [trainTPR(i), testTPR(i)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances, 0);
         
