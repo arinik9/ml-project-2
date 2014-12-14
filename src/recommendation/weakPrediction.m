@@ -7,7 +7,7 @@ clearvars;
 loadDataset;
 % Number of random train / test splits to generate
 % TODO: moar
-nSplits = 1;
+nSplits = 2;
 
 % Shortcut
 evaluate = @(name, learn) evaluateMethod(name, learn, Yoriginal, Goriginal, nSplits, 1);
@@ -84,14 +84,13 @@ name = ['GMM', int2str(K), 'ALS'];
 clearvars K nFeatures lambda;
 
 %% Top-K recommendation (on the full dataset using dim-reduction)
-% This can be seen as a faster version of the Pearson similarity predictor
 % TODO: select K with cross-validation
-K = 2000;
+K = 150;
 nFeatures = 200;
 lambda = 0.000001;
 
-%reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 0)';
-%getSimilarity = @(Ytrain, Ytest, userDV) computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
+reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 0)';
+getSimilarity = @(Ytrain, Ytest, userDV) computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
 learnTopKALS = @(Y, Ytest, userDV, artistDV) ...
     learnTopKPredictor(Y, Ytest, userDV, artistDV, K, getSimilarity(Y, Ytest, userDV));
 
@@ -100,5 +99,10 @@ name = ['Top', int2str(K), 'NeighborsALS'];
 
 clearvars K nFeatures lambda;
 
-%% Other predictions
-% TODO
+
+%% Similarity-based predictor
+% Can be seen as a particular case of the Top-K recommendation,
+% where K is equal to the total number of individuals.
+name = 'SimilarityBased';
+[e.tr.(name), e.te.(name)] = evaluate(name, @learnSimilarityBasedPredictor);
+
