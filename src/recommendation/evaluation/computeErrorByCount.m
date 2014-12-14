@@ -1,4 +1,4 @@
-function [errorByCount, errors] = computeErrorByCount(y, yHat)
+function [errorByCount, errors] = computeErrorByCount(y, yHat, yRef)
 %
 %
 % OUTPUT
@@ -6,12 +6,16 @@ function [errorByCount, errors] = computeErrorByCount(y, yHat)
 %   errors: acual RMSE
   % TODO: allow to choose dimension along which to compute error
 
+    if(~exist('yRef', 'var'))
+        yRef = y;
+    end;
+
     % Error made for each artist
     [idx, sz] = getRelevantIndices(y);
     errors = zeros(sz.unique.a, 2);
     for j = 1:sz.unique.a
         artist = idx.unique.a(j);
-        errors(j, 1) = nnz(y(:, artist));
+        errors(j, 1) = nnz(yRef(:, artist));
         errors(j, 2) = computeRmse(y(:, artist), yHat(:, artist));
     end;
 
