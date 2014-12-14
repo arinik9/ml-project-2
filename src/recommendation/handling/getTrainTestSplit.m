@@ -10,7 +10,9 @@ function [Ytest_strong, Ytest_weak, Gstrong, Ytrain, Gtrain] = ...
 
 
     % Normalization & outliers removal
-    Ytrain = normalizedSparse(Ytrain);
-    Ytest_weak = normalizedSparse(Ytest_weak);
+    [Ytrain, overallMean] = normalizedSparse(Ytrain);
+    Ytest_weak = normalizedSparse(Ytest_weak, overallMean);
+    Ytest_strong = normalizedSparse(Ytest_strong, overallMean);
+
     Ytrain = removeOutliersSparse(Ytrain, nDev);
 end

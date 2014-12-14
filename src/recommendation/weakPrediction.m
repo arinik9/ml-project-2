@@ -2,7 +2,7 @@
 % Weak prediction: for an existing user, predict unobserved listening counts
 addpath(genpath('./data'), genpath('../data'));
 addpath(genpath('./src'), genpath('../src'));
-%clearvars;
+clearvars;
 %%
 loadDataset;
 % Number of random train / test splits to generate
