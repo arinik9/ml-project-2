@@ -10,7 +10,7 @@ loadDataset;
 nSplits = 2;
 
 % Shortcut
-evaluate = @(name, learn) evaluateMethod(name, learn, Yoriginal, Goriginal, nSplits);
+evaluate = @(name, learn) evaluateMethod(name, learn, Yoriginal, Goriginal, nSplits, 1);
 
 %% Baseline: constant predictor (overall mean of all observed counts)
 name = 'Constant';
