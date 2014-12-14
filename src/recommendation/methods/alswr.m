@@ -1,4 +1,4 @@
-function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
+function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve, maxIterations)
 % ALSWR Alternating Least Squares with Weighted lambda-regulaziation
 % Low-rank matrix factorization using the technique described by:
 %   Zhou, Y., Wilkinson, D., Schreiber, R., & Pan, R. (2008).
@@ -31,11 +31,13 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
     if(~exist('plotLearningCurve', 'var'))
         plotLearningCurve = 0;
     end
+    if(~exist('maxIterations', 'var'))
+        maxIterations = 50;
+    end
 
     % TODO: smaller epsilon?
     epsilon = 1e-2;
     minIterations = 3;
-    maxIterations = 100;
 
     [idx, sz] = getRelevantIndices(R);
     [testIdx, testSz] = getRelevantIndices(Rtest);
@@ -128,7 +130,7 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve)
 
     if(plotLearningCurve)
         fprintf('ALSWR is done!\n');
-        
+
         figure;
         plot(1:it, trErrors, 'b.-');
         hold on;
