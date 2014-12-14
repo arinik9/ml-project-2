@@ -38,6 +38,9 @@ name = 'ALSWR';
 name = 'EachArtist';
 [e.tr.(name), e.te.(name)] = evaluate(name, @learnEachArtistPredictor);
 
+%% "Each User" predictions
+% TODO
+
 %% Head / tail predictor
 % Train a separate model for each artist of the head
 % Train a common model for each cluster of tail artists
@@ -50,13 +53,13 @@ name = ['HeadTail', int2str(headThreshold)];
 
 %% Top-K recommendation (on the full dataset using dim-reduction)
 % TODO: select K with cross-validation
-K = 150;
+K = 1000;
 % Parameters for ALS-WR
 % Our goal here is to obtain a version of Ytrain but with lower
 % dimensionality. We're not trying to predict from the result, so we
 % can overfit completely.
-nFeatures = 200;
-lambda = 0.000001;
+nFeatures = 20;
+lambda = 0.0001;
 
 reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 0)';
 getSimilarity = @(Ytrain, Ytest, userDV) computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
@@ -67,6 +70,21 @@ name = ['Top', int2str(K), 'NeighborsALS'];
 [e.tr.(name), e.te.(name)] = evaluate(name, learnTopKALS);
 
 clearvars K nFeatures lambda;
+
+%% Top-K recommendation (on the *full* dataset)
+% Doesn't seem to help
+%{
+K = 30;
+learnTopKFull = @(Y, Ytest, userDV, artistDV) ...
+    learnTopKPredictor( ...
+      Y, Ytest, userDV, artistDV, ...
+      K, computeSimilarityMatrix(Ytrain, Ytest, userDV));
+
+name = ['Top', int2str(K), 'NeighborsFull'];
+[e.tr.(name), e.te.(name)] = evaluate(name, learnTopKFull);
+
+clearvars K;
+%}
 
 %% Top-K recommendation with Fisher Transform
 % Doesn't seem to change anything.
