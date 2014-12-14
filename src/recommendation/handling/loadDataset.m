@@ -2,7 +2,7 @@
 
 % Cell array holding the errors made with various methods
 e = {};
-e.tr = {}; e.te = {};
+e.tr = {}; e.te = {}; e.st = {};
 
 % Load dataset
 load('./data/recommendation/songTrain.mat');
