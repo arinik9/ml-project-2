@@ -44,9 +44,9 @@ plot(model.m(1, :)', model.m(2, :)', '.');
 % model.R gives the soft assignments
 
 %% Gaussian Mixture Model (soft clustering)
-lambda = 0.000001;
-nComponents = [5 50 100 200 500];
-nClusters = [3 10 30 50 100 500];
+lambda = 0.5;
+nComponents = [50 100 200 500];
+nClusters = [30 50 100 500];
 
 e = {};
 e.tr = zeros(length(nComponents), length(nClusters));
@@ -55,11 +55,10 @@ e.te = zeros(length(nComponents), length(nClusters));
 % Select hyperparameters values
 for i = 1:length(nComponents)
     components = nComponents(i);
-    [U, M] = alswr(Ytrain, Ytest, components, lambda, 0, 5);
+    [U, M] = alswr(Ytrain, Ytest, components, lambda, 1, 5);
     
     for j = 1:length(nClusters)
-        
-        maxClusters = nClusters(i);
+        maxClusters = nClusters(j);
         [~, model, ~] = vbgm(U, maxClusters);
 
         % TODO: predict something more interesting than the ALS reconstruction
@@ -78,4 +77,3 @@ for i = 1:length(nComponents)
         %diagnoseError(Ytrain, Yhat);
     end;
 end;
-
