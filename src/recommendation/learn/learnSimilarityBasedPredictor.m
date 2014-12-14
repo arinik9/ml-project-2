@@ -1,8 +1,9 @@
-function predictor = learnSimilarityBasedPredictor(Ytrain, Ytest, userDV, artistDV)
+function predictor = learnSimilarityBasedPredictor(Y, Ytest, userDV, ~, transform)
 % LEARNSIMILARITYBASEDPREDICTOR Predict based on inter-user similarity measures
 
-    S = computeSimilarityMatrix(Ytrain, Ytest, userDV);
-
+    S = computeSimilarityMatrix(Y, Ytest, userDV);
+    S = transform(S);
+    
     predictor = @(user, artist) predict(user, artist, Y, userDV, S);
 end
 
@@ -11,5 +12,5 @@ function prediction = predict(user, artist, Y, userDV, S)
     % regardless of their proximity. Their vote will be weighted by the
     % similarity afterwards.
     participants = find(Y(:, artist));
-    predictVotesWeightedBySimilarity(user, artist, Y, participants, userDV, S)
+    prediction = predictVotesWeightedBySimilarity(user, artist, Y, participants, userDV, S);
 end

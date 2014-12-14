@@ -104,5 +104,10 @@ clearvars K nFeatures lambda;
 % Can be seen as a particular case of the Top-K recommendation,
 % where K is equal to the total number of individuals.
 name = 'SimilarityBased';
-[e.tr.(name), e.te.(name)] = evaluate(name, @learnSimilarityBasedPredictor);
+transform = @(S) S;
+%transform = @applyFisherTransform;
+learnSimilarity = @(Y, Ytest, userDV, artistDV) ...
+    learnSimilarityBasedPredictor(Y, Ytest, userDV, artistDV, transform);
+
+[e.tr.(name), e.te.(name)] = evaluate(name, learnSimilarity);
 
