@@ -53,15 +53,13 @@ function [tprAtWPAvg,aucAvg,fprAvg,tprAvg] = kCVfastROC(allLabels, allScores, pl
     % Compute standard deviation
     uncertScore = std(tpr,0, 2);
     
-    %Plot the ROC curve
+    %Plot the averaged ROC curve
     if plot_flag==1
         uncert = 2*uncertScore; % +/- 2 sigma => 95% confidence interval
-        %figure();
         semilogx(fprAvg, tprAvg, plotStyle, 'LineWidth',2);
         if uncert_flag == 1
             jbfill(fprAvg, tprAvg + uncert, tprAvg - uncert, plotStyle, plotStyle, 1, 0.2);
         end;
-        %plot(fprAvg,tprAvg,plotStyle,'LineWidth',2);
         xlabel('False Positive Rate');
         ylabel('True Positive Rate');
         if info_flag == 1

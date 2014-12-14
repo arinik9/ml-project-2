@@ -40,5 +40,5 @@ predictGP = @(model, X) predictGPClassification(model,X);
 
 %%
 
-methodNames = {'Log Reg', 'NN', 'GP', 'RF', 'SVM'};
-avgTPRList = kCVevaluateMultipleMethods( cat(3, trueTe_LR, trueTe_NN, trueTe_GP, trueTe_RF, trueTe_SVM), cat(3, predTe_LR, predTe_NN, predTe_GP, predTe_RF, predTe_SVM), true, methodNames );
+methodNames = {'Log Reg', 'NN', 'RF', 'SVM'};
+avgTPRList = kCVevaluateMultipleMethods( cat(3, trueTe_LR, trueTe_NN, trueTe_RF, trueTe_SVM), cat(3, predTe_LR, predTe_NN, predTe_RF, predTe_SVM), true, methodNames );

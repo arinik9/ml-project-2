@@ -1,3 +1,8 @@
+% Script used to test different SVM settings
+% First we try out different kernel types using CV for validation
+% Then RBF being the best suited kernel, we try to find the best gamma
+% parameter
+
 getStartedDetection;
 
 %% SVM Model
@@ -58,8 +63,6 @@ avgTPRList = kCVevaluateMultipleMethods( cat(3, svmPCA.trueTe, svmPCAexp.trueTe)
 
     
 %% kCV on different models
-%TODO: check accuracy message
-
 
 % Linear kernel
 learn = @(y, X) trainSVM(y, X, '-t 0 -b 1 -e 0.01');
@@ -68,7 +71,7 @@ learn = @(y, X) trainSVM(y, X, '-t 0 -b 1 -e 0.01');
 % Quadratic kernel
 learn = @(y, X) trainSVM(y, X, '-t 1 -b 1 -e 0.01');
 [svm2.trAvgTPR, svm2.teAvgTPR, svm2.predTr, svm2.predTe, svm2.trueTr, svm2.trueTe] = kFoldCrossValidation(y, pcaExpX, 3, learn, predict, computePerformance, 'SVM Polynomial kernel');
-%%
+
 % RBF kernel
 plot_flag = 0;
 predict = @(model, X) predictSVM(model, X);
@@ -76,7 +79,9 @@ computePerformance = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(true
 
 learn = @(y, X) trainSVM(y, X, '-t 2 -b 1 -e 0.01');
 [svm3.trAvgTPR, svm3.teAvgTPR, svm3.predTr, svm3.predTe, svm3.trueTr, svm3.trueTe] = kFoldCrossValidation(y, pcaExpX, 3, learn, predict, computePerformance, 'SVM RBF kernel');
-%%
+
+%% Compare SVM with different kernels
+
 methodNames = {'Linear kernel', 'Polynomial kernel', 'RBF kernel'};
 avgTPRList = kCVevaluateMultipleMethods( cat(3, svm1.trueTe, svm2.trueTe, svm3.trueTe), cat(3, svm1.predTe, svm2.predTe, svm3.predTe), true, methodNames );
 
@@ -86,18 +91,3 @@ avgTPRList = kCVevaluateMultipleMethods( cat(3, svm1.trueTe, svm2.trueTe, svm3.t
 gammaValues = [(5/(size(pcaExpX,2))),(2/(size(pcaExpX,2))), (1/size(pcaExpX,2)), (1/(2*size(pcaExpX,2))), (1/(5*size(pcaExpX,2))), (1/(10*size(pcaExpX,2)))];
 [bestGamma, testTPR, trainTPR] = findGammaSVM(y, pcaExpX, 3, gammaValues);
 savePlot('./report/figures/detection/svm-gamma-learningcurve.pdf','Gamma values','TPR on train (blue) and test (red)');
-
-
-%% See prediction performance
-fprintf('Plotting performance..\n');
-% let's also see how random predicition does
-randPred = rand(size(Te.y));
-
-% and plot all together, and get the performance of each
-methodNames = {'Linear Kernel', 'Polynomial Kernel', 'RBF Kernel', 'RBF + exp', 'Random'}; % this is to show it in the legend
-avgTPRList = evaluateMultipleMethods( Te.y > 0, [svm1.predTe, svm2.predTe, svm3.predTe, svm4.predTe, randPred], true, methodNames ); % (true_labels, predictions, showPlot, legendNames) 
-                                            
-
-% now you can see that the performance of each method
-% is in avgTPRList. You can see that random is doing very bad.
-avgTPRList
