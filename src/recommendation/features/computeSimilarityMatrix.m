@@ -108,3 +108,4 @@ function similarity = computePearsonCoefficient(Ysub, means)
 
     similarity = sum(Ydev(1, :) .* Ydev(2, :), 2) / sqrt(deviations(1) * deviations(2));
 end
+

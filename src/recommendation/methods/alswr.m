@@ -122,7 +122,7 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve, maxIterations)
         end;
 
         % Stopping criterion
-        if (it > minIterations && previousError - teError < epsilon) || (it > maxIterations)
+        if (it >= minIterations && previousError - teError < epsilon) || (it > maxIterations)
             break;
         end;
         previousError = teError;
