@@ -34,6 +34,7 @@ name = 'ALSWR';
 
 %% "Each Artist" predictions
 % Train a separate model for each artist using derived variables
+% We clearly see that it overfits badly when too few counts are available.
 name = 'EachArtist';
 [e.tr.(name), e.te.(name)] = evaluate(name, @learnEachArtistPredictor);
 
@@ -41,7 +42,7 @@ name = 'EachArtist';
 % Train a separate model for each artist of the head
 % Train a common model for each cluster of tail artists
 % TODO: select threshold with cross-validation?
-headThreshold = 30;
+headThreshold = 10;
 learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThreshold);
 
 name = ['HeadTail', int2str(headThreshold)];
