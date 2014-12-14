@@ -12,7 +12,7 @@ function [Ytest_strong, Ytest_weak, Gstrong, Ytrain, Gtrain] = ...
 %   Ytest_strong: pairs (user, artist) = count for new users to test
 %   Ytest_weak: pairs (user, artist) = hidden counts for existing users to test
 %   Gstrong: friendship graph of new users with all users
-%   Ytrain and Gtrain is the new training set 
+%   Ytrain and Gtrain is the new training set
     if(nargin < 3)
         testRatioStrong = 0.1;
     end;
@@ -22,7 +22,7 @@ function [Ytest_strong, Ytest_weak, Gstrong, Ytrain, Gtrain] = ...
 
     % ----- Test data for Strong generalization
     % Keep testRatioStrong percent of users hidden for testing as 'new users'
-    
+
     % Total number of available users
     nU = size(Y,1);
     idx = randperm(nU);
@@ -35,12 +35,15 @@ function [Ytest_strong, Ytest_weak, Gstrong, Ytrain, Gtrain] = ...
     Ytrain = Y(idxTr,:);
     Ytest_strong = Y(idxTe,:);
     Gtrain = G(idxTr, idxTr);
+    % WARNING, the whole right part of Gstrong is useless to us:
+    % is represents friendships between unseen users,
+    % we don't have any data about them.
     Gstrong = G(idxTe, [idxTr idxTe]);
 
     % ----- Test data for weak generalization
     % Keep testRatioWeak percent of entries per remaining user as test data
     [nU, nA] = size(Ytrain);
-    
+
     userTestIndices = [];
     artistTestIndices = [];
     countTestValues = [];
@@ -55,17 +58,17 @@ function [Ytest_strong, Ytest_weak, Gstrong, Ytrain, Gtrain] = ...
             % Pick some of those counts for testing
             ind = randperm(length(available));
             j = available(ind(1:numA));
-            
+
             userTestIndices = [userTestIndices; i * ones(numA, 1)];
             artistTestIndices = [artistTestIndices; j];
             countTestValues = [countTestValues; Ytrain(i, j)'];
-            
+
             %fprintf('User %i has %d counts, we hide %d.\n', i, length(available), numA);
         end
     end
     Ytest_weak = sparse(userTestIndices, artistTestIndices, countTestValues, nU, nA);
     % Hide the extracted counts in the remaining test set
     Ytrain(sub2ind([nU nA], userTestIndices, artistTestIndices)) = 0;
-    
+
     %fprintf('We hide %d counts in total for weak prediction.\n', nnz(countTestValues));
 end
