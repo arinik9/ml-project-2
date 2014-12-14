@@ -5,10 +5,7 @@ clearvars;
 loadDataset;
 setSeed(1);
 [~, Ytest, ~, Ytrain, ~] = getTrainTestSplit(Yoriginal, Goriginal, 0.3, 0, 3);
-
-K = 30;
-lambda = 0.000001;
-[U, M] = alswr(Ytrain, Ytest, K, lambda, 1);
+[userDV, artistDV] = generateDerivedVariables(Ytest);
 
 %% Testing VBGM toolbox
 % From http://www.mathworks.com/matlabcentral/fileexchange/35362-variational-bayesian-inference-for-gaussian-mixture-model
@@ -77,3 +74,22 @@ for i = 1:length(nComponents)
         %diagnoseError(Ytrain, Yhat);
     end;
 end;
+
+%% Trying to cluster directly on the dataset
+% Probably not a good idea
+%{
+topArtists = find(artistDV(:, 2) > 10);
+Ysmall = Ytrain(:, topArtists);
+% Artist-oriented clustering
+[labels, model, L] = vbgm(Ysmall, 30);
+%%
+N = size(Ysmall, 2);
+predictor = @(user, artist) ...
+    sum(model.R(artist, :) .* model.m(user, :), 2)';
+
+[idx, sz] = getRelevantIndices(Ysmall);
+Yhat = predictCounts(predictor, idx, sz);
+rmse = computeRmse(Ysmall, Yhat);
+rmse
+diagnoseError(Ysmall, Yhat);
+%}

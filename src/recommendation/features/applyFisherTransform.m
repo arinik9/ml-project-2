@@ -10,9 +10,9 @@ function Sfisher = applyFisherTransform(S)
 
     if(issparse(S))
         [ii, jj] = find(S);
-        [n, ~] = size(S);
+        [n, d] = size(S);
         values = nonzeros(S);
-        Sfisher = sparse(ii, jj, atanh(values), n, n);
+        Sfisher = sparse(ii, jj, atanh(values), n, d);
     else
         Sfisher = atanh(S);
     end;

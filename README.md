@@ -66,9 +66,9 @@ Recall we must achieve both **weak** (new ratings for existing users) and **stro
 - [x] Feature engineering: implement derived variables
 - [x] Get a baseline error value
 - [x] Implement Top-N recommendation (cluster with Pearson similarity measure)
+- [ ] Experiment with K-Means
 - [ ] Implement the simple [Slope One](http://arxiv.org/pdf/cs/0702144v2.pdf) method
 - [ ] Experiment with Gaussian Mixture Models (soft clustering)
-- [ ] Experiment with SVM
 - [x] Cluster the tail items (head / tail cutoff point to be chosen carefully)
 - [x] Try clustering in reduced-dimensionality space
 - [ ] Implement a hybrid head / tail predictor (e.g. Each Item for head, Top-K for tail)
