@@ -21,7 +21,7 @@ name = 'Constant';
 name = 'ArtistMean';
 [e.tr.(name), e.te.(name)] = evaluate(name, @learnAveragePerArtistPredictor);
 
-%% ALS-WR
+%% ALS-WR (low rank approximation)
 % TODO: experiment different lambdas and number of features
 % TODO: select hyper-parameters by cross-validation
 nFeatures = 50; % Target reduced dimensionality
@@ -38,9 +38,6 @@ name = 'ALSWR';
 name = 'EachArtist';
 [e.tr.(name), e.te.(name)] = evaluate(name, @learnEachArtistPredictor);
 
-%% "Each User" predictions
-% TODO
-
 %% Head / tail predictor
 % Train a separate model for each artist of the head
 % Train a common model for each cluster of tail artists
@@ -51,15 +48,31 @@ learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, u
 name = ['HeadTail', int2str(headThreshold)];
 [e.tr.(name), e.te.(name)] = evaluate(name, learnHeadTail);
 
-%% Top-K recommendation (on the full dataset using dim-reduction)
+%% K-Means clustering
 % TODO: select K with cross-validation
-K = 1000;
+K = 150;
 % Parameters for ALS-WR
 % Our goal here is to obtain a version of Ytrain but with lower
 % dimensionality. We're not trying to predict from the result, so we
 % can overfit completely.
 nFeatures = 20;
-lambda = 0.0001;
+lambda = 0.000001;
+
+reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 0)';
+getSimilarity = @(Ytrain, Ytest, userDV) computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
+learnKMeansALS = @(Y, Ytest, userDV, artistDV) ...
+    learnKMeansPredictor(Y, Ytest, userDV, artistDV, K, getSimilarity(Y, Ytest, userDV));
+
+name = [int2str(K), '-MeansALS'];
+[e.tr.(name), e.te.(name)] = evaluate(name, learnKMeansALS);
+
+clearvars K nFeatures lambda;
+
+%% Top-K recommendation (on the full dataset using dim-reduction)
+% TODO: select K with cross-validation
+K = 150;
+nFeatures = 200;
+lambda = 0.000001;
 
 reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 0)';
 getSimilarity = @(Ytrain, Ytest, userDV) computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
@@ -70,21 +83,6 @@ name = ['Top', int2str(K), 'NeighborsALS'];
 [e.tr.(name), e.te.(name)] = evaluate(name, learnTopKALS);
 
 clearvars K nFeatures lambda;
-
-%% Top-K recommendation (on the *full* dataset)
-% Doesn't seem to help
-%{
-K = 30;
-learnTopKFull = @(Y, Ytest, userDV, artistDV) ...
-    learnTopKPredictor( ...
-      Y, Ytest, userDV, artistDV, ...
-      K, computeSimilarityMatrix(Ytrain, Ytest, userDV));
-
-name = ['Top', int2str(K), 'NeighborsFull'];
-[e.tr.(name), e.te.(name)] = evaluate(name, learnTopKFull);
-
-clearvars K;
-%}
 
 %% Top-K recommendation with Fisher Transform
 % Doesn't seem to change anything.
