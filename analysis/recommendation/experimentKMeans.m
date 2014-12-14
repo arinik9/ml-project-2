@@ -40,8 +40,8 @@ function prediction = predict(user, artist, Y, assignments, userDV, S)
     participants = usersInCluster(Y(usersInCluster, artist) ~= 0 & usersInCluster ~= user);
     
     if(~isempty(participants))
-        %prediction = predictVotesWeightedBySimilarity(user, artist, Y, participants, userDV, S);
-        prediction = predictVotesWeightedByDistance(user, artist, Y, participants, userDV);
+        prediction = predictVotesWeightedBySimilarity(user, artist, Y, participants, userDV, S);
+        %prediction = predictVotesWeightedByDistance(user, artist, Y, participants, userDV);
     else
         % Not enough information available in this cluster
         prediction = userDV(user, 1);
@@ -52,13 +52,17 @@ function prediction = predictVotesWeightedBySimilarity(user, artist, Y, particip
     % Voting:
     %   deviation to participant's average + this user's average
     votes = full(Y(participants, artist) - userDV(participants, 1));
-
+    
+    prediction = userDV(user, 1);
+    
     % Weight vote of each user by its similarity
     % TODO: Fisher transform on the similarities?
     similarities = S(participants, user);
-    similarities = similarities ./ sum(similarities);
+    if(sum(abs(similarities)) > eps)
+        similarities = similarities ./ sum(abs(similarities));
 
-    prediction = userDV(user, 1) + sum(similarities .* votes);
+        prediction = prediction + sum(similarities .* votes);
+    end;
 end
 
 function prediction = predictVotesWeightedByDistance(user, artist, Y, participants, userDV)
