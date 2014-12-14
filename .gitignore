@@ -10,6 +10,7 @@ toolbox/*
 
 # Matlab
 *.m~
+**/parfor_progress.txt
 
 # LaTeX
 *.aux
