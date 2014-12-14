@@ -15,18 +15,24 @@ function predictor = learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThre
     % TODO: take the social network in input!
     G = sparse(size(Y, 1), size(Y, 1));
 
+    overallMean = mean(nonzeros(Y));
+    
     headPredictor = learnHeadPredictor(Y, G, Ytest, userDV, artistDV, headThreshold);
     tailPredictor = learnTailPredictor(Y, G, Ytest, userDV, artistDV, headThreshold);
-    predictor = @(user, artist) predict(user, artist, artistDV(:, 2), headThreshold, headPredictor, tailPredictor);
+    predictor = @(user, artist)...
+        predict(user, artist, headThreshold, headPredictor, tailPredictor, artistDV(artist, 2), overallMean);
 end
 
-function prediction = predict(user, artist, popularity, headThreshold, head, tail)
+function prediction = predict(user, artist, headThreshold, head, tail, popularity, overallMean)
 % At prediction time, choose either head or tail predictor
-    if(popularity(artist) >= headThreshold)
+    if(popularity >= headThreshold)
         prediction = head(user, artist);
-    else
+    elseif(popularity > 0)
         prediction = tail(user, artist);
         %fprintf('Tail predictor for artist %d --> %f\n', artist, prediction);
+    else
+        % Fallback
+        prediction = overallMean;
     end;
 end
 
@@ -75,7 +81,7 @@ function predictor = learnTailPredictor(Y, G, Ytest, userDV, artistDV, headThres
         fprintf('Cluster %d has %d artists (yielding %d counts)\n', ...
             k, length(artistsInThisCluster), nnz(Y(:, artistsInThisCluster)));
         
-        if(~isempty(artistsInThisCluster))
+        if(~isempty(artistsInThisCluster) && nnz(Y(:, artistsInThisCluster)) > 0)
             [uIdx, ~] = find(Y(:, artistsInThisCluster));
             correspondingUsers = unique(uIdx);
 

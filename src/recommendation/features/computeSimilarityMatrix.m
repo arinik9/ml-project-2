@@ -19,8 +19,11 @@ function similarities = computeSimilarityMatrix(Y, Ytest, userDV, reduceDimensio
     if(exist('reduceDimensionality', 'var'))
         % ----- Dense mode
         Yreduced = reduceDimensionality(Y, Ytest);
+        Yreduced = normalizedDense(Yreduced);
+        
         similarities = zeros(u, u);
 
+        parfor_progress(u);
         parfor a = 1:u
             for b = 1:u
                 % Only need to compute one half
@@ -28,8 +31,10 @@ function similarities = computeSimilarityMatrix(Y, Ytest, userDV, reduceDimensio
                     similarities(a, b) = computeSimilarity(Yreduced, a, b, userDV);
                 end;
             end;
+            parfor_progress;
         end;
-
+        parfor_progress(0);
+        
     else
         % ----- Sparse mode
         listenedBy = getListenedBy(Y);
@@ -38,7 +43,8 @@ function similarities = computeSimilarityMatrix(Y, Ytest, userDV, reduceDimensio
         values = [];
         idxa = [];
         idxb = [];
-        for a = 1:u
+        parfor_progress(u);
+        parfor a = 1:u
             for b = 1:u
                 % Only need to compute one half
                 if (a > b)
@@ -50,8 +56,11 @@ function similarities = computeSimilarityMatrix(Y, Ytest, userDV, reduceDimensio
                     end;
                 end;
             end;
+            
+            parfor_progress;
         end;
-
+        parfor_progress(0);
+        
         similarities = sparse(idxa, idxb, values, u, u);
     end;
 
@@ -108,3 +117,4 @@ function similarity = computePearsonCoefficient(Ysub, means)
 
     similarity = sum(Ydev(1, :) .* Ydev(2, :), 2) / sqrt(deviations(1) * deviations(2));
 end
+

@@ -9,8 +9,8 @@ function [errors, teErrors] = diagnoseError(y, yHat, yTest, yTestHat)
 %   errors: [number of available listening count, average RMSE error made] (sorted)
 
     % Baseline
-    nullMatrix = sparse(size(y, 1), size(y, 2));
-    [averagedBaseline, ~] = computeErrorByCount(y, nullMatrix);
+    baseline = sparse(size(y, 1), size(y, 2));
+    [averagedBaseline, ~] = computeErrorByCount(y, baseline);
 
     % Training set
     nRows = 1;
@@ -21,10 +21,10 @@ function [errors, teErrors] = diagnoseError(y, yHat, yTest, yTestHat)
     if(exist('yTest', 'var'))
         nRows = 2;
         name = ' train ';
-        [teAveraged, teErrors] = computeErrorByCount(yTest, yTestHat);
-        [teAveragedBaseline, ~] = computeErrorByCount(yTest, nullMatrix);
+        [teAveraged, teErrors] = computeErrorByCount(yTest, yTestHat, y);
+        [teAveragedBaseline, ~] = computeErrorByCount(yTest, baseline, y);
     end;
-    
+
     figure;
     makeSubplots(name, errors, averaged, averagedBaseline, nRows, 0);
 
