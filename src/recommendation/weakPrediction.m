@@ -7,7 +7,7 @@ clearvars;
 loadDataset;
 % Number of random train / test splits to generate
 % TODO: moar
-nSplits = 2;
+nSplits = 1;
 
 % Shortcut
 evaluate = @(name, learn) evaluateMethod(name, learn, Yoriginal, Goriginal, nSplits, 1);
@@ -49,8 +49,9 @@ name = ['HeadTail', int2str(headThreshold)];
 [e.tr.(name), e.te.(name)] = evaluate(name, learnHeadTail);
 
 %% K-Means clustering
+% Maximum number of clusters (may not all be used)
 % TODO: select K with cross-validation
-K = 150;
+K = 15;
 % Parameters for ALS-WR
 % Our goal here is to obtain a version of Ytrain but with lower
 % dimensionality. We're not trying to predict from the result, so we
@@ -63,19 +64,34 @@ getSimilarity = @(Ytrain, Ytest, userDV) computeSimilarityMatrix(Ytrain, Ytest, 
 learnKMeansALS = @(Y, Ytest, userDV, artistDV) ...
     learnKMeansPredictor(Y, Ytest, userDV, artistDV, K, getSimilarity(Y, Ytest, userDV));
 
-name = [int2str(K), '-MeansALS'];
+name = ['K', int2str(K), 'MeansALS'];
 [e.tr.(name), e.te.(name)] = evaluate(name, learnKMeansALS);
 
 clearvars K nFeatures lambda;
 
+%% Gaussian Mixture Model clustering (soft clustering)
+K = 15;
+nFeatures = 100;
+lambda = 0.05;
+
+reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 1);
+learnGMM = @(Y, Ytest, userDV, artistDV) ...
+    learnGMMPredictor(Y, Ytest, userDV, artistDV, reduceSpace, K);
+
+name = ['GMM', int2str(K), 'ALS'];
+[e.tr.(name), e.te.(name)] = evaluate(name, learnGMM);
+
+clearvars K nFeatures lambda;
+
 %% Top-K recommendation (on the full dataset using dim-reduction)
+% This can be seen as a faster version of the Pearson similarity predictor
 % TODO: select K with cross-validation
-K = 150;
+K = 2000;
 nFeatures = 200;
 lambda = 0.000001;
 
-reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 0)';
-getSimilarity = @(Ytrain, Ytest, userDV) computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
+%reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 0)';
+%getSimilarity = @(Ytrain, Ytest, userDV) computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
 learnTopKALS = @(Y, Ytest, userDV, artistDV) ...
     learnTopKPredictor(Y, Ytest, userDV, artistDV, K, getSimilarity(Y, Ytest, userDV));
 
@@ -83,19 +99,6 @@ name = ['Top', int2str(K), 'NeighborsALS'];
 [e.tr.(name), e.te.(name)] = evaluate(name, learnTopKALS);
 
 clearvars K nFeatures lambda;
-
-%% Top-K recommendation with Fisher Transform
-% Doesn't seem to change anything.
-%{
-learnTopKFisher = @(Y, Ytest, userDV, artistDV) learnTopKPredictor(Y, Ytest, userDV, artistDV, K, Sfisher);
-
-name = ['Top', int2str(K), 'NeighborsALSFisher'];
-[e.tr.(name), e.te.(name)] = evaluate(name, learnTopKFisher);
-fprintf('RMSE with Top-K recommendation (K = %d) with Fisher transform: %f | %f\n', K, e.tr.topKFisher, e.te.topKFisher);
-%}
-
-%% Gaussian Mixture Model clustering (soft clustering)
-% TODO
 
 %% Other predictions
 % TODO
