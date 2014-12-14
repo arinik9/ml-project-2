@@ -7,7 +7,7 @@ function predictor = learnTopKPredictor(Y, Ytest, userDV, artistDV, K, S)
 
     K = min(K, size(Y, 1));
     % Use less than K neighbors if they're not similar enough
-    similarityThreshold = 0.5;
+    similarityThreshold = -1000; % Disabled
 
     % Precompute useful values
     listenedBy = getListenedBy(Y);

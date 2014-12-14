@@ -1,4 +1,4 @@
-function predictor = learnConstantPredictor(Y, Ytest, userDV, artistDV)
+function predictor = learnConstantPredictor(Y, ~, ~, ~)
 % LEARNCONSTANTPREDICTOR This predictor always returns the overall mean
 
     overallMean = mean(nonzeros(Y));
