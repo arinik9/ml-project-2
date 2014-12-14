@@ -3,8 +3,9 @@ function [errorByCount, errors] = computeErrorByCount(y, yHat, yRef)
 %
 % OUTPUT
 %   errorByCount: average and deviation RMSE for each count
-%   errors: acual RMSE
-  % TODO: allow to choose dimension along which to compute error
+%   errors: [nnz, RMSE]
+    
+    % TODO: allow to choose dimension along which to compute error
 
     if(~exist('yRef', 'var'))
         yRef = y;

@@ -19,7 +19,6 @@ function similarities = computeSimilarityMatrix(Y, Ytest, userDV, reduceDimensio
     if(exist('reduceDimensionality', 'var'))
         % ----- Dense mode
         Yreduced = reduceDimensionality(Y, Ytest);
-        Yreduced = normalizedDense(Yreduced);
         
         similarities = zeros(u, u);
 

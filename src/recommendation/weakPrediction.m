@@ -21,7 +21,7 @@ name = 'Constant';
 name = 'ArtistMean';
 [e.tr.(name), e.te.(name)] = evaluate(name, @learnAveragePerArtistPredictor);
 
-%% ALS-WR
+%% ALS-WR (low rank approximation)
 % TODO: experiment different lambdas and number of features
 % TODO: select hyper-parameters by cross-validation
 nFeatures = 50; % Target reduced dimensionality
@@ -48,13 +48,44 @@ learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, u
 name = ['HeadTail', int2str(headThreshold)];
 [e.tr.(name), e.te.(name)] = evaluate(name, learnHeadTail);
 
-%% Top-K recommendation (on the full dataset using dim-reduction)
+%% K-Means clustering
+% Maximum number of clusters (may not all be used)
 % TODO: select K with cross-validation
-K = 150;
+K = 15;
 % Parameters for ALS-WR
 % Our goal here is to obtain a version of Ytrain but with lower
 % dimensionality. We're not trying to predict from the result, so we
 % can overfit completely.
+nFeatures = 20;
+lambda = 0.000001;
+
+reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 0)';
+getSimilarity = @(Ytrain, Ytest, userDV) computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
+learnKMeansALS = @(Y, Ytest, userDV, artistDV) ...
+    learnKMeansPredictor(Y, Ytest, userDV, artistDV, K, getSimilarity(Y, Ytest, userDV));
+
+name = ['K', int2str(K), 'MeansALS'];
+[e.tr.(name), e.te.(name)] = evaluate(name, learnKMeansALS);
+
+clearvars K nFeatures lambda;
+
+%% Gaussian Mixture Model clustering (soft clustering)
+K = 15;
+nFeatures = 100;
+lambda = 0.05;
+
+reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 1);
+learnGMM = @(Y, Ytest, userDV, artistDV) ...
+    learnGMMPredictor(Y, Ytest, userDV, artistDV, reduceSpace, K);
+
+name = ['GMM', int2str(K), 'ALS'];
+[e.tr.(name), e.te.(name)] = evaluate(name, learnGMM);
+
+clearvars K nFeatures lambda;
+
+%% Top-K recommendation (on the full dataset using dim-reduction)
+% TODO: select K with cross-validation
+K = 150;
 nFeatures = 200;
 lambda = 0.000001;
 
@@ -68,18 +99,15 @@ name = ['Top', int2str(K), 'NeighborsALS'];
 
 clearvars K nFeatures lambda;
 
-%% Top-K recommendation with Fisher Transform
-% Doesn't seem to change anything.
-%{
-learnTopKFisher = @(Y, Ytest, userDV, artistDV) learnTopKPredictor(Y, Ytest, userDV, artistDV, K, Sfisher);
 
-name = ['Top', int2str(K), 'NeighborsALSFisher'];
-[e.tr.(name), e.te.(name)] = evaluate(name, learnTopKFisher);
-fprintf('RMSE with Top-K recommendation (K = %d) with Fisher transform: %f | %f\n', K, e.tr.topKFisher, e.te.topKFisher);
-%}
+%% Similarity-based predictor
+% Can be seen as a particular case of the Top-K recommendation,
+% where K is equal to the total number of individuals.
+name = 'SimilarityBased';
+transform = @(S) S;
+%transform = @applyFisherTransform;
+learnSimilarity = @(Y, Ytest, userDV, artistDV) ...
+    learnSimilarityBasedPredictor(Y, Ytest, userDV, artistDV, transform);
 
-%% Gaussian Mixture Model clustering (soft clustering)
-% TODO
+[e.tr.(name), e.te.(name)] = evaluate(name, learnSimilarity);
 
-%% Other predictions
-% TODO

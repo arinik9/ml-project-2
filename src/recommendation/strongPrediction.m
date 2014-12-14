@@ -19,6 +19,7 @@ clearvars nDev strongRatio;
 
 %% Simply predict the mean of artists
 % Although we have no idea what kind of volume this user would have
+% It turns out this does worse than just predicting a constant overall!
 
 name = 'ArtistMean';
 % [e.st.(name)] = evaluate(name, @learnAveragePerArtistPredictor);
@@ -28,6 +29,21 @@ YhatMean = predictCounts(meanPredictor, idx, sz);
 diagnoseError(YtestStrong, YhatMean);
 e.st.(name) = computeRmse(YtestStrong, YhatMean);
 fprintf('----- %s [single run]: %f\n\n', name, e.st.(name));
+
+%% Predict the overall mean
+% Although we have no idea what kind of volume this user would have
+% It turns out this does worse than just predicting a constant overall!
+
+name = 'Constant';
+% [e.st.(name)] = evaluate(name, @learnAveragePerArtistPredictor);
+overallMean = mean(nonzeros(Ytrain));
+constantPredictor = @(user, artist) overallMean;
+YhatConstant = predictCounts(constantPredictor, idx, sz);
+
+diagnoseError(YtestStrong, YhatConstant);
+e.st.(name) = computeRmse(YtestStrong, YhatConstant);
+fprintf('----- %s [single run]: %f\n\n', name, e.st.(name));
+
 
 %% Leverage the social graph
 % Trust at 100% votes from friends, when there are enough (fallback on
