@@ -7,7 +7,7 @@ loadDataset;
 
 % TODO: use the automatic random train / test splits
 setSeed(1);
-nDev = 3;
+nDev = 1; % Be very conservative
 strongRatio = 0.2;
 [YtestStrong, Ytest, Gstrong, Ytrain, Gtrain] = ...
     getTrainTestSplit(Yoriginal, Goriginal, 0, strongRatio, nDev);
@@ -32,7 +32,17 @@ fprintf('----- %s [single run]: %f\n\n', name, e.st.(name));
 %% Leverage the social graph
 % Trust at 100% votes from friends, when there are enough (fallback on
 % means)
-% TODO: determine if the friendship graph actually helps.
+% TODO: determine if the friendship graph actually helps
+% TODO: try making broader clusters from the friendship graph?
+name = 'BFFs';
+% [e.st.(name)] = evaluate(name, @learnAveragePerArtistPredictor);
+bffPredictor = learnFriendsPredictor(Ytrain, Gstrong, userDV, artistDV);
+YhatBFF = predictCounts(bffPredictor, idx, sz);
+
+diagnoseError(YtestStrong, YhatBFF);
+e.st.(name) = computeRmse(YtestStrong, YhatBFF);
+fprintf('----- %s [single run]: %f\n\n', name, e.st.(name));
+
 
 %% Weighted combination
 % TODO: choose automatically
