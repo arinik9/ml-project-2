@@ -5,82 +5,80 @@ addpath(genpath('./src'), genpath('../src'));
 clearvars;
 
 loadDataset;
-[userDV, artistDV] = generateDerivedVariables(Ytrain);
+% Number of random train / test splits to generate
+% TODO: moar
+nSplits = 2;
 
 % Shortcut
-evaluate = @(learn) evaluateMethod(learn, Ytrain, Ytest, userDV, artistDV);
+evaluate = @(name, learn) evaluateMethod(name, learn, Yoriginal, Goriginal, nSplits);
 
 %% Baseline: constant predictor (overall mean of all observed counts)
-[e.tr.constant, e.te.constant] = evaluate(@learnConstantPredictor);
-fprintf('RMSE with a constant predictor: %f | %f\n', e.tr.constant, e.te.constant);
+name = 'Constant';
+[e.tr.(name), e.te.(name)] = evaluate(name, @learnConstantPredictor);
 
 %% Simple model: predict the average listening count of the artist
 % (which is one of the derived variables)
-[e.tr.mean, e.te.mean] = evaluate(@learnAveragePerArtistPredictor);
-fprintf('RMSE with a constant predictor per artist: %f | %f\n', e.tr.mean, e.te.mean);
+name = 'ArtistMean';
+[e.tr.(name), e.te.(name)] = evaluate(name, @learnAveragePerArtistPredictor);
 
 %% ALS-WR
 % TODO: experiment different lambdas and number of features
 % TODO: select hyper-parameters by cross-validation
 nFeatures = 100; % Target reduced dimensionality
 lambda = 1;
-displayLearningCurve = 1;
+displayLearningCurve = 0;
 learnAlsWr = @(Y, Ytest, userDV, artistDV) learnAlsWrPredictor(Y, Ytest, userDV, artistDV, nFeatures, lambda, displayLearningCurve);
 
-[e.tr.als, e.te.als] = evaluate(learnAlsWr);
-fprintf('RMSE ALS-WR (low rank): %f | %f\n', e.tr.als, e.te.als);
+name = 'ALSWR';
+[e.tr.(name), e.te.(name)] = evaluate(name, learnAlsWr);
 
 %% "Each Artist" predictions
 % Train a separate model for each artist using derived variables
-[e.tr.eachArtist, e.te.eachArtist] = evaluate(@learnEachArtistPredictor);
-fprintf('RMSE with Each Artist (one model per artist): %f | %f\n', e.tr.eachArtist, e.te.eachArtist);
+name = 'EachArtist';
+[e.tr.(name), e.te.(name)] = evaluate(name, @learnEachArtistPredictor);
 
 %% Head / tail predictor
 % Train a separate model for each artist of the head
 % Train a common model for each cluster of tail artists
+% TODO: select threshold with cross-validation?
 headThreshold = 30;
 learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThreshold);
 
-[e.tr.eachArtist, e.te.eachArtist] = evaluate(learnHeadTail);
-fprintf('RMSE with head / tail (threshold = %d): %f | %f\n', headThreshold, e.tr.eachArtist, e.te.eachArtist);
+name = ['HeadTail', int2str(headThreshold)];
+[e.tr.(name), e.te.(name)] = evaluate(name, learnHeadTail);
 
 %% Top-K recommendation (on the full dataset using dim-reduction)
 % TODO: select K with cross-validation
-K = 300;
+K = 150;
+% Parameters for ALS-WR
+% Our goal here is to obtain a version of Ytrain but with lower
+% dimensionality. We're not trying to predict from the result, so we
+% can overfit completely.
+nFeatures = 200;
+lambda = 0.000001;
 
-% Precompute the similarity matrix (only once)
-if(~exist('S', 'var'))
-    % Our goal here is to obtain a version of Ytrain but with lower
-    % dimensionality. We're not trying to predict from the result, so we 
-    % can overfit completely.
-    nFeatures = 200;
-    lambda = 0.000001;
-    reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 0)';
-    
-    fprintf('Computing similarity matrix of %d users projected with ALS-WR...\n', size(Ytrain, 1));
-    S = computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
-    Sfisher = applyFisherTransform(S);
-    fprintf('Similarity matrix computation is done.\n');
+reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 0)';
+getSimilarity = @(Ytrain, Ytest, userDV) computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
+learnTopKALS = @(Y, Ytest, userDV, artistDV) ...
+    learnTopKPredictor(Y, Ytest, userDV, artistDV, K, getSimilarity(Y, Ytest, userDV));
 
-    figure; hist(nonzeros(S));
-    figure; hist(nonzeros(Sfisher));
-    
-    clearvars nFeatures lambda;
-end;
+name = ['Top', int2str(K), 'NeighborsALS'];
+[e.tr.(name), e.te.(name)] = evaluate(name, learnTopKALS);
 
-learnTopKALS = @(Y, Ytest, userDV, artistDV) learnTopKPredictor(Y, Ytest, userDV, artistDV, K, S);
-[e.tr.topKALS, e.te.topKALS] = evaluate(learnTopKALS);
-fprintf('RMSE with Top-K recommendation (K = %d): %f | %f\n', K, e.tr.topKALS, e.te.topKALS);
+clearvars K nFeatures lambda;
 
 %% Top-K recommendation with Fisher Transform
 % Doesn't seem to change anything.
+%{
 learnTopKFisher = @(Y, Ytest, userDV, artistDV) learnTopKPredictor(Y, Ytest, userDV, artistDV, K, Sfisher);
-[e.tr.topKFisher, e.te.topKFisher] = evaluate(learnTopKFisher);
+
+name = ['Top', int2str(K), 'NeighborsALSFisher'];
+[e.tr.(name), e.te.(name)] = evaluate(name, learnTopKFisher);
 fprintf('RMSE with Top-K recommendation (K = %d) with Fisher transform: %f | %f\n', K, e.tr.topKFisher, e.te.topKFisher);
+%}
 
-
-%% Gaussian Mixture Model clustering
-% (soft clustering)
+%% Gaussian Mixture Model clustering (soft clustering)
+% TODO
 
 %% Other predictions
 % TODO
