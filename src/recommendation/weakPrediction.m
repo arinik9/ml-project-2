@@ -2,8 +2,8 @@
 % Weak prediction: for an existing user, predict unobserved listening counts
 addpath(genpath('./data'), genpath('../data'));
 addpath(genpath('./src'), genpath('../src'));
-clearvars;
-
+%clearvars;
+%%
 loadDataset;
 % Number of random train / test splits to generate
 % TODO: moar
@@ -24,9 +24,9 @@ name = 'ArtistMean';
 %% ALS-WR
 % TODO: experiment different lambdas and number of features
 % TODO: select hyper-parameters by cross-validation
-nFeatures = 100; % Target reduced dimensionality
-lambda = 1;
-displayLearningCurve = 0;
+nFeatures = 50; % Target reduced dimensionality
+lambda = 0.01;
+displayLearningCurve = 1;
 learnAlsWr = @(Y, Ytest, userDV, artistDV) learnAlsWrPredictor(Y, Ytest, userDV, artistDV, nFeatures, lambda, displayLearningCurve);
 
 name = 'ALSWR';

@@ -35,8 +35,8 @@ function [U, M] = alswr(R, Rtest, k, lambda, plotLearningCurve, maxIterations)
         maxIterations = 50;
     end
 
-    % TODO: smaller epsilon?
-    epsilon = 1e-2;
+    % TODO: smaller epsilon
+    epsilon = 1e-3;
     minIterations = 3;
 
     [idx, sz] = getRelevantIndices(R);
