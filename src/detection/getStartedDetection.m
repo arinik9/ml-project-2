@@ -14,7 +14,7 @@ y = labels;
 
 % Normalize -----------------------------------------
 fprintf('Normalizing features..\n');
-[X, ~, ~] = zscore(X); % train, get mu and std
+[X, ~, ~] = zscore(X);
 
 % Principal Component Analysis ----------------------
 fprintf('Performing Principal Component Analysis..\n');

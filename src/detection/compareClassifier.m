@@ -1,8 +1,8 @@
 getStartedDetection;
-
+%%
 %
 plot_flag = 0;
-kfold = 5;
+kfold = 3;
 computePerformance = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 1, 1, model_name);
 
 % SVM
@@ -18,7 +18,7 @@ predictLR = @(model, X) predictNeuralNetwork(model, X);
 % Neural Network
 learnNN = @(y, X) trainNeuralNetwork(y, X, 0, 1, 'sigm', 0, 1e-3, [size(X,2) 100 2]);
 predictNN = @(model, X) predictNeuralNetwork(model, X);
-[trAvgTPR_NN, teAvgTPR_NN, predTr_NN, predTe_NN, trueTr_NN, trueTe_NN] = kFoldCrossValidation(y, X, kfold, learnNN, predictNN, computePerformance, plot_flag, 'Neural Network');
+[trAvgTPR_NN, teAvgTPR_NN, predTr_NN, predTe_NN, trueTr_NN, trueTe_NN] = kFoldCrossValidation(y, expX, kfold, learnNN, predictNN, computePerformance, plot_flag, 'Neural Network');
 
 % Random Forest
 learnRF = @(y, X) trainRandomForest(y, X, 100, sqrt(size(X,2))/2);

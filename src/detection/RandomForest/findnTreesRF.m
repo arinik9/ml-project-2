@@ -1,4 +1,6 @@
 function [nTreesStar, trainTPR, testTPR] = findnTreesRF(y, X, k, nTreesValues, seed)
+% Finds the best number of trees for random forests from a given range of values 
+% nTreesValues over k-fold CV and plots learning curves on train and test data
 
     nDf = length(nTreesValues);
 
@@ -15,6 +17,7 @@ function [nTreesStar, trainTPR, testTPR] = findnTreesRF(y, X, k, nTreesValues, s
         predict = @(model, X) predictRandomForest(model, X);
         computePerformances = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
         
+        rng('default');
         setSeed(seed);
         [trainTPR(i), testTPR(i)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances, 0);
   
