@@ -74,8 +74,8 @@
 
   Finally, in order to test our models for both weak and strong predictions, we separated the training set in two ways:
   \begin{itemize}
-    \item Entirely remove a proportion of users to use them as a strong prediction test set
-    \item Withhold a proportion of the remaining (user, artist, listening count) triplets to use them as a weak prediction test set
+    \item Entirely remove a proportion of users to use them as a strong prediction test set. We typically removed $20\%$ of the users.
+    \item Withhold a proportion of the remaining (user, artist, listening count) triplets to use them as a weak prediction test set. We typically withhled $20\%$ of the available counts of each user.
   \end{itemize}
 
   \textbf{Error measure}: Both weak and strong prediction involve generating, for a given set of (user, artist) pairs, predicted listening counts. We use mean \textbf{RMSE} as our main error measure. Given a predicted triplets $\hat{Y}$, we compute the RMSE of the residuals on nonzero elements of the \textbf{$\log$-transformed} target sparse matrix $Y$.\\
@@ -89,7 +89,7 @@
   \begin{figure}[ht]
     \center
       \includegraphics[width=14cm]{figures/recommendation/baseline-predictor-plots.pdf}
-    \caption{Error diagnostic plots for the \textsc{MeanPerUser} baseline predictor}
+    \caption{Error diagnostic for the \textsc{MeanPerUser} baseline predictor}
     \label{fig:baseline-predictor-plots}
   \end{figure}
 
@@ -152,7 +152,7 @@
     TODO: results
 
     \noindent
-    \textbf{Top-N similar users}. Our best results we obtained by basing our predictions on a user similarity measure. We selected the \textbf{Pearson product-moment correlation} coefficient as described in \cite{cf-techniques-review}. For two users $i$ and $j$, we compute their similarity as:
+    \textbf{Top-N similar users}. Our best results were obtained by basing our predictions on a user similarity measure. We selected the \textbf{Pearson product-moment correlation} coefficient as described in \cite{cf-techniques-review}. For two users $i$ and $j$, we compute their similarity as:
     \[
       \text{similarity}(i, j) = \frac{
         \sum_{\text{common artists~} k} (r_{ik} - \bar r_{i})(r_{jk} - \bar r_{j})
@@ -174,12 +174,15 @@
     Computing the similarity coefficient proved somewhat costly. For very large datasets, as for clustering, it is possible to use a low rank approximation of the dataset to compute the correlation coefficients. The Top-N predictor's hyperparameters ($N$ and the space to compute the similarity in) can be tuned to strike a balance between performance and computation time.
 
     \noindent
-    \textbf{Final model and predictions}: Since the number of users remains limited ($\leq 2000$), we were able to fully compute the similarity matrix $S$ on the training data and predict using the votes of \textit{all} other users. Although somewhat slow, this method striked the best performance to time ratio among those which we experimented. Figure \ref{fig:similarity-predictor-plots} shows the error diagnostic for this method. We obtain an expected test RMSE of $TODO$, which finally beats the \textsc{MeanPerUser} baseline.
-    We researched further processing which could be applied to the similarity matrix, e.g. Fisher's $z$ transform, but it didn't seem to improve the results.\\
-    TODO: add a cool plot showing how little error we're achieving.
+    \textbf{Final model and predictions}: Since the number of users remains limited ($\leq 2000$), we were able to fully compute the similarity matrix $S$ on the training data and predict using the votes of \textit{all} other users. Although somewhat slow, this method striked the best performance to time ratio among those which we experimented. Figure \ref{fig:similarity-predictor-plots} shows the error diagnostic for this method. We obtain an expected test RMSE of $0.76$, which finally beats the \textsc{MeanPerUser} baseline.
+    We researched further processing which could be applied to the similarity matrix, e.g. Fisher's $z$ transform, but it didn't seem to improve the results.
 
-  \subsection{Strong prediction}
-  Also known as ``cold start''.
+    \begin{figure}[ht]
+      \center
+        \includegraphics[width=14cm]{figures/recommendation/similarity-predictor-plots.pdf}
+      \caption{Error diagnostic for the \textsc{Similarity} predictor}
+      \label{fig:baseline-predictor-plots}
+    \end{figure}
   TODO: baseline ``overall mean'' is hard to beat. Friendship graph contains some information, but we were not able to find a way to exploit it to our advantage. Refine the similarity measure to first cluster artists, and then use the clusters as ``common artists''.\\
 
   \subsection{Further work}
