@@ -1,5 +1,5 @@
 function nnPred = predictNeuralNetwork(nn, xPred)
-% Predict output labels from the given Neural Network model for the xPred
+% Predict scores from the given Neural Network model nn for the xPred
 % data examples
 
     % to get the scores we need to do nnff (feed-forward) 

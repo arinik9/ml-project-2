@@ -2,6 +2,10 @@ function [nTreesStar, trainTPR, testTPR] = findnTreesRF(y, X, k, nTreesValues, s
 % Finds the best number of trees for random forests from a given range of values 
 % nTreesValues over k-fold CV and plots learning curves on train and test data
 
+    if (nargin < 5)
+        seed = 1;
+    end
+
     nDf = length(nTreesValues);
 
     trainTPR = zeros(nDf,1);

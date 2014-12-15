@@ -2,7 +2,7 @@ function [dropOutStar, trainTPR, testTPR] = findDropoutNeuralNetwork(y, X, k, dr
 % Finds the best dropout parameter for NN from a given range of values dropoutFractions 
 % over k-fold CV and plots learning curves on train and test data
 
-    if (nargin < 6)
+    if (nargin < 5)
         seed = 1;
     end
 

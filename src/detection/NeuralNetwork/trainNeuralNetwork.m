@@ -3,23 +3,23 @@ function model = trainNeuralNetwork(yTr, XTr, plot_flag, learningRate, activatio
 % This function takes train and test data and apply NN model with given
 % parameters in order to test different parameters tuning instead of boilerplate code.
 %
-% Outputs:
-%   - model: Neural Network trained from the training data
-% Inputs:
-%   - yTr: training output data
-%   - XTr: normalized training input data
-%   - XTe: normalized test input data
-%   - learningRate: Note from toolbox: typically needs to be lower when using 'sigm' activation function and non-normalized inputs.
-%   - activationFunction: Activation functions of hidden layers: 'sigm' (sigmoid) or 'tanh_opt' (optimal tanh).
-%   - dropoutFraction: Dropout level (http://www.cs.toronto.edu/~hinton/absps/dropout.pdf)
-%   - weightPenaltyL2: L2 regularization
-%   - plot_flag: if == 1 => plots trainin error as the NN is trained 
-%   - nnSetup: setup for Neural Network. The first layer needs to have
-%   number of features neurons, and the last layer the number of classes
-%   (here two). One can add as many layer as he wants by indicating the
-%   number of activation functions in that layer.
-%   - numepochs: Number of full sweeps through data
-%   - batchsize: Take a mean gradient step over this many samples
+% OUTPUTS
+%   model:      Neural Network trained from the training data
+% INPUTS
+%   yTr:                training output data
+%   XTr:                normalized training input data
+%   XTe:                normalized test input data
+%   learningRate:       Note from toolbox: typically needs to be lower when using 'sigm' activation function and non-normalized inputs.
+%   activationFunction: Activation functions of hidden layers: 'sigm' (sigmoid) or 'tanh_opt' (optimal tanh).
+%   dropoutFraction:    Dropout level (http://www.cs.toronto.edu/~hinton/absps/dropout.pdf)
+%   weightPenaltyL2:    L2 regularization
+%   plot_flag:          if == 1 => plots trainin error as the NN is trained 
+%   nnSetup:            setup for Neural Network. The first layer needs to have
+%                       number of features neurons, and the last layer the number of classes
+%                       (here two). One can add as many layer as he wants by indicating the
+%                       number of activation functions in that layer.
+%   numepochs:          Number of full sweeps through data
+%   batchsize:          Take a mean gradient step over this many samples
 
     % Default parameter settings
     

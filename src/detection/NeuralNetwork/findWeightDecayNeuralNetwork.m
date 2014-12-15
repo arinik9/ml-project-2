@@ -3,6 +3,10 @@ function [weightDecayStar, trainTPR, testTPR] = findWeightDecayNeuralNetwork(y, 
 % weightDecaysValues over k-fold CV and plots learning curves 
 % on train and test data
 
+    if (nargin < 5)
+        seed = 1;
+    end
+
     n = length(weightDecaysValues);
 
     trainTPR = zeros(n,1);

@@ -2,6 +2,10 @@ function [nMinLeafStar, trainTPR, testTPR] = findminLeafRF(y, X, k, leafValues, 
 % Finds the best number of minimum observation per leaf for random forests from a given range of values 
 % leafValues over k-fold CV and plots learning curves on train and test data
 
+    if (nargin < 5)
+        seed = 1;
+    end
+
     nDf = length(leafValues);
 
     trainTPR = zeros(nDf,1);
