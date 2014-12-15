@@ -16,10 +16,10 @@ evaluate = @(name, learn) evaluateMethod(name, learn, Yoriginal, Goriginal, nSpl
 name = 'Constant';
 [e.tr.(name), e.te.(name)] = evaluate(name, @learnConstantPredictor);
 
-%% Simple model: predict the average listening count of the artist
+%% Simple model: predict the average listening count of the user
 % (which is one of the derived variables)
-name = 'ArtistMean';
-[e.tr.(name), e.te.(name)] = evaluate(name, @learnAveragePerArtistPredictor);
+name = 'UserMean';
+[e.tr.(name), e.te.(name)] = evaluate(name, @learnAveragePerUserPredictor);
 
 %% ALS-WR (low rank approximation)
 % We tried: lambda = 0.01, 0.025, 0.05, 0.075, 0.1, 0.2

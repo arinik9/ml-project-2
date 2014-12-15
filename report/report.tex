@@ -1,6 +1,7 @@
-\documentclass{article}
+\documentclass[10pt,a4paper]{article}
 % We will use NIPS submission format
 \usepackage{nips13submit_e,times}
+\usepackage[top=50pt,bottom=50pt,left=60pt,right=60pt]{geometry}
 % for hyperlinks
 \usepackage{hyperref}
 \usepackage{url}
@@ -50,28 +51,24 @@
     \item \textit{Strong} generalization: for unknown users, predict the listening counts. We may use the friendship data.
   \end{itemize}
 
-  \textbf{About the data}: The listening counts matrix $Y$ covers $1774$ users and $15085$ artists. It is very sparse, as we observe only $69617$ triplets (density of $0.2\%$). The friendship graph $G$ is given in the form of a symmetric $1774 \times 1774$ adjacency matrix, where $G_{i, j} = G_{j, i} = 1$ if users $i$ and $j$ are connected.\\
+  \textbf{About the data}: The listening counts matrix $Y$ covers $1774$ users and $15085$ artists. It is very sparse, as we observe only $69617$ triplets (density of $0.2\%$). In our algorithms, we were careful never to use the $0$ entries of $Y$, since they one convey an absence of signal rather valuable information. The friendship graph $G$ is given in the form of a symmetric $1774 \times 1774$ adjacency matrix, where $G_{i, j} = G_{j, i} = 1$ if users $i$ and $j$ are connected.\\
 
   Artists have listening counts ranging from $1$ to $2274039$, the most listened artist being Britney Spears (for some reason). Over all observations, before any outlier removal, the average count is 707 while the median count is 278.\\
-
-  TODO: explain carefully how we handled unobserved data.
-
-  \textbf{Error measure}: Both weak and strong prediction involve generating, for a given set of (user, artist) pairs, predicted listening counts. We use mean \textbf{RMSE} as our main error measure. Given a predicted triplets $\hat{Y}$, we compute the RMSE of the residuals on nonzero elements of the target sparse matrix $Y$.\\
 
   \subsection{Dataset analysis and preprocessing}
   Examining the dataset, we noticed that user $385$ had listened to artist $9162$ a whopping $352698$ times. Assuming an average song duration of $3$ minutes, user $385$ have supposedly spent the equivalent of two full years listening to \textit{Depeche Mode}. It was then necessary to remove such outliers before carrying out any learning.
 
-  Several Machine Learning techniques rely on the assumption that data follows a Gaussian distribution. Applying a $\log$ transform to listening counts brought all counts back to a common scale.
+  Several Machine Learning techniques rely on the assumption that data follows a Gaussian distribution. Applying a $\log$ transform to listening counts brought all counts back to a common scale. Moreover, observed resulting scale is in $[1;10]$, which is a range comparable to ratings. Since the semantics can be transposed from listening counts to ratings, we are able to apply directly results from recommender systems research articles (e.g. \cite{alswr}), without need for further adaptation.
 
   \begin{figure}[ht]
     \center
     \subfigure{
-      \includegraphics[width=2.5in]{figures/recommendation/unnormalized-counts.pdf}
+      \includegraphics[width=2in]{figures/recommendation/unnormalized-counts.pdf}
     }
     \subfigure{
-      \includegraphics[width=2.5in]{figures/recommendation/normalized-counts.pdf}
+      \includegraphics[width=2in]{figures/recommendation/normalized-counts.pdf}
     }
-    \caption{Normalization makes listening counts distribution more Gaussian}
+    \caption{The Quest for Gaussianity}
     \label{fig:recommendation-normalization}
   \end{figure}
 
@@ -81,10 +78,73 @@
     \item Withhold a proportion of the remaining (user, artist, listening count) triplets to use them as a weak prediction test set
   \end{itemize}
 
-  \subsection{Feature transformations}
+  \textbf{Error measure}: Both weak and strong prediction involve generating, for a given set of (user, artist) pairs, predicted listening counts. We use mean \textbf{RMSE} as our main error measure. Given a predicted triplets $\hat{Y}$, we compute the RMSE of the residuals on nonzero elements of the \textbf{$\log$-transformed} target sparse matrix $Y$.\\
 
-  \subsection{Final model and predictions}
+  In the following subsections, we examine the different methods applied to the weak generalization task.
 
+  \subsection{Methodology and baseline}
+  We used two baseline predictors to compare our results with: always predict the overall mean listening count, and always predict the mean of the user. Surprisingly, these performed remarkably well, with an expected test RMSE of $1.42$ and $0.867$ respectively. It turns out the latest was hard to beat.\\
+  In order to analyze the results of each proposed technique, we rely on three plots: a histogram representation of the repartition of errors made for each prediction, and a plot of the mean RMSE per listening count available. This allows us to diagnose the error more precisely than a single RMSE measure (how does it perform when there's a lot of counts available? When there are few? When the counts are large?). Figure \ref{fig:baseline-predictor-plots} shows such plots for the baseline predictor \textsc{MeanPerUser}.
+
+  \begin{figure}[ht]
+    \center
+      \includegraphics[width=14cm]{figures/recommendation/baseline-predictor-plots.pdf}
+    \caption{Error diagnostic plots for the \textsc{MeanPerUser} baseline predictor}
+    \label{fig:baseline-predictor-plots}
+  \end{figure}
+
+
+  \subsection{Model-based}
+  Model-based approaches to recommender system try to \textit{explain} the observations by learning models. However, we are confronted with the classical \textbf{sparsity} and \textbf{long-tail} problems of recommender systems.\\
+
+    \noindent
+    \textbf{Each Artist}: We applied an ``item''-oriented approach by training a linear model per artist. The features were extracted as proposed by \cite{long-tail-recommender}, forming a set of Derived Variables (DV) for each user and for each artist. Some of these DVs were also reused in subsequent methods. As shown on figure \ref{fig:each-artist-plot}, this approach works fairly well when a large number of counts is available, but fails when data examples are too scarce. \textsc{EachArtist} gives an expected train RMSE of $0.62$, but fails to generalize (test RMSE: $1.41$).
+
+    \begin{figure}[ht]
+      \center
+        \includegraphics[width=4cm]{figures/recommendation/each-artist-predictor-plot.pdf}
+      \caption{\textsc{EachArtist} is not accurate when too few listening counts are observed. A constant predictor (blue) is shown for comparison.}
+      \label{fig:each-artist-plot}
+    \end{figure}
+
+    \noindent
+    \textbf{Head-Tail split}:
+    TODO: As described in \cite{long-tail-recommender}, split the dataset in a head (many listening counts available) and a tail (few listening counts, but \textit{many} artists). The head can support Each-Artist (learning a model per artist), while the tail artists are clustered and used together (more data). Although it looked promising, due to lack of time, were not able to investigate this method as far as we wanted.
+
+    \noindent
+    \textbf{Low-rank matrix factorization} with ALS-WR:
+    TODO: Described in \cite{alswr}. Implementation of the algorithm.
+
+  \subsection{Memory-based}
+  Memory-based approaches, as opposed to model-based, do not rely on semantics of the data. On the other hand, we make the assumption that people have stable \textit{tastes} or preferences, that is that users who agreed in the past will agree in the future and that they will like similar artists than those they listened to in the past. While this approach may show limitations on a large temporal scale, it proved successful on our dataset.\\
+
+    \noindent
+    \textbf{K-nearest-neighbors clustering}:
+    TODO: fast implementation from \cite{piotrtoolbox}.\\
+
+    \noindent
+    \textbf{Gaussian Mixture Models} with Expectation Maximization (EM) for soft clustering:
+    TODO: cite the script used.\\
+    TODO: not fast enough, so we clustered after projecting into lower-dimensionality space (reuse ALSWR algorithm).\\
+    TODO: predict ALS-WR reconstruction, weighted by the soft assignments.
+
+    \noindent
+    \textbf{Top-N similar users}:
+    TODO: describe similarity measure used. Fresh implementation.\\
+    TODO: prediction is a weighted average from the vote (deviation) of similar user + the biais the current user\\
+    TODO: we tried Fisher's transform, but it didn't seem to help.\\
+
+    \noindent
+    \textbf{Final model and predictions}:
+    TODO: detail the best model (purely collaborative filtering using the Pearson similarity measure) and the parameters chosen.\\
+    TODO: add a cool plot showing how little error we're achieving.
+
+  \subsection{Strong prediction}
+  Also known as ``cold start''.
+  TODO: baseline ``overall mean'' is hard to beat. Friendship graph contains some information, but we were not able to find a way to exploit it to our advantage.\\
+
+  \subsection{Further work}
+  TODO: cite approaches that seemed promising but were not implemented due to lack of time: Boltzman machines, Naïve Bayes, Slope One (cite papers).\\
 
 
 \section{Image classification}
@@ -114,12 +174,12 @@
    \begin{figure}[ht]
        \center
       	\subfigure[ROC Curve of logistic regression applied to different low-rank approximation. $100$ principal components returns the best results begin the most top-left curve.]{
-      		\includegraphics[width=2.5in]{figures/detection/pcaselection-curve3.pdf}
+      		\includegraphics[width=2in]{figures/detection/pcaselection-curve3.pdf}
       		\label{fig:detection-pca-roc-curve}
       	}
     	\hfill
 	\subfigure[Explained variance per principal component (barplot) and cumulated explained variance (curve).]{
-      		\includegraphics[width=2.5in]{figures/detection/pca-varianceExplained.pdf}
+      		\includegraphics[width=2in]{figures/detection/pca-varianceExplained.pdf}
       		\label{detection-pca-variance}
     	}
 	\caption{PCA on detection dataset. Selection of the number of principal components}
@@ -133,13 +193,13 @@
 	   	\item Applying a default implementation of the model to normalized input data or reduced input data after applying PCA depending on computation complexity and performance of the algorithm.
     		\item Tuning model parameters: for parameters that seemed relevant, we chose a range of values to test on and find the best combination using cross validation. As training the different models is rather slow, we used 3-fold cross validation. Other parameters were set manually. We plot learning curves and select parameters values that maximize the average True Positive Rate (TPR) on the test set. It is important to point out that we may not select the very best parameter doing so because the average TPR is only a proxy but it is the only measure we can rely on to automate the search.
 		  \item Validating the trained model using 3-fold cross-validation: we computed an average ROC curve over train and test data. We represent the curve with its 95\% confidence interval (see our \texttt{kCVfastROC} function).
-  		\item Finally, we compare the candidate model with other classifiers plotting a ROC Curve averaged over 3-fold cross validation and a boxplot for each of them (see our \texttt{kCVevaluateMultipleMethods} function).
+  		\item Finally, we compare the candidate model with other classifiers plotting a ROC Curve averaged over 3-fold cross validation and a boxplot for each of them (see our \texttt{kCVevaluateMultipleMethods} function).\\
 	\end{itemize}
 
-  \textbf{Logistic Regression}: Since it can be seen as a single-layer Neural Network, we used the Deep Learning toolbox. We added a regularization term (see below for details). We applied this classifier on our reduced data after exponential transform and learned the regularization term with cross validation and ended up with a regularization of value equal to $10^{-3}$.
+  \textbf{Logistic Regression}: Since it can be seen as a single-layer Neural Network, we used the Deep Learning toolbox. We added a regularization term (see below for details). We applied this classifier on our reduced data after exponential transform and learned the regularization term with cross validation and ended up with a regularization of value equal to $10^{-3}$.\\
 
-  \textbf{Gaussian Processes}: Having a large number of data examples in our training set, we used "large scale'' GP classification from Rasmussen's GPML library. It relies on low-rank and diagonal approximation to the exact covariance using induction points. Solving a classification problem, we opted for a logistic function as a likelihood function. We did not have specific intuition about the prior distribution so we used a constant 0-mean prior. We selected a squared exponential covariance with isometric distance measure \texttt{covSEiso} rather than the ARD one. While yielding comparable performance, the former uses only two hyper-parameters, in contrast with the latter which needs $D+1$ hyper parameters and thus might be prone to overfitting. Finally we chose Laplace approximation to infer on our data because of its reasonable computation time (as opposed to Expectation-Propagation). Gaussian Processes have a lot of hyper parameters and are very sensitive to those, especially the covariance hyper parameters. We only succeeded to make it work on a low-rank approximation over 50 principal components. None of our several trials of grid search to find the hyper parameters for our regular reduced input data succeeded.
-  
+  \textbf{Gaussian Processes}: Having a large number of data examples in our training set, we used "large scale'' GP classification from Rasmussen's GPML library. It relies on low-rank and diagonal approximation to the exact covariance using induction points. Solving a classification problem, we opted for a logistic function as a likelihood function. We did not have specific intuition about the prior distribution so we used a constant 0-mean prior. We selected a squared exponential covariance with isometric distance measure \texttt{covSEiso} rather than the ARD one. While yielding comparable performance, the former uses only two hyper-parameters, in contrast with the latter which needs $D+1$ hyper parameters and thus might be prone to overfitting. Finally we chose Laplace approximation to infer on our data because of its reasonable computation time (as opposed to Expectation-Propagation). Gaussian Processes have a lot of hyper parameters and are very sensitive to those, especially the covariance hyper parameters. We only succeeded to make it work on a low-rank approximation over 50 principal components. None of our several trials of grid search to find the hyper parameters for our regular reduced input data succeeded.\\
+
     \textbf{Neural Networks}: We applied a 2-layered Neural Network on our full-dimension data. We were able to tune the number of activation functions on each layer as well as its type. A sigmoid activation function gives better results than the $\tanh$ function and is more robust.\\
   To avoid overfitting, we leveraged two regularization methods:
   \begin{itemize}
@@ -147,23 +207,24 @@
 	  \item Defining a "dropout fraction'', which removes randomly some units during the training \cite{dropout}
   \end{itemize}
 	The best combination of weight decay and dropout fraction parameters were selected from ranges of parameters using cross-validation as described in the general approach section. We used  the ranges $[0, 0.1, 0.2, 0.3, 0.4, 0.5]$ for dropout fraction and $[0, 10^{-5}, 10^{-4}, 10^{-3}]$ for weight decay and ended up with selected values of $0$ for the dropout and $10^{-3}$ for the weight decay.\\
-  
-    \textbf{Random Forests}: We trained a random forest on the reduced input data and learned different parameters through cross-validation. We experimented with the number of trees (on which the decision is averaged), the fraction of variables selected in the random bagging for each decision split, and the minimum observations per tree leaf. A low number of these observations and a large fraction of features selected might be prone to overfitting while increasing the number of trees improves the predictions performances up to some point. However increasing the number of minimum observation per leaf gives us worse results, this may happen because we don't have enough training examples in our folds. We kept 100 as the number of trees over the range $[50, 100, 200, 300, 400, 500]$, as it offers a good compromise between computational complexity and performance:  while performing as good as more trees it is reasonably fast. We chose the $v/ 2$ with $v = \sqrt{size(X,2)}$ as the optimal number of variables sampled over the range $[5*v 2*v, v, v/ 2, v/ 5]$.
 
-  \textbf{Support Vectors Machines}: We experimented with different kernels: linear, polynomial and Radial Basis Function (RBF). As the polynomial and RBF kernels are more complex models their computational complexity is much higher than the linear one. Hence we applied SVM with those kernels on our low-rank approximation data. We retained the RBF kernel because it was giving the best performance results (fig. \ref{fig:detection-svm-kernels}) and then we select the best smoothness parameter $\gamma$ over a range of possible values through cross validation. We used the range $[0.2*L, 0.5*L, L, 2*L, 5*L]$ with $L = 1 / \sqrt{size(X,2)}$. As $\gamma$ increases, the algorithm tries harder to avoid misclassification on train data which leads to overfitting. One can notice it on fig. \ref{fig:detection-svm-gamma} that represents the learning curve for $\gamma$ parameter: as gamma increases the model fits perfectly the training data and thus performs worse on test data.
+    \textbf{Random Forests}: We trained a random forest on the reduced input data and learned different parameters through cross-validation. We experimented with the number of trees (on which the decision is averaged), the fraction of variables selected in the random bagging for each decision split, and the minimum observations per tree leaf. A low number of these observations and a large fraction of features selected might be prone to overfitting while increasing the number of trees improves the predictions performances up to some point. However increasing the number of minimum observation per leaf gives us worse results, this may happen because we don't have enough training examples in our folds. We kept 100 as the number of trees over the range $[50, 100, 200, 300, 400, 500]$, as it offers a good compromise between computational complexity and performance:  while performing as good as more trees it is reasonably fast. We chose the $v/ 2$ with $v = \sqrt{size(X,2)}$ as the optimal number of variables sampled over the range $[5*v 2*v, v, v/ 2, v/ 5]$.\\
+
+  \textbf{Support Vectors Machines}: We experimented with different kernels: linear, polynomial and Radial Basis Function (RBF). As the polynomial and RBF kernels are more complex models their computational complexity is much higher than the linear one. Hence we applied SVM with those kernels on our low-rank approximation data. We retained the RBF kernel because it was giving the best performance results (fig. \ref{fig:detection-svm-kernels}) and then we select the best smoothness parameter $\gamma$ over a range of possible values through cross validation. We used the range $[0.2*L, 0.5*L, L, 2*L, 5*L]$ with $L = 1 / \sqrt{size(X,2)}$. As $\gamma$ increases, the algorithm tries harder to avoid misclassification on train data which leads to overfitting. One can notice it on fig. \ref{fig:detection-svm-gamma} that represents the learning curve for $\gamma$ parameter: as gamma increases the model fits perfectly the training data and thus performs worse on test data.\\
   
      \begin{figure}[ht]
        \center
       	\subfigure[Averaged ROC curves to choose the best kernel.]{
-      		\includegraphics[width=2.5in]{figures/detection/svm-kernels-curve.pdf}
+      		\includegraphics[width=2in]{figures/detection/svm-kernels-curve.pdf}
       		\label{fig:detection-svm-kernels}
       	}
     	\hfill
       	\subfigure[Learning curves for  $\gamma$ parameter of RBF kernel.]{
-      		\includegraphics[width=2.5in]{figures/detection/svm-gamma-learningcurve.pdf}
+      		\includegraphics[width=2in]{figures/detection/svm-gamma-learningcurve.pdf}
       		\label{fig:detection-svm-gamma}
       	}
 	\caption{Selecting the best parameters with ROC comparison and learning parameters for SVM.}
+
   \end{figure}
 
 
@@ -173,17 +234,17 @@
    \begin{figure}[ht]
        \center
       	\subfigure[Averaged ROC Curves of all our tuned classifiers.]{
-      		\includegraphics[width=2.5in]{figures/detection/compareall-5fold-curve.pdf}
+      		\includegraphics[width=2in]{figures/detection/compareall-5fold-curve.pdf}
       		\label{fig:detection-compare-roc-curve}
       	}
     	\hfill
 	\subfigure[Boxplots of each classifier.]{
-      		\includegraphics[width=2.5in]{figures/detection/compareall-5fold-boxplots.pdf}
+      		\includegraphics[width=2in]{figures/detection/compareall-5fold-boxplots.pdf}
       		\label{detection-compare-boxplot}
     	}
 	\caption{Comparison of all models. SVM appear to provide the best performance.}
   \end{figure}
-  
+
   \textbf{Predictions}: Hence, we produced our predictions for the given \texttt{X\_test} input data using the SVM classifier and wrote them in the mat file \texttt{personPred.mat}. We should underline that the predicted scores output from SVM are strongly split rather than smooth: our classifier does not predict with uncertainty, hence playing with the threshold will not affect much our label predictions.
 
 \section{Summary}
@@ -191,23 +252,27 @@
 
   In the detection problem, we first applied a PCA to reduce the dimensionality of our data. Then, we applied different classifiers and experimented with their parameter to improve their performance. Once having the optimal settings we could get, we compared them using ROC curves. Finally we selected SVM with RBF kernel for our predictions.
 
-  \subsubsection*{Acknowledgments}
-  	We would like to thank Prof. Emtiyaz Khan and the teaching assistants for creating this project. It was a great opportunity for us to put in practice the machine learning techniques seen in class on real-world problems. We also would like to thank them for their availability throughout the semester.\\
-  
-     \begin{thebibliography}{99}
-   
-   	\bibitem{piotrtoolbox} Doll'ar P, \textit{Piotr's Computer Vision Matlab Toolbox}
-	
-	\bibitem{rocanalysis} Fawcett T, \textit{An introduction to ROC analysis}, in Pattern Recognition Letters 27 (2006) 861-874.
-	   
-     	\bibitem{gpmltoolbox} Rasmussen C and Williams C, \textit{Gaussian Processes for Machine Learning Toolbox}
-	
-	\bibitem{deeplearningtoolbox} Rasmus Berg Palm, \textit{Deep Learning Toolbox}
-		
-	\bibitem{libsvmtoolbox} Chang CC and Lin CJ, \textit{LIBSVM: A library for support vector machines}, in ACM Transactions on Intelligent Systems and Technology, vol. 2 (2011)
-		
-	\bibitem{dropout} Srivastava N, Hinton G, Krizhevsky A, Sutskever I and Salakhutdinov R, \textit{Dropout: A Simple Way to Prevent Neural Networks from Overfitting}, in Journal of Machine Learning Research 15 (2014) 1929-1958.
+    \subsubsection*{Remarks}
+    TODO: Implementation: point to the most interesting implementations (generic methods and ML algorithms that we implemented ourselves). We could make use of parallel processing (thank Harris for the suggestion).
 
-   \end{thebibliography}
-   
+    \subsubsection*{Acknowledgments}
+    We would like to thank Prof. Emtiyaz Khan and the teaching assistants for creating this project. It was a great opportunity for us to put in practice the machine learning techniques seen in class on real-world problems. We also would like to thank them for their availability throughout the semester.\\
+
+    \begin{thebibliography}{99}
+      % TODO: More references!
+
+      % Papers
+      \bibitem{alswr} Zhou, Y., Wilkinson, D., Schreiber, R., \& Pan, R., \textit{Large-scale parallel collaborative filtering for the netflix prize} (2008).
+      \bibitem{long-tail-recommender} Park, Yoon-Joo, and Alexander Tuzhilin, \textit{The long tail of recommender systems and how to leverage it}.
+      \bibitem{dropout} Srivastava N, Hinton G, Krizhevsky A, Sutskever I and Salakhutdinov R, \textit{Dropout: A Simple Way to Prevent Neural Networks from Overfitting}, in Journal of Machine Learning Research 15 (2014) 1929-1958.
+      \bibitem{rocanalysis} Fawcett T, \textit{An introduction to ROC analysis}, in Pattern Recognition Letters 27 (2006) 861-874.
+
+      % Code libraries
+      \bibitem{piotrtoolbox} Doll'ar P, \textit{Piotr's Computer Vision Matlab Toolbox}
+      \bibitem{gpmltoolbox} Rasmussen C and Williams C, \textit{Gaussian Processes for Machine Learning Toolbox}
+      \bibitem{deeplearningtoolbox} Rasmus Berg Palm, \textit{Deep Learning Toolbox}
+      \bibitem{libsvmtoolbox} Chang CC and Lin CJ, \textit{LIBSVM: A library for support vector machines}, in ACM Transactions on Intelligent Systems and Technology, vol. 2 (2011)
+
+    \end{thebibliography}
+
 \end{document}
