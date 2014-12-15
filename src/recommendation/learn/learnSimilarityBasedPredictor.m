@@ -1,8 +1,12 @@
-function predictor = learnSimilarityBasedPredictor(Y, Ytest, userDV, ~, transform)
+function predictor = learnSimilarityBasedPredictor(Y, Ytest, userDV, ~, S, transform)
 % LEARNSIMILARITYBASEDPREDICTOR Predict based on inter-user similarity measures
 
-    S = computeSimilarityMatrix(Y, Ytest, userDV);
-    S = transform(S);
+    if(~exist('S', 'var'))
+        S = computeSimilarityMatrix(Y, Ytest, userDV);
+    end;
+    if(exist('transform', 'var'))
+        S = transform(S);
+    end;
     
     predictor = @(user, artist) predict(user, artist, Y, userDV, S);
 end

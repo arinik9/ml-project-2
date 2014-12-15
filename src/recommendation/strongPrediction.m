@@ -44,6 +44,9 @@ diagnoseError(YtestStrong, YhatConstant);
 e.st.(name) = computeRmse(YtestStrong, YhatConstant);
 fprintf('----- %s [single run]: %f\n\n', name, e.st.(name));
 
+%% Use artist derived variables
+% E.g. overall mean + artist likeability
+% TODO
 
 %% Leverage the social graph
 % Trust at 100% votes from friends, when there are enough (fallback on

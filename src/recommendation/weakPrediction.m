@@ -107,7 +107,7 @@ name = 'SimilarityBased';
 transform = @(S) S;
 %transform = @applyFisherTransform;
 learnSimilarity = @(Y, Ytest, userDV, artistDV) ...
-    learnSimilarityBasedPredictor(Y, Ytest, userDV, artistDV, transform);
+    learnSimilarityBasedPredictor(Y, Ytest, userDV, artistDV, S, transform);
 
 [e.tr.(name), e.te.(name)] = evaluate(name, learnSimilarity);
 
