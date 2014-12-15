@@ -151,8 +151,17 @@
     TODO: results
 
     \noindent
-    \textbf{Top-N similar users}:
-    TODO: describe similarity measure used. Fresh implementation.\\
+    \textbf{Top-N similar users}. Our best results we obtained by basing our predictions on a user similarity measure. We selected the \textbf{Pearson product-moment correlation} coefficient. For two users $i$ and $j$, we compute it as:
+    \[
+      similarity(i, j) = \frac{
+        \sum_{\text{common artists~} k} (r_{ik} - \bar r_{i})(r_{jk} - \bar r_{j})
+      }{
+        \sqrt{ \sum_{i\text{'s counts } r_{ik}} (r_{ik} - \bar r_{i}) }
+        \sqrt{ \sum_{j\text{'s counts } r_{jk}} (r_{jk} - \bar r_{j}) }
+      }
+    \]
+    where $\bar r_i$ is the average listening count of user $i$. Intuitively, the terms involving a deviation to the user's mean can be seen as encoding preference. It also allows to ignore the large variations in listening habits (small and large volume users). Since the sum in the nominator only takes into account artists which both users have listened to, users with no artists in common have a similarity of $0$. On the other hand, users having listened to exactly the same artists will have either $1$ or $-1$ similarity, based on whether or not they ``liked'' it (i.e. if they listened to it more or less that to other artists).\\
+
     TODO: prediction is a weighted average from the vote (deviation) of similar user + the biais the current user\\
     TODO: we tried Fisher's transform, but it didn't seem to help.\\
 
@@ -163,10 +172,10 @@
 
   \subsection{Strong prediction}
   Also known as ``cold start''.
-  TODO: baseline ``overall mean'' is hard to beat. Friendship graph contains some information, but we were not able to find a way to exploit it to our advantage.\\
+  TODO: baseline ``overall mean'' is hard to beat. Friendship graph contains some information, but we were not able to find a way to exploit it to our advantage. Refine the similarity measure to first cluster artists, and then use the clusters as ``common artists''.\\
 
   \subsection{Further work}
-  TODO: cite approaches that seemed promising but were not implemented due to lack of time: Boltzman machines, Naïve Bayes, Slope One (cite papers).\\
+  TODO: cite approaches that seemed promising but were not implemented due to lack of time: Boltzman machines, Naïve Bayes, Slope One (cite papers). Head/Tail could have been used better. Combine the clustering approaches with better prediction schemes Use the social network.\\
 
 
 \section{Image classification}
@@ -189,8 +198,8 @@
   We normalized our features before using them for training.
 
   \subsection{Principal Component Analysis}
-  Our features matrix is of dimensionality $9360$ for $8545$ examples which gives us a "fat'' matrix. As several Machine Learning algorithms' time complexity grows fast with dimensionality, we applied a Principal Component Analysis (PCA) in order to work with lower dimensionality data. To do so, we used Piotr's \texttt{pca} implementation which proved to be faster than Matlab's default implementation. We experimented different rank approximations (keeping $50$, $75$, $100$, $300$, $500$ and $1000$ principal components) and applied a simple logistic regression with 3-fold cross validation to have an heuristic about the performance. From the analysis of the resulting ROC curve averaged over the folds \ref{fig:detection-pca-roc-curve}, we decided to keep $100$ principal components for our data projection. 
-  
+  Our features matrix is of dimensionality $9360$ for $8545$ examples which gives us a "fat'' matrix. As several Machine Learning algorithms' time complexity grows fast with dimensionality, we applied a Principal Component Analysis (PCA) in order to work with lower dimensionality data. To do so, we used Piotr's \texttt{pca} implementation which proved to be faster than Matlab's default implementation. We experimented different rank approximations (keeping $50$, $75$, $100$, $300$, $500$ and $1000$ principal components) and applied a simple logistic regression with 3-fold cross validation to have an heuristic about the performance. From the analysis of the resulting ROC curve averaged over the folds \ref{fig:detection-pca-roc-curve}, we decided to keep $100$ principal components for our data projection.
+
   Using a reduced number of features also helps avoiding overfitting, as we are, to some extend, using only the signal (residing in the principal components). We have almost $50\%$ of the variance explained in our reduced space \ref{fig:detection-pca-variance}, the rest being mostly noise.
 
    \begin{figure}[ht]
@@ -233,7 +242,7 @@
     \textbf{Random Forests}: We trained a random forest on the reduced input data and learned different parameters through cross-validation. We experimented with the number of trees (on which the decision is averaged), the fraction of variables selected in the random bagging for each decision split, and the minimum observations per tree leaf. A low number of these observations and a large fraction of features selected might be prone to overfitting while increasing the number of trees improves the predictions performances up to some point. However increasing the number of minimum observation per leaf gives us worse results, this may happen because we don't have enough training examples in our folds. We kept 100 as the number of trees over the range $[50, 100, 200, 300, 400, 500]$, as it offers a good compromise between computational complexity and performance:  while performing as good as more trees it is reasonably fast. We chose the $v/ 2$ with $v = \sqrt{size(X,2)}$ as the optimal number of variables sampled over the range $[5*v 2*v, v, v/ 2, v/ 5]$.\\
 
   \textbf{Support Vectors Machines}: We experimented with different kernels: linear, polynomial and Radial Basis Function (RBF). As the polynomial and RBF kernels are more complex models their computational complexity is much higher than the linear one. Hence we applied SVM with those kernels on our low-rank approximation data. We retained the RBF kernel because it was giving the best performance results (fig. \ref{fig:detection-svm-kernels}) and then we select the best smoothness parameter $\gamma$ over a range of possible values through cross validation. We used the range $[0.2*L, 0.5*L, L, 2*L, 5*L]$ with $L = 1 / \sqrt{size(X,2)}$. As $\gamma$ increases, the algorithm tries harder to avoid misclassification on train data which leads to overfitting. One can notice it on fig. \ref{fig:detection-svm-gamma} that represents the learning curve for $\gamma$ parameter: as gamma increases the model fits perfectly the training data and thus performs worse on test data.\\
-  
+
      \begin{figure}[ht]
        \center
       	\subfigure[Averaged ROC curves to choose the best kernel.]{
@@ -294,6 +303,7 @@
       \bibitem{gpmltoolbox} Rasmussen C and Williams C, \textit{Gaussian Processes for Machine Learning Toolbox}
       \bibitem{deeplearningtoolbox} Rasmus Berg Palm, \textit{Deep Learning Toolbox}
       \bibitem{libsvmtoolbox} Chang CC and Lin CJ, \textit{LIBSVM: A library for support vector machines}, in ACM Transactions on Intelligent Systems and Technology, vol. 2 (2011)
+      \bibitem{gaussian-mixture-model-script} Mo Chen \textit{Variational Bayesian Inference for Gaussian Mixture Model}, on MathWorks File Exchange
 
     \end{thebibliography}
 
