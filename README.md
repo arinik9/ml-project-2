@@ -25,24 +25,21 @@ Project's TODO
 - [X] Support Vector Machine
 - [X] Gaussian process and several kernels
 - [X] K-means clustering
-- [ ] Gaussian Mixture Model and EM algo
-- [x] Principal Components Analysis (as a low-rank approximation) using alternating least squares
+- [X] [Gaussian Mixture Model and EM algo](http://www.mathworks.com/matlabcentral/fileexchange/35362-variational-bayesian-inference-for-gaussian-mixture-model)
+- [X] Principal Components Analysis (as a low-rank approximation) using alternating least squares
 - [X] Neural Networks (implementation from the [DeepLearn toolbox](https://github.com/rasmusbergpalm/DeepLearnToolbox/archive/))
-- [ ] Generic learning curve plotting function
 - [X] Generic ML method comparison function (for each method, plot achieved test error & stability with a boxplot)
 
 ### Dataset pre-processing
 
-- [x] Basic data characteristics (dimensionality, repartition, correlation, ...)
-- [ ] Try obtaining helpful visualizations
-- [x] Dimensionality reduction with PCA
-- [ ] Try feature transformations (basis expansion) on the reduced set of features
+- [X] Basic data characteristics (dimensionality, repartition, correlation, ...)
+- [X] Try obtaining helpful visualizations
+- [X] Dimensionality reduction with PCA
 
 ### Person detection dataset
 
 - [X] Implement the relevant error measures
-- [ ] Compare precision/recall vs ROC
-- [ ] Implement Mutual Information and plot against classification threshold theta
+- [X] Try feature transformations (basis expansion)
 - [X] Get a baseline error value
 - [X] Implement PCA
 - [X] Implement Logistic Regression
@@ -51,7 +48,7 @@ Project's TODO
 - [X] Experiment with SVM (check provided toolbox)
 - [X] Experiment with Random Forest
 - [X] Implement kCV fastROC
-- [X] Generate learning curves (code to replicate for different methods)
+- [X] Generate feature selection plots (code to replicate for different methods)
 - [X] Plot ROC Curves of different models for comparison
 - [X] Maximize the train and test avgTPR
 - [X] Check the stability of the results with k-CV
@@ -60,24 +57,24 @@ Project's TODO
 
 Recall we must achieve both **weak** (new ratings for existing users) and **strong** (entirely new users) prediction.
 
-- [x] Implement the relevant error measures
-- [x] Implement error diagnostics (which kind of counts do we make the most error on?)
-- [x] Train / test split (particular for weak and strong prediction)
-- [x] Feature engineering: implement derived variables
-- [x] Get a baseline error value
-- [x] Implement Top-N recommendation (cluster with Pearson similarity measure)
-- [x] Experiment with K-Means
+- [X] Implement the relevant error measures
+- [X] Implement error diagnostics (which kind of counts do we make the most error on?)
+- [X] Train / test split (particular for weak and strong prediction)
+- [X] Feature engineering: implement derived variables
+- [X] Get a baseline error value
+- [X] Implement Top-N recommendation (cluster with Pearson similarity measure)
+- [X] Experiment with K-Means
 - [ ] Implement the simple [Slope One](http://arxiv.org/pdf/cs/0702144v2.pdf) method
-- [x] Experiment with Gaussian Mixture Models (soft clustering)
-- [x] Cluster the tail items (head / tail cutoff point to be chosen carefully)
-- [x] Try clustering in reduced-dimensionality space
+- [X] Experiment with Gaussian Mixture Models (soft clustering)
+- [X] Cluster the tail items (head / tail cutoff point to be chosen carefully)
+- [X] Try clustering in reduced-dimensionality space
 - [ ] Implement a hybrid head / tail predictor (e.g. Each Item for head, Top-K for tail)
 - [ ] Determine if using the social graph helps weak prediction (then, we will be able to know if we can use it for strong prediction as well)
 - [ ] Use the social network and generic artist informations for strong prediction (clustering ?)
-- [ ] Generate learning curves
-- [ ] Minimize the train and test error
-- [ ] Check the stability of the results with random train / test splits
-- [ ] Use the artists name to output fun facts
+- [X] Generate feature selection plots
+- [X] Minimize the train and test error
+- [X] Check the stability of the results with random train / test splits
+- [X] Use the artists name to output fun facts
 
 ### Predictions
 
