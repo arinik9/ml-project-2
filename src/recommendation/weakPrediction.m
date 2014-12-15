@@ -23,9 +23,9 @@ name = 'UserMean';
 %% ALS-WR (low rank approximation)
 % We tried: lambda = 0.01, 0.025, 0.05, 0.075, 0.1, 0.2
 % TODO: select hyper-parameters by cross-validation
-nFeatures = 50; % Target reduced dimensionality
+nFeatures = 250; % Target reduced dimensionality
 lambda = 0.5;
-displayLearningCurve = 0;
+displayLearningCurve = 1;
 learnAlsWr = @(Y, Ytest, userDV, artistDV) learnAlsWrPredictor(Y, Ytest, userDV, artistDV, nFeatures, lambda, displayLearningCurve);
 
 name = 'ALSWR';
@@ -73,8 +73,8 @@ name = ['K', int2str(K), 'Means'];
 clearvars K nFeatures lambda;
 
 %% Gaussian Mixture Model clustering (soft clustering)
-K = 10;
-nFeatures = 20;
+K = 15;
+nFeatures = 40;
 lambda = 0.05;
 
 reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 1);
