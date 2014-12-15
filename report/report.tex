@@ -222,7 +222,7 @@
   \textbf{General approach}:
    	\begin{itemize}
 	   	\item Applying a default implementation of the model to normalized input data or reduced input data after applying PCA depending on computation complexity and performance of the algorithm.
-    		\item Tuning model parameters: for parameters that seemed relevant, we chose a range of values to test on and find the best combination using cross validation. As training the different models is rather slow, we used 3-fold cross validation. Other parameters were set manually. We plot learning curves and select parameters values that maximize the average True Positive Rate (TPR) on the test set. It is important to point out that we may not select the very best parameter doing so because the average TPR is only a proxy but it is the only measure we can rely on to automate the search.
+    		\item Tuning model parameters: for parameters that seemed relevant, we chose a range of values to test on and find the best combination using cross validation. As training the different models is rather slow, we used 3-fold cross validation. Other parameters were set manually. We plot averaged performances curves over the range of parameters and select parameters values that maximize the average True Positive Rate (TPR) on the test set. It is important to point out that we may not select the very best parameter doing so because the average TPR is only a proxy but it is the only measure we can rely on to automate the search.
 		  \item Validating the trained model using 3-fold cross-validation: we computed an average ROC curve over train and test data. We represent the curve with its 95\% confidence interval (see our \texttt{kCVfastROC} function).
   		\item Finally, we compare the candidate model with other classifiers plotting a ROC Curve averaged over 3-fold cross validation and a boxplot for each of them (see our \texttt{kCVevaluateMultipleMethods} function).\\
 	\end{itemize}
@@ -241,7 +241,7 @@
 
     \textbf{Random Forests}: We trained a random forest on the reduced input data and learned different parameters through cross-validation. We experimented with the number of trees (on which the decision is averaged), the fraction of variables selected in the random bagging for each decision split, and the minimum observations per tree leaf. A low number of these observations and a large fraction of features selected might be prone to overfitting while increasing the number of trees improves the predictions performances up to some point. However increasing the number of minimum observation per leaf gives us worse results, this may happen because we don't have enough training examples in our folds. We kept 100 as the number of trees over the range $[50, 100, 200, 300, 400, 500]$, as it offers a good compromise between computational complexity and performance:  while performing as good as more trees it is reasonably fast. We chose the $v/ 2$ with $v = \sqrt{size(X,2)}$ as the optimal number of variables sampled over the range $[5*v 2*v, v, v/ 2, v/ 5]$.\\
 
-  \textbf{Support Vectors Machines}: We experimented with different kernels: linear, polynomial and Radial Basis Function (RBF). As the polynomial and RBF kernels are more complex models their computational complexity is much higher than the linear one. Hence we applied SVM with those kernels on our low-rank approximation data. We retained the RBF kernel because it was giving the best performance results (fig. \ref{fig:detection-svm-kernels}) and then we select the best smoothness parameter $\gamma$ over a range of possible values through cross validation. We used the range $[0.2*L, 0.5*L, L, 2*L, 5*L]$ with $L = 1 / \sqrt{size(X,2)}$. As $\gamma$ increases, the algorithm tries harder to avoid misclassification on train data which leads to overfitting. One can notice it on fig. \ref{fig:detection-svm-gamma} that represents the learning curve for $\gamma$ parameter: as gamma increases the model fits perfectly the training data and thus performs worse on test data.\\
+  \textbf{Support Vectors Machines}: We experimented with different kernels: linear, polynomial and Radial Basis Function (RBF). As the polynomial and RBF kernels are more complex models their computational complexity is much higher than the linear one. Hence we applied SVM with those kernels on our low-rank approximation data. We retained the RBF kernel because it was giving the best performance results (fig. \ref{fig:detection-svm-kernels}) and then we select the best smoothness parameter $\gamma$ over a range of possible values through cross validation. We used the range $[0.2*L, 0.5*L, L, 2*L, 5*L]$ with $L = 1 / \sqrt{size(X,2)}$. As $\gamma$ increases, the algorithm tries harder to avoid misclassification on train data which leads to overfitting. One can notice it on fig. \ref{fig:detection-svm-gamma} that represents the averaged TPR curve for $\gamma$ parameter: as gamma increases the model fits perfectly the training data and thus performs worse on test data.\\
 
      \begin{figure}[ht]
        \center
@@ -250,11 +250,11 @@
       		\label{fig:detection-svm-kernels}
       	}
     	\hfill
-      	\subfigure[Learning curves for  $\gamma$ parameter of RBF kernel.]{
+      	\subfigure[$\gamma$ parameter selection for the RBF kernel.]{
       		\includegraphics[width=2in]{figures/detection/svm-gamma-learningcurve.pdf}
       		\label{fig:detection-svm-gamma}
       	}
-	\caption{Selecting the best parameters with ROC comparison and learning parameters for SVM.}
+	\caption{Selecting the best parameters with ROC comparison and selecting parameters for SVM.}
 
   \end{figure}
 
