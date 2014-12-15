@@ -27,7 +27,6 @@ function [ellStar, sfStar, trainTPR, testTPR] = findCovHypGP(y, X, k, ellValues,
             predict = @(model, X) predictGPClassification(model, X);
             computePerformances = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
        
-            rng('default');
             setSeed(seed);
             [trainTPR(d,w), testTPR(d,w)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances, 0);
 
