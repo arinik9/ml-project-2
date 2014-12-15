@@ -1,6 +1,5 @@
 function rfModel = trainRandomForest(y, X, nTrees, nVarSample, nMinLeaf)
 % Wrapper to be consistent with other models
-% TODO: add other hyper parameters
     
     if (nargin < 5)
        nMinLeaf = 1; % Default value for classification 

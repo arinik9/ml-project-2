@@ -1,4 +1,4 @@
-function [trError, teError] = evaluateMethod(name, getPredictor, Y, G, nSplits, showErrorDiagnostic)
+function [trErrorAvg, teErrorAvg, trError, teError] = evaluateMethod(name, getPredictor, Y, G, nSplits, showErrorDiagnostic)
 % EVALUATEMETHOD Evaluate method on many random train / test splits
 %
 % INPUT
@@ -50,8 +50,12 @@ function [trError, teError] = evaluateMethod(name, getPredictor, Y, G, nSplits, 
         fprintf('%s [split %d]: %f | %f\n', name, i, e.tr(i), e.te(i));
     end;
 
-    trError = mean(e.tr);
-    teError = mean(e.te);
+    % Get back all train and test error to plot error
+    trError = e.tr;
+    teError = e.te;
     
-    fprintf('----- %s [average]: %f | %f\n\n', name, trError, teError);
+    trErrorAvg = mean(e.tr);
+    teErrorAvg = mean(e.te);
+    
+    fprintf('----- %s [average]: %f | %f\n\n', name, trErrorAvg, teErrorAvg);
 end

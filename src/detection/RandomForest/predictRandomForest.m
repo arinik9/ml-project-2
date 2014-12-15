@@ -1,5 +1,5 @@
 function [rfPred, labels] = predictRandomForest(rfModel, Xpred)
-% Takes a random forest and predict outputs for given Xpred values
+% Takes a random forest and predict scores for given Xpred values
 % Returns probabilities and associated labels computed by the model
 
     [labels, scores] = rfModel.predict(Xpred);

@@ -1,4 +1,11 @@
 function [weightDecayStar, trainTPR, testTPR] = findWeightDecayNeuralNetwork(y, X, k, weightDecaysValues, seed)
+% Finds the best weight decay parameters for NN from given range of 
+% weightDecaysValues over k-fold CV and plots learning curves 
+% on train and test data
+
+    if (nargin < 5)
+        seed = 1;
+    end
 
     n = length(weightDecaysValues);
 
@@ -15,6 +22,7 @@ function [weightDecayStar, trainTPR, testTPR] = findWeightDecayNeuralNetwork(y, 
         predict = @(model, X) predictNeuralNetwork(model, X);
         computePerformances = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
         
+        rng('default');
         setSeed(seed);
         [trainTPR(i), testTPR(i)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances, 0);
         

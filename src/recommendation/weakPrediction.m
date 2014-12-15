@@ -7,7 +7,7 @@ clearvars;
 loadDataset;
 % Number of random train / test splits to generate
 % TODO: moar
-nSplits = 3;
+nSplits = 5;
 
 % Shortcut
 evaluate = @(name, learn) evaluateMethod(name, learn, Yoriginal, Goriginal, nSplits, 1);
@@ -22,15 +22,15 @@ name = 'UserMean';
 [e.tr.(name), e.te.(name)] = evaluate(name, @learnAveragePerUserPredictor);
 
 %% ALS-WR (low rank approximation)
-% TODO: experiment different lambdas and number of features
+% We tried: lambda = 0.01, 0.025, 0.05, 0.075, 0.1, 0.2
 % TODO: select hyper-parameters by cross-validation
 nFeatures = 50; % Target reduced dimensionality
-lambda = 0.01;
-displayLearningCurve = 1;
+lambda = 0.5;
+displayLearningCurve = 0;
 learnAlsWr = @(Y, Ytest, userDV, artistDV) learnAlsWrPredictor(Y, Ytest, userDV, artistDV, nFeatures, lambda, displayLearningCurve);
 
 name = 'ALSWR';
-[e.tr.(name), e.te.(name)] = evaluate(name, learnAlsWr);
+[e.tr.(name), e.te.(name), trLambda7, teLambda7] = evaluate(name, learnAlsWr);
 
 %% "Each Artist" predictions
 % Train a separate model for each artist using derived variables

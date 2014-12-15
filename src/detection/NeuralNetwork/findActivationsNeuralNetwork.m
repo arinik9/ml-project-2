@@ -2,7 +2,7 @@ function [nActivationStar, trainTPR, testTPR] = findActivationsNeuralNetwork(y, 
 % Finds the best activation functions number on L2 and for NN from a given range of values 
 % activationValues over k-fold CV and plots learning curves on train and test data
 
-    if (nargin < 6)
+    if (nargin < 5)
         seed = 1;
     end
 
