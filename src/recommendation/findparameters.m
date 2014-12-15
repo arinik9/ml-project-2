@@ -1,6 +1,5 @@
 loadDataset;
 % Number of random train / test splits to generate
-% TODO: moar
 nSplits = 2;
 
 % Shortcut

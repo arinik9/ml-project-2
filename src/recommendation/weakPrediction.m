@@ -6,8 +6,7 @@ clearvars;
 %%
 loadDataset;
 % Number of random train / test splits to generate
-% TODO: moar
-nSplits = 2;
+nSplits = 5;
 
 % Shortcut
 evaluate = @(name, learn) evaluateMethod(name, learn, Yoriginal, Goriginal, nSplits, 1);
