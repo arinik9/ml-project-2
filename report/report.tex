@@ -1,7 +1,7 @@
 \documentclass[10pt,a4paper]{article}
 % We will use NIPS submission format
 \usepackage{nips13submit_e,times}
-% \usepackage[top=50pt,bottom=50pt,left=60pt,right=60pt]{geometry}
+\usepackage[top=80pt,bottom=80pt]{geometry} % ,left=60pt,right=60pt
 % for hyperlinks
 \usepackage{hyperref}
 \usepackage{url}
@@ -39,42 +39,28 @@
 
 \section{Song recommendation}
 
-  \subsection{Dataset description}
+  \subsection{Dataset analysis and preprocessing}
   \textbf{Objective}: The song recommendation dataset represents the musical habits of users on a musical streaming service. We are given a large number of (user, artist, listening count) triplets, as well as a friendship graph encoding the connections between users. Our goal is to perform: \textit{Weak generalization} (for existing users, predict the listening counts for unobserved artists); \textit{Strong generalization} (for unknown users, predict some listening counts).
 
-  \textbf{About the data}: The listening counts matrix $Y$ covers $1774$ users and $15085$ artists. It is very sparse, as we observe only $69617$ triplets (density of $0.2\%$). In our algorithms, we were careful never to use the $0$ entries of $Y$, since they one convey an absence of signal rather valuable information. The friendship graph $G$ is given in the form of a symmetric $1774 \times 1774$ adjacency matrix, where $G_{i, j} = G_{j, i} = 1$ if users $i$ and $j$ are friends.\\
-
-  Artists have listening counts ranging from $1$ to $2274039$, the most listened artist being Britney Spears (for some reason). Over all observations, before any outlier removal, the average count is 707 while the median count is 278.\\
-
-  \subsection{Dataset analysis and preprocessing}
-  Examining the dataset, we noticed that user $385$ had listened to artist $9162$ a whopping $352698$ times. Assuming an average song duration of $3$ minutes, user $385$ have supposedly spent the equivalent of two full years listening to \textit{Depeche Mode}. It was then necessary to remove such outliers before carrying out any learning.
+  \textbf{About the data}: The listening counts matrix $Y$ covers $1774$ users and $15085$ artists. It is very sparse, as we observe only $69617$ triplets (density of $0.2\%$). In our algorithms, we were careful never to use the $0$ entries of $Y$, since they one convey an absence of signal rather valuable information. Artists have listening counts ranging from $1$ to $2274039$, the most listened artist being Britney Spears (for some reason). Examining the dataset, we noticed that user $385$ had listened to artist $9162$ a whopping $352698$ times. Assuming an average song duration of $3$ minutes, user $385$ have supposedly spent the equivalent of two full years listening to \textit{Depeche Mode}. It was then necessary to remove such outliers before carrying out any learning.
 
   Several Machine Learning techniques rely on the assumption that data follows a Gaussian distribution. Applying a $\log$ transform to listening counts brought all counts back to a common scale. Moreover, observed resulting scale is in $[1;10]$, which is a range comparable to ratings. Since the semantics can be transposed from listening counts to ratings, we are able to apply directly results from recommender systems research articles (e.g. \cite{alswr}), without need for further adaptation.
 
   \begin{figure}[ht]
     \center
     \subfigure{
-      \includegraphics[width=2in]{figures/recommendation/unnormalized-counts.pdf}
+      \includegraphics[width=4cm]{figures/recommendation/unnormalized-counts.pdf}
     }
     \subfigure{
-      \includegraphics[width=2in]{figures/recommendation/normalized-counts.pdf}
+      \includegraphics[width=4cm]{figures/recommendation/normalized-counts.pdf}
     }
     \caption{The Quest for Gaussianity}
     \label{fig:recommendation-normalization}
   \end{figure}
 
-  Finally, in order to test our models for both weak and strong predictions, we separated the training set in two ways:
-  \begin{itemize}
-    \item Entirely remove a proportion of users to use them as a strong prediction test set. We typically removed $20\%$ of the users.
-    \item Withhold a proportion of the remaining (user, artist, listening count) triplets to use them as a weak prediction test set. We typically withhled $20\%$ of the available counts of each user.
-  \end{itemize}
-
-  \textbf{Error measure}: Both weak and strong prediction involve generating, for a given set of (user, artist) pairs, predicted listening counts. We use mean \textbf{RMSE} as our main error measure. Given a predicted triplets $\hat{Y}$, we compute the RMSE of the residuals on nonzero elements of the $\log$-transformed target sparse matrix $Y$.
-
+  Finally, in order to test our models for both weak and strong predictions, we separated the training set in two ways. We either ntirely remove a proportion of users to use them as a strong prediction test set (typically removed $20\%$). Or we withhold a proportion of the remaining (user, artist, listening count) triplets to use them as a weak prediction test set (typically $20\%$ of the available counts of each user). We use mean \textbf{RMSE} as our main error measure. Given a predicted triplets $\hat{Y}$, we compute the RMSE of the residuals on nonzero elements of the $\log$-transformed target sparse matrix $Y$.
 
   \subsection{Methodology and baseline}
-  In the following subsections, we examine the different methods applied to the weak generalization task.
-
   We used two baseline predictors to compare our results with: \textsc{OverallMean} which always predict the mean of all observations, and\textsc{MeanPerUser} which always predict the mean of the user. These performed remarkably well, with an expected test RMSE of $1.42$ and $0.867$ respectively. It turns out the latest was hard to beat.\\
   In order to analyze the results of each proposed technique, we rely on three plots: a comparison of the observation's norm versus the predicted norm for each user, a histogram representation of the repartition of errors made for each prediction, and a plot of the mean RMSE per listening count available. This allows us to diagnose the error more precisely than a single RMSE measure (how does the predictor perform when there's a lot of counts available? When there are few? When the counts are large?). Figure \ref{fig:baseline-predictor-plots} shows such plots for the baseline predictor \textsc{MeanPerUser}.
 
