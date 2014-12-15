@@ -18,16 +18,13 @@
 
 \author{
   Jade Copet\\
-  EPFL \\
-  \texttt{jade.copet@epfl.com} \\
+  EPFL %%(\texttt{jade.copet}) \\
   \And
   Merlin Nimier David\\
-  EPFL \\
-  \texttt{merlin.nimier-david@epfl.com} \\
+  EPFL %%(\texttt{merlin.nimier-david)} \\
   \And
   Krishna Raj Sapkota\\
-  EPFL \\
-  \texttt{krishna.sapkota@epfl.com} \\
+  EPFL %%(\texttt{krishna.sapkota})\\
 }
 
 \nipsfinalcopy
@@ -43,14 +40,9 @@
 \section{Song recommendation}
 
   \subsection{Dataset description}
-  \textbf{Objective}: The song recommendation dataset represents the musical habits of users on a musical streaming service. We are given a large number of (user, artist, listening count) triplets, as well as a friendship graph encoding the connections between users. Our goal is to use this training data to perform:
+  \textbf{Objective}: The song recommendation dataset represents the musical habits of users on a musical streaming service. We are given a large number of (user, artist, listening count) triplets, as well as a friendship graph encoding the connections between users. Our goal is to perform: \textit{Weak generalization} (for existing users, predict the listening counts for unobserved artists); \textit{Strong generalization} (for unknown users, predict some listening counts).
 
-  \begin{itemize}
-    \item \textit{Weak} generalization: for existing users, predict the listening counts for unobserved (user, artist) pairs.
-    \item \textit{Strong} generalization: for unknown users, predict the listening counts. We may use the friendship data.
-  \end{itemize}
-
-  \textbf{About the data}: The listening counts matrix $Y$ covers $1774$ users and $15085$ artists. It is very sparse, as we observe only $69617$ triplets (density of $0.2\%$). In our algorithms, we were careful never to use the $0$ entries of $Y$, since they one convey an absence of signal rather valuable information. The friendship graph $G$ is given in the form of a symmetric $1774 \times 1774$ adjacency matrix, where $G_{i, j} = G_{j, i} = 1$ if users $i$ and $j$ are connected.\\
+  \textbf{About the data}: The listening counts matrix $Y$ covers $1774$ users and $15085$ artists. It is very sparse, as we observe only $69617$ triplets (density of $0.2\%$). In our algorithms, we were careful never to use the $0$ entries of $Y$, since they one convey an absence of signal rather valuable information. The friendship graph $G$ is given in the form of a symmetric $1774 \times 1774$ adjacency matrix, where $G_{i, j} = G_{j, i} = 1$ if users $i$ and $j$ are friends.\\
 
   Artists have listening counts ranging from $1$ to $2274039$, the most listened artist being Britney Spears (for some reason). Over all observations, before any outlier removal, the average count is 707 while the median count is 278.\\
 
@@ -176,7 +168,7 @@
 
     \begin{figure}[ht]
       \center
-        \includegraphics[width=14cm]{figures/recommendation/similarity-predictor-plots.pdf}
+        \includegraphics[width=12cm]{figures/recommendation/similarity-predictor-plots.pdf}
       \caption{Error diagnostic for the \textsc{Similarity} predictor}
       \label{fig:similarity-predictor-plots}
     \end{figure}
@@ -195,7 +187,7 @@
   \subsection{Dataset description}
   \textbf{Objective}: The people detection dataset consists of a set of images associated with a label that indicates whether there is a person or not in the image. Our goal is to predict whether people are present in unseen images.
 
-  \textbf{Data characteristics}: The training set is composed of $8545$ examples. For each of these images, we are provided with the Histogram of Oriented Gradient (HOG) features, generated with Piotr's toolbox \cite{piotrtoolbox}, converted into a vector. Hence for each image we get a vector of dimensionality $9360$. The training dataset includes $1237$ positive examples (images with a person on it) encoded with the label $+1$ and $7308$ negative examples encoded with the label $-1$. The distribution is thus heavily skewed towards negative examples. The test set that we have to make predictions for is composed of $8743$ examples. 
+  \textbf{Data characteristics}: The training set is composed of $8545$ examples. For each of these images, we are provided with the Histogram of Oriented Gradient (HOG) features, generated with Piotr's toolbox \cite{piotrtoolbox}, converted into a vector. Hence for each image we get a vector of dimensionality $9360$. The training dataset includes $1237$ positive examples (images with a person on it) encoded with the label $+1$ and $7308$ negative examples encoded with the label $-1$. The distribution is thus heavily skewed towards negative examples. The test set that we have to make predictions for is composed of $8743$ examples.
 
   \subsection{Performance Evaluation}
   As our dataset is imbalanced, we are relying on both True Positive (TP) and False Positive (FP) values as indicators of our performance. We are using the Receiver Operating Characteristics (ROC) measure and associated \textbf{ROC curves} \cite{rocanalysis} to compare and evaluate our classifiers' performances. The ideal working point is the top-left corner of the ROC curve, where no misclassification is made.
