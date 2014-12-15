@@ -19,7 +19,8 @@ weakPredictor = learnSimilarityBasedPredictor(Ynorm, empty, userDV, empty, S);
 % Sanity check: train error
 [idxTrain, szTrain] = getRelevantIndices(Ynorm);
 Yhat = predictCounts(weakPredictor, idxTrain, szTrain);
-frprintf('[Weak] Train RMSE: %f', computeRmse(Ynorm, Yhat));
+diagnoseError(Ynorm, Yhat);
+fprintf('[Weak] Train RMSE: %f\n', computeRmse(Ynorm, Yhat));
 %%
 % Generate actual predictions
 [idxTarget, szTarget] = getRelevantIndices(Ytest_weak_pairs);
@@ -32,11 +33,12 @@ assert(nnz((Ytrain ~= 0) & (Ytest_weak_pairs ~= 0)) == 0);
 % Then it is not applicable, too bad
 
 % Denormalize the output
-values = exp(nonzeros(logYweak));
+valuesFloat = exp(nonzeros(logYweak));
+values = ceil(valuesFloat); % Listening counts are integer valued
 Yweak = sparse(idxTarget.u, idxTarget.a, values, szTarget.u, szTarget.a);
 
 % Verify
-assert(nnz(logYweak) == nnzTarget);
+assert(nnz(Yweak) == nnzTarget);
 figure;
 subplot(2, 2, 1); hist(nonzeros(Ynorm));
 subplot(2, 2, 2); hist(nonzeros(Ytrain));
@@ -54,7 +56,7 @@ strongPredictor = learnArtistBasedPredictor(Ynorm, Goriginal, userDV, artistDV);
 [idxTrainStrong, szTrainStrong] = getRelevantIndices(Ynorm);
 YhatStrong = predictCounts(strongPredictor, idxTrainStrong, szTrainStrong);
 diagnoseError(Ynorm, YhatStrong);
-fprintf('[Strong] Train RMSE: %f', computeRmse(Ynorm, YhatStrong));
+fprintf('[Strong] Train RMSE: %f\n', computeRmse(Ynorm, YhatStrong));
 %%
 % Generate actual predictions
 [idxTargetStrong, szTargetStrong] = getRelevantIndices(Ytest_strong_pairs);
@@ -62,11 +64,12 @@ nnzTargetStrong = nnz(Ytest_strong_pairs);
 
 logYstrong = predictCounts(strongPredictor, idxTargetStrong, szTargetStrong);
 
-valuesStrong = exp(nonzeros(logYstrong));
+valuesStrongFloat = exp(nonzeros(logYstrong));
+valuesStrong = ceil(valuesStrongFloat);
 Ystrong = sparse(idxTargetStrong.u, idxTargetStrong.a, valuesStrong, szTargetStrong.u, szTargetStrong.a);
 
 % Verify
-assert(nnz(logYstrong) == nnzTargetStrong);
+assert(nnz(Ystrong) == nnzTargetStrong);
 figure;
 subplot(2, 2, 1); hist(nonzeros(Ynorm));
 subplot(2, 2, 2); hist(nonzeros(Ytrain));
@@ -77,4 +80,5 @@ subplot(2, 2, 4); hist(nonzeros(Ystrong));
 %% Output
 saveRecommendationPredictions(Yweak, Ystrong);
 
+%%
 testRecommendationPredictions;
