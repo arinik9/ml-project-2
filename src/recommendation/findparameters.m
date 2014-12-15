@@ -155,8 +155,31 @@ name = ['HeadTail', int2str(headThreshold)];
 learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThreshold);
 
 [e.tr.(name), e.te.(name), trErrH4, teErrH4] = evaluate(name, learnHeadTail);
-%%
+
 boxplot([teErrH1 teErrH2 teErrH3], 'labels', {'5', '10','50'})
 savePlot('./report/figures/recommendation/headtail-threshold-learningcurve-test.pdf','Threshold','RMSE');
 boxplot([trErrH1 trErrH2 trErrH3], 'labels', {'5', '10','50'});
+savePlot('./report/figures/recommendation/headtail-threshold-learningcurve-train.pdf','Threshold','RMSE');
+
+%% Headtail predictor clusters
+
+headThreshold = 10;
+name = ['HeadTail', int2str(headThreshold)];
+
+K = 5;
+learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThreshold, K);
+[e.tr.(name), e.te.(name), trErrK5, teErrK5] = evaluate(name, learnHeadTail);
+
+K = 10;
+learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThreshold, K);
+[e.tr.(name), e.te.(name), trErrK10, teErrK10] = evaluate(name, learnHeadTail);
+
+K = 20;
+learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThreshold, K);
+[e.tr.(name), e.te.(name), trErrK20, teErrK20] = evaluate(name, learnHeadTail);
+
+%%
+boxplot([teErrK5 teErrK10 teErrK20], 'labels', {'5', '10','50'})
+savePlot('./report/figures/recommendation/headtail-threshold-learningcurve-test.pdf','Threshold','RMSE');
+boxplot([trErrK5 trErrK10 trErrK20], 'labels', {'5', '10','50'});
 savePlot('./report/figures/recommendation/headtail-threshold-learningcurve-train.pdf','Threshold','RMSE');

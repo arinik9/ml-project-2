@@ -1,4 +1,4 @@
-function predictor = learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThreshold)
+function predictor = learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThreshold, K)
 % LEARNHEADTAILPREDICTOR This predictor separates the dataset into "head" and "tail" artist
 % Head contains artists for which we have many observations,
 % while Tail contains artists which we do not know well.
@@ -7,18 +7,23 @@ function predictor = learnHeadTailPredictor(Y, Ytest, userDV, artistDV, headThre
 % INPUT
 %   headThreshold: Minimum number of observations required for an artist
 %                  to be part of the head
+%   K:             Number of clusters
 %
 % SEE ALSO
 %   Park, Yoon-Joo, and Alexander Tuzhilin.
 %   "The long tail of recommender systems and how to leverage it."
 
+    if (nargin < 6)
+        K = 10;
+    end
+    
     % TODO: take the social network in input!
     G = sparse(size(Y, 1), size(Y, 1));
 
     overallMean = mean(nonzeros(Y));
     
     headPredictor = learnHeadPredictor(Y, G, Ytest, userDV, artistDV, headThreshold);
-    tailPredictor = learnTailPredictor(Y, G, Ytest, userDV, artistDV, headThreshold);
+    tailPredictor = learnTailPredictor(Y, G, Ytest, userDV, artistDV, headThreshold, K);
     predictor = @(user, artist)...
         predict(user, artist, headThreshold, headPredictor, tailPredictor, artistDV(artist, 2), overallMean);
 end
@@ -45,7 +50,7 @@ function predictor = learnHeadPredictor(Y, G, Ytest, userDV, artistDV, headThres
     predictor = @(user, artist) getFeatures(user, artist) * betas(:, artist);
 end
 
-function predictor = learnTailPredictor(Y, G, Ytest, userDV, artistDV, headThreshold)
+function predictor = learnTailPredictor(Y, G, Ytest, userDV, artistDV, headThreshold, K)
 % Since artists in the tail have very little information available,
 % we cluster them together and learn a model per cluster instead of one per artist.
 % Clustering is done in the Derived Variables space.
@@ -64,7 +69,6 @@ function predictor = learnTailPredictor(Y, G, Ytest, userDV, artistDV, headThres
     % TODO: tweak the number of clusters
     % TODO: use more info to cluster on?
     % TODO: use GMM (soft clustering)?
-    K = 10;
     [tailClusters, ~] = kmeans2(tailSpace, K);
 
     % Convert cluster assignments back to "all artists" indexing
