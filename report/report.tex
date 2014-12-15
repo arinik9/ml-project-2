@@ -232,7 +232,7 @@
    	\begin{itemize}
 	   	\item Applying a default implementation of the model to normalized input data or reduced input data after applying PCA depending on computation complexity and performance of the algorithm.
     		\item Tuning model parameters: for parameters that seemed relevant, we chose a range of values to test on and find the best combination using cross validation. As training the different models is rather slow, we used 3-fold cross validation. Other parameters were set manually. We plot averaged performances curves over the range of parameters and select parameters values that maximize the average True Positive Rate (TPR) on the test set. It is important to point out that we may not select the very best parameter doing so because the average TPR is only a proxy but it is the only measure we can rely on to automate the search.
-		  \item Validating the trained model using 3-fold cross-validation: we computed an average ROC curve over train and test data. We represent the curve with its 95\% confidence interval (see our \texttt{kCVfastROC} function).
+		  \item Validating the trained model using 3-fold cross-validation: we computed an average ROC curve over train and test data. We represent the curve with its 95\% confidence interval.
 	\end{itemize}
 
   \textbf{Logistic Regression}: Since it can be seen as a single-layer Neural Network, we used the Deep Learning toolbox. We applied this classifier on $X_{pca}$ and learnt the regularization term (see below for details) with cross validation and ended up with a regularization of value equal to $10^{-3}$.\\
@@ -268,7 +268,7 @@
 
 
   \subsection{Model selection and predictions}
-    \textbf{Models comparison}:  Finally, we compare every candidate model with other classifiers plotting a ROC Curve averaged over 5-fold cross validation and a boxplot for each of them (see our \texttt{kCVevaluateMultipleMethods} function). The results are presented on Figure \ref{fig:detection-compare-roc-curve}. SVM with the RBF kernel on $X_{pca}$ gives the best performance with its ROC curve lying above the other classifiers and an average TPR reaching $0.911$. The second best classifier is the Neural Network on full-dimensionality data presenting the lowest variance over all methods. It worths pointing out the good performance of penalized logistic regression which is a very simple model. We did not expect much on the Gaussian Processes as we did not succeed to tune it a lot because of its sensitivity. However we are quite surprised about the Random Forest classifier which we would have expected to provide much better results as it is supposed to be particularly well fitted for such problems. We think that we did not succeed to find the best settings for this classifier.
+    \textbf{Models comparison}:  Finally, we compare every candidate model with other classifiers plotting a ROC Curve averaged over 5-fold cross validation and a boxplot for each of them. The results are presented on Figure \ref{fig:detection-compare-roc-curve}. SVM with the RBF kernel on $X_{pca}$ gives the best performance with its ROC curve lying above the other classifiers and an average TPR reaching $0.911$. The second best classifier is the Neural Network on full-dimensionality data presenting the lowest variance over all methods. It worths pointing out the good performance of penalized logistic regression which is a very simple model. We did not expect much on the Gaussian Processes as we did not succeed to tune it a lot because of its sensitivity. However we are quite surprised about the Random Forest classifier which we would have expected to provide much better results as it is supposed to be particularly well fitted for such problems. We think that we did not succeed to find the best settings for this classifier.
 
    \begin{figure}[ht]
        \center
@@ -286,13 +286,13 @@
 
   \textbf{Predictions}: Hence, we produced our predictions for the given \texttt{X\_test} input data using the SVM classifier and wrote them in the mat file \texttt{personPred.mat}. We should underline that the predicted scores output from SVM are strongly split rather than smooth: our classifier does not predict with uncertainty, hence playing with the threshold will not affect much our label predictions.
 
+ \subsubsection*{Implementation details}
+    We could make use of parallel processing (thank Harris for the suggestion) working with larger dataset. In the detection problem we updated the \texttt{fastROC} and \texttt{evaluateMultipleMethods} function to versions based on cross-validation results. Our \texttt{kCVfastROC} function plots an averaged ROC curves with its 95\% confidence interval and our \texttt{kCVevaluateMultipleMethods} calls kCVfastROC and also plots boxplots of the average TPR. We also wrote methods to find automatically the parameters of each methods and used our generic \texttt{kFoldCrossValidation} function from project 1.
+
 \section{Summary}
   Sparse matrix representation made manipulation less straightforward and required us to learn a few new techniques.
 
   In the detection problem, we first applied a PCA to reduce the dimensionality of our data. Then, we applied different classifiers and experimented with their parameter to improve their performance. Once having the optimal settings we could get, we compared them using ROC curves. Finally we selected SVM with RBF kernel for our predictions.
-
-    \subsubsection*{Remarks}
-    TODO: Implementation: point to the most interesting implementations (generic methods and ML algorithms that we implemented ourselves). We could make use of parallel processing (thank Harris for the suggestion).
 
     \subsubsection*{Acknowledgments}
     We would like to thank Prof. Emtiyaz Khan and the teaching assistants for creating this project. It was a great opportunity for us to put in practice the machine learning techniques seen in class on real-world problems. We also would like to thank them for their availability throughout the semester.\\
