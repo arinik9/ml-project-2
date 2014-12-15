@@ -9,8 +9,8 @@ empty = [];
 
 % Normalize train dataset
 Ynorm = normalizedSparse(Ytrain);
-
 [userDV, ~] = generateDerivedVariables(Ynorm);
+
 if(~exist('S', 'var'))
     S = computeSimilarityMatrix(Ynorm, empty, userDV);
 end;
@@ -19,7 +19,7 @@ weakPredictor = learnSimilarityBasedPredictor(Ynorm, empty, userDV, empty, S);
 % Sanity check: train error
 [idxTrain, szTrain] = getRelevantIndices(Ynorm);
 Yhat = predictCounts(weakPredictor, idxTrain, szTrain);
-frprintf('Train RMSE: %f', computeRmse(Ynorm, Yhat));
+frprintf('[Weak] Train RMSE: %f', computeRmse(Ynorm, Yhat));
 %%
 % Generate actual predictions
 [idxTarget, szTarget] = getRelevantIndices(Ytest_weak_pairs);
@@ -32,8 +32,8 @@ assert(nnz((Ytrain ~= 0) & (Ytest_weak_pairs ~= 0)) == 0);
 % Then it is not applicable, too bad
 
 % Denormalize the output
-logValues = nonzeros(logYweak);
-Yweak = sparse(idxTarget.u, idxTarget.a, exp(logValues), szTarget.u, szTarget.a);
+values = exp(nonzeros(logYweak));
+Yweak = sparse(idxTarget.u, idxTarget.a, values, szTarget.u, szTarget.a);
 
 % Verify
 assert(nnz(logYweak) == nnzTarget);
@@ -45,9 +45,36 @@ subplot(2, 2, 4); hist(nonzeros(Yweak));
 
 %% ---------- Strong generalization
 % Given unknown users
-strongPredictor = 0;
+Ynorm = normalizedSparse(Ytrain);
+[userDV, artistDV] = generateDerivedVariables(Ynorm);
 
-% TODO: (!!!) denormalize the output
+strongPredictor = learnArtistBasedPredictor(Ynorm, Goriginal, userDV, artistDV);
+
+% Sanity check: train error
+[idxTrainStrong, szTrainStrong] = getRelevantIndices(Ynorm);
+YhatStrong = predictCounts(strongPredictor, idxTrainStrong, szTrainStrong);
+diagnoseError(Ynorm, YhatStrong);
+fprintf('[Strong] Train RMSE: %f', computeRmse(Ynorm, YhatStrong));
+%%
+% Generate actual predictions
+[idxTargetStrong, szTargetStrong] = getRelevantIndices(Ytest_strong_pairs);
+nnzTargetStrong = nnz(Ytest_strong_pairs);
+
+logYstrong = predictCounts(strongPredictor, idxTargetStrong, szTargetStrong);
+
+valuesStrong = exp(nonzeros(logYstrong));
+Ystrong = sparse(idxTargetStrong.u, idxTargetStrong.a, valuesStrong, szTargetStrong.u, szTargetStrong.a);
+
+% Verify
+assert(nnz(logYstrong) == nnzTargetStrong);
+figure;
+subplot(2, 2, 1); hist(nonzeros(Ynorm));
+subplot(2, 2, 2); hist(nonzeros(Ytrain));
+subplot(2, 2, 3); hist(nonzeros(logYstrong));
+subplot(2, 2, 4); hist(nonzeros(Ystrong));
+
 
 %% Output
-saveRecommendationPredictions(logYweak, Ystrong);
+saveRecommendationPredictions(Yweak, Ystrong);
+
+testRecommendationPredictions;
