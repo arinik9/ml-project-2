@@ -84,7 +84,7 @@
 
   \subsection{Methodology and baseline}
   We used two baseline predictors to compare our results with: always predict the overall mean listening count, and always predict the mean of the user. Surprisingly, these performed remarkably well, with an expected test RMSE of $1.42$ and $0.867$ respectively. It turns out the latest was hard to beat.\\
-  In order to analyze the results of each proposed technique, we rely on three plots: a histogram representation of the repartition of errors made for each prediction, and a plot of the mean RMSE per listening count available. This allows us to diagnose the error more precisely than a single RMSE measure (how does it perform when there's a lot of counts available? When there are few? When the counts are large?). Figure \ref{fig:baseline-predictor-plots} shows such plots for the baseline predictor \textsc{MeanPerUser}.
+  In order to analyze the results of each proposed technique, we rely on three plots: a comparison of the observation's norm versus the predicted norm for each user, a histogram representation of the repartition of errors made for each prediction, and a plot of the mean RMSE per listening count available. This allows us to diagnose the error more precisely than a single RMSE measure (how does the predictor perform when there's a lot of counts available? When there are few? When the counts are large?). Figure \ref{fig:baseline-predictor-plots} shows such plots for the baseline predictor \textsc{MeanPerUser}.
 
   \begin{figure}[ht]
     \center
@@ -98,22 +98,33 @@
   Model-based approaches to recommender system try to \textit{explain} the observations by learning models. However, we are confronted with the classical \textbf{sparsity} and \textbf{long-tail} problems of recommender systems.\\
 
     \noindent
-    \textbf{Each Artist}: We applied an ``item''-oriented approach by training a linear model per artist. The features were extracted as proposed by \cite{long-tail-recommender}, forming a set of Derived Variables (DV) for each user and for each artist. Some of these DVs were also reused in subsequent methods. As shown on figure \ref{fig:each-artist-plot}, this approach works fairly well when a large number of counts is available, but fails when data examples are too scarce. \textsc{EachArtist} gives an expected train RMSE of $0.62$, but fails to generalize (test RMSE: $1.41$).
-
-    \begin{figure}[ht]
-      \center
-        \includegraphics[width=4cm]{figures/recommendation/each-artist-predictor-plot.pdf}
-      \caption{\textsc{EachArtist} is not accurate when too few listening counts are observed. A constant predictor (blue) is shown for comparison.}
-      \label{fig:each-artist-plot}
-    \end{figure}
+    \textbf{Each Artist}: We applied an ``item''-oriented approach by training a linear model per artist. The features were extracted as proposed by \cite{long-tail-recommender}, forming a set of Derived Variables (DV) for each user and for each artist. Some of these DVs were also reused in subsequent methods. As shown on figure \ref{fig:model-based-predictors-plots:each-artist}, this approach works fairly well when a large number of counts is available, but fails when data examples are too scarce. \textsc{EachArtist} gives an expected train RMSE of $0.62$, but fails to generalize (test RMSE: $1.41$).
 
     \noindent
-    \textbf{Head-Tail split}:
-    TODO: As described in \cite{long-tail-recommender}, split the dataset in a head (many listening counts available) and a tail (few listening counts, but \textit{many} artists). The head can support Each-Artist (learning a model per artist), while the tail artists are clustered and used together (more data). Although it looked promising, due to lack of time, were not able to investigate this method as far as we wanted.
+    \textbf{Head-Tail split}: In order to handle better the artists for which very few data points are available (e.g. less than $10$), we follow the method described in \cite{long-tail-recommender}, and split the dataset in head and tail parts. It is interesting to note that even with a generous cutoff points, a vast majority of the artists lie in the tail of the dataset. While the head can support training a single model (e.g. \textsc{EachArtist}) per artist, tail artists are clustered and used together to learn a common, approximate model. Using a cutoff point of $10$ (minimum number of observations in the Head) and clustering tail items into $10$ clusters, we obtain an expected RMSE of $1.07$. Examining our error diagnostic plots on figure \ref{fig:model-based-predictors-plots:head-tail}, we remark a general tendency to slightly overpredict small entries and underpredict large entries.
 
     \noindent
     \textbf{Low-rank matrix factorization} with ALS-WR:
     TODO: Described in \cite{alswr}. Implementation of the algorithm.
+
+    \begin{figure}
+      \center
+        \subfigure[
+          \textsc{EachArtist} is not accurate when too few listening counts are observed.
+          \label{fig:model-based-predictors-plots:each-artist}
+        ]{
+          \includegraphics[width=6.5cm]{figures/recommendation/each-artist-predictor-plot.pdf}
+        }
+        \hfill
+        \subfigure[
+          \textsc{HeadTailSplit} with cutoff at $10$ and $10$ tail clusters
+          \label{fig:model-based-predictors-plots:head-tail}
+        ]{
+          \includegraphics[width=9cm]{figures/recommendation/head-tail-predictor-plot.pdf}
+        }
+      \caption{Model-based methods}
+      \label{fig:model-based-predictors-plots}
+    \end{figure}
 
   \subsection{Memory-based}
   Memory-based approaches, as opposed to model-based, do not rely on semantics of the data. On the other hand, we make the assumption that people have stable \textit{tastes} or preferences, that is that users who agreed in the past will agree in the future and that they will like similar artists than those they listened to in the past. While this approach may show limitations on a large temporal scale, it proved successful on our dataset.\\
