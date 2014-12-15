@@ -55,7 +55,7 @@ learnSVM = @(y, X) trainSVM(y, X, '-t 2 -b 1 -e 0.01');
 predictSVM = @(model, X) predictSVM(model, X);
 
 [trAvgTPR_SVM, teAvgTPR_SVM, predTr_SVM, predTe_SVM, trueTr_SVM, trueTe_SVM] = kFoldCrossValidation(ytrain, pcaXtrain, kfold, learnSVM, predictSVM, computePerformance, 1, 'SVM RBF kernel');
-savePlot('./report/figures/detection/selected-classifier-validation.pdf','False Positive Rate','True Positive Rate');
+%savePlot('./report/figures/detection/selected-classifier-validation.pdf','False Positive Rate','True Positive Rate');
 
 %% NN
 

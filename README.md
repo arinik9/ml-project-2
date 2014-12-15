@@ -88,7 +88,7 @@ Recall we must achieve both **weak** (new ratings for existing users) and **stro
 
 - [ ] Describe and discuss the methods used and show that we understand their inner working and the influence of each hyperparameter (especially for methods we did not implement ourselves)
 - [X] Produce figures for the detection dataset
-- [ ] Report work done for the detection dataset and the corresponding results
+- [X] Report work done for the detection dataset and the corresponding results
 - [ ] Produce figures for the recommendation dataset
 - [ ] Report work done for the recommendation dataset and the corresponding results
 - [ ] Double-check all figures for labels (on each axis and for the figure itself)
