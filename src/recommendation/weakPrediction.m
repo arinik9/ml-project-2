@@ -51,21 +51,25 @@ name = ['HeadTail', int2str(headThreshold)];
 %% K-Means clustering
 % Maximum number of clusters (may not all be used)
 % TODO: select K with cross-validation
-K = 15;
+K = 500;
 % Parameters for ALS-WR
 % Our goal here is to obtain a version of Ytrain but with lower
 % dimensionality. We're not trying to predict from the result, so we
 % can overfit completely.
-nFeatures = 20;
-lambda = 0.000001;
+%nFeatures = 20;
+%lambda = 0.000001;
 
-reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 0)';
-getSimilarity = @(Ytrain, Ytest, userDV) computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
-learnKMeansALS = @(Y, Ytest, userDV, artistDV) ...
-    learnKMeansPredictor(Y, Ytest, userDV, artistDV, K, getSimilarity(Y, Ytest, userDV));
+%reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 0)';
+%getSimilarity = @(Ytrain, Ytest, userDV) computeSimilarityMatrix(Ytrain, Ytest, userDV, reduceSpace);
 
-name = ['K', int2str(K), 'MeansALS'];
-[e.tr.(name), e.te.(name)] = evaluate(name, learnKMeansALS);
+%learnKMeansALS = @(Y, Ytest, userDV, artistDV) ...
+%    learnKMeansPredictor(Y, Ytest, userDV, artistDV, K, getSimilarity(Y, Ytest, userDV));
+
+learnKMeans = @(Y, Ytest, userDV, artistDV) ...
+    learnKMeansPredictor(Y, Ytest, userDV, artistDV, K);
+
+name = ['K', int2str(K), 'Means'];
+[e.tr.(name), e.te.(name)] = evaluate(name, learnKMeans);
 
 clearvars K nFeatures lambda;
 

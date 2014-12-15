@@ -15,19 +15,31 @@ function predictor = learnKMeansPredictor(Ytrain, Ytest, userDV, ~, K, S)
     % [assignments, centroids] = kmeans(Ytrain, K, 'Distance', 'sqeuclidean', 'Options', options);
 
     % Piotr's version runs super fast
-    [assignments, ~, ~] = kmeans2(Ytrain, K, 'metric', 'cosine', 'display', 1);
+    [assignments, centroids, ~] = kmeans2(Ytrain, K, 'metric', 'cosine', 'display', 1);
 
-    predictor = @(user, artist) ...
-        predict(user, artist, Ytrain, assignments, userDV, S);
+
+    if(exist('S', 'var'))
+        predictor = @(user, artist) ...
+            predict(user, artist, Ytrain, assignments, centroids, userDV, S);
+    else
+        predictor = @(user, artist) ...
+            predict(user, artist, Ytrain, assignments, centroids, userDV);
+    end;
 end
 
-function prediction = predict(user, artist, Y, assignments, userDV, S)
+function prediction = predict(user, artist, Y, assignments, centroids, userDV, S)
     usersInCluster = find(assignments == assignments(user));
     participants = usersInCluster(Y(usersInCluster, artist) ~= 0 & usersInCluster ~= user);
 
     if(~isempty(participants))
-        prediction = predictVotesWeightedBySimilarity(user, artist, Y, participants, userDV, S);
-        %prediction = predictVotesWeightedByDistance(user, artist, Y, participants, userDV);
+        if(exist('S', 'var'))
+            prediction = predictVotesWeightedBySimilarity(user, artist, Y, participants, userDV, S);
+            %prediction = predictVotesWeightedByDistance(user, artist, Y, participants, userDV);
+        else
+            % Simply predict the cluster's centroid
+            predictedVector = centroids(assignments(user), :);
+            prediction = predictedVector(artist);
+        end;
     else
         % Not enough information available in this cluster
         prediction = userDV(user, 1);
