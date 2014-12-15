@@ -223,12 +223,12 @@
    \begin{figure}[ht]
        \center
       	\subfigure[ROC Curve of logistic regression applied to different low-rank approximation. $100$ principal components returns the best results begin the most top-left curve.]{
-      		\includegraphics[width=2in]{figures/detection/pcaselection-curve3.pdf}
+      		\includegraphics[width=3in]{figures/detection/pcaselection-curve3.pdf}
       		\label{fig:detection-pca-roc-curve}
       	}
     	\hfill
 	\subfigure[Explained variance per principal component (barplot) and cumulated explained variance (curve).]{
-      		\includegraphics[width=2in]{figures/detection/pca-varianceExplained.pdf}
+      		\includegraphics[width=3in]{figures/detection/pca-varianceExplained.pdf}
       		\label{detection-pca-variance}
     	}
 	\caption{PCA on detection dataset. Selection of the number of principal components}
@@ -247,7 +247,7 @@
 
   \textbf{Logistic Regression}: Since it can be seen as a single-layer Neural Network, we used the Deep Learning toolbox. We added a regularization term (see below for details). We applied this classifier on our reduced data after exponential transform and learned the regularization term with cross validation and ended up with a regularization of value equal to $10^{-3}$.\\
 
-  \textbf{Gaussian Processes}: Having a large number of data examples in our training set, we used "large scale'' GP classification from Rasmussen's GPML library. It relies on low-rank and diagonal approximation to the exact covariance using induction points. Solving a classification problem, we opted for a logistic function as a likelihood function. We did not have specific intuition about the prior distribution so we used a constant 0-mean prior. We selected a squared exponential covariance with isometric distance measure \texttt{covSEiso} rather than the ARD one. While yielding comparable performance, the former uses only two hyper-parameters, in contrast with the latter which needs $D+1$ hyper parameters and thus might be prone to overfitting. Finally we chose Laplace approximation to infer on our data because of its reasonable computation time (as opposed to Expectation-Propagation). Gaussian Processes have a lot of hyper parameters and are very sensitive to those, especially the covariance hyper parameters. We only succeeded to make it work on a low-rank approximation over 50 principal components. None of our several trials of grid search to find the hyper parameters for our regular reduced input data succeeded.\\
+  \textbf{Gaussian Processes}: Having a large number of data examples in our training set, we used "large scale'' GP classification from Rasmussen's GPML library. It relies on low-rank and diagonal approximation to the exact covariance using induction points. Solving a classification problem, we opted for a logistic function as a likelihood function. We did not have specific intuition about the prior distribution so we used a constant 0-mean prior. We selected a squared exponential covariance with isometric distance measure \texttt{covSEiso} rather than the ARD one. While yielding comparable performance, the former uses only two hyper-parameters, in contrast with the latter which needs $D+1$ hyper parameters and thus might be prone to overfitting. Finally we chose Laplace approximation to infer on our data because of its reasonable computation time (as opposed to Expectation-Propagation). Gaussian Processes have a lot of hyper parameters and are very sensitive to those, especially the covariance hyper parameters. We only succeeded to make it work on a low-rank approximation over 50 principal components. None of our several trials of grid search to find the hyper parameters for our regular reduced input data succeeded. We used $size(X,1) / 50$ inducing points to be have a fairly reasonable computation time but it may require more to improve performance. As it was really hard to find the parameters we discarded this classifier to focus on other models.\\
 
     \textbf{Neural Networks}: We applied a 2-layered Neural Network on our full-dimension data. We were able to tune the number of activation functions on each layer as well as its type. A sigmoid activation function gives better results than the $\tanh$ function and is more robust.\\
   To avoid overfitting, we leveraged two regularization methods:
@@ -264,12 +264,12 @@
      \begin{figure}[ht]
        \center
       	\subfigure[Averaged ROC curves to choose the best kernel.]{
-      		\includegraphics[width=2in]{figures/detection/svm-kernels-curve.pdf}
+      		\includegraphics[width=3in]{figures/detection/svm-kernels-curve.pdf}
       		\label{fig:detection-svm-kernels}
       	}
     	\hfill
       	\subfigure[$\gamma$ parameter selection for the RBF kernel.]{
-      		\includegraphics[width=2in]{figures/detection/svm-gamma-learningcurve.pdf}
+      		\includegraphics[width=3in]{figures/detection/svm-gamma-learningcurve.pdf}
       		\label{fig:detection-svm-gamma}
       	}
 	\caption{Selecting the best parameters with ROC comparison and selecting parameters for SVM.}
@@ -283,12 +283,12 @@
    \begin{figure}[ht]
        \center
       	\subfigure[Averaged ROC Curves of all our tuned classifiers.]{
-      		\includegraphics[width=2in]{figures/detection/compareall-5fold-curve.pdf}
+      		\includegraphics[width=3in]{figures/detection/compareall-5fold-curve.pdf}
       		\label{fig:detection-compare-roc-curve}
       	}
     	\hfill
 	\subfigure[Boxplots of each classifier.]{
-      		\includegraphics[width=2in]{figures/detection/compareall-5fold-boxplots.pdf}
+      		\includegraphics[width=3in]{figures/detection/compareall-5fold-boxplots.pdf}
       		\label{detection-compare-boxplot}
     	}
 	\caption{Comparison of all models. SVM appear to provide the best performance.}
