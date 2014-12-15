@@ -8,13 +8,8 @@ Team members
 
 - Jade Copet
 - Merlin Nimier-David
-- Krishna Sapkota
 
 The project was designed by Prof. Emtiyaz & TAs.
-
-Project structure
------------------
-
 
 Project's TODO
 --------------
@@ -68,9 +63,9 @@ Recall we must achieve both **weak** (new ratings for existing users) and **stro
 - [X] Experiment with Gaussian Mixture Models (soft clustering)
 - [X] Cluster the tail items (head / tail cutoff point to be chosen carefully)
 - [X] Try clustering in reduced-dimensionality space
-- [ ] Implement a hybrid head / tail predictor (e.g. Each Item for head, Top-K for tail)
+- [X] Implement a hybrid head / tail predictor (e.g. Each Item for head, Top-K for tail)
 - [ ] Determine if using the social graph helps weak prediction (then, we will be able to know if we can use it for strong prediction as well)
-- [ ] Use the social network and generic artist informations for strong prediction (clustering ?)
+- [X] Use the social network and generic artist informations for strong prediction
 - [X] Generate feature selection plots
 - [X] Minimize the train and test error
 - [X] Check the stability of the results with random train / test splits
@@ -78,21 +73,21 @@ Recall we must achieve both **weak** (new ratings for existing users) and **stro
 
 ### Predictions
 
-- [ ] `songPred.mat` contains the two matrices `Ytest_weak_pred` (size 1774x15082) and `Ytest_strong_pred` (size 93x15082)
-- [ ] `personPred.mat` contains a vector 'Ytest_score' (8743x1) with the prediction score for each test sample
+- [X] `songPred.mat` contains the two matrices `Ytest_weak_pred` (size 1774x15082) and `Ytest_strong_pred` (size 93x15082)
+- [X] `personPred.mat` contains a vector 'Ytest_score' (8743x1) with the prediction score for each test sample
 
 ### Report
 
-- [ ] Describe and discuss the methods used and show that we understand their inner working and the influence of each hyperparameter (especially for methods we did not implement ourselves)
+- [X] Describe and discuss the methods used and show that we understand their inner working and the influence of each hyperparameter (especially for methods we did not implement ourselves)
 - [X] Produce figures for the detection dataset
 - [X] Report work done for the detection dataset and the corresponding results
-- [ ] Produce figures for the recommendation dataset
-- [ ] Report work done for the recommendation dataset and the corresponding results
+- [X] Produce figures for the recommendation dataset
+- [X] Report work done for the recommendation dataset and the corresponding results
 - [ ] Double-check all figures for labels (on each axis and for the figure itself)
-- [ ] Clear conclusion and analysis of the results for each dataset
+- [X] Clear conclusion and analysis of the results for each dataset
 - [ ] Include complete details about each algorithm (initialization values, lambda values, number of folds, number of trials, etc)
-- [ ] What worked and what did not? Why do you think are the reasons behind that?
-- [ ] Why did you choose the method that you chose?
+- [X] What worked and what did not? Why do you think are the reasons behind that?
+- [X] Why did you choose the method that you chose?
 
 Tools
 -----
