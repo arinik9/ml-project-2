@@ -97,16 +97,6 @@
   \subsection{Model-based}
   Model-based approaches to recommender system try to \textit{explain} the observations by learning models. However, we are confronted with the classical \textbf{sparsity} and \textbf{long-tail} problems of recommender systems.\\
 
-    \noindent
-    \textbf{Each Artist}: We applied an ``item''-oriented approach by training a linear model per artist. The features were extracted as proposed by \cite{long-tail-recommender}, forming a set of Derived Variables (DV) for each user and for each artist. Some of these DVs were also reused in subsequent methods. As shown on figure \ref{fig:model-based-predictors-plots:each-artist}, this approach works fairly well when a large number of counts is available, but fails when data examples are too scarce. \textsc{EachArtist} gives an expected train RMSE of $0.62$, but fails to generalize (test RMSE: $1.41$).
-
-    \noindent
-    \textbf{Head-Tail split}: In order to handle better the artists for which very few data points are available (e.g. less than $10$), we follow the method described in \cite{long-tail-recommender}, and split the dataset in head and tail parts. It is interesting to note that even with a generous cutoff points, a vast majority of the artists lie in the tail of the dataset. While the head can support training a single model (e.g. \textsc{EachArtist}) per artist, tail artists are clustered and used together to learn a common, approximate model. Using a cutoff point of $10$ (minimum number of observations in the Head) and clustering tail items into $10$ clusters, we obtain an expected RMSE of $1.07$. Examining our error diagnostic plots on figure \ref{fig:model-based-predictors-plots:head-tail}, we remark a general tendency to slightly overpredict small entries and underpredict large entries.
-
-    \noindent
-    \textbf{Low-rank matrix factorization} with ALS-WR:
-    TODO: Described in \cite{alswr}. Implementation of the algorithm.
-
     \begin{figure}
       \center
         \subfigure[
@@ -123,6 +113,28 @@
           \includegraphics[width=9cm]{figures/recommendation/head-tail-predictor-plot.pdf}
         }
       \caption{Model-based methods}
+      \label{fig:model-based-predictors-plots}
+    \end{figure}
+
+    \noindent
+    \textbf{Each Artist}: We applied an ``item''-oriented approach by training a linear model per artist. The features were extracted as proposed by \cite{long-tail-recommender}, forming a set of Derived Variables (DV) for each user and for each artist. Some of these DVs were also reused in subsequent methods. As shown on figure \ref{fig:model-based-predictors-plots:each-artist}, this approach works fairly well when a large number of counts is available, but fails when data examples are too scarce. \textsc{EachArtist} gives an expected train RMSE of $0.62$, but fails to generalize (test RMSE: $1.41$).
+
+    \noindent
+    \textbf{Head-Tail split}: In order to handle better the artists for which very few data points are available (e.g. less than $10$), we follow the method described in \cite{long-tail-recommender}, and split the dataset in head and tail parts. It is interesting to note that even with a generous cutoff points, a vast majority of the artists lie in the tail of the dataset. While the head can support training a single model (e.g. \textsc{EachArtist}) per artist, tail artists are clustered and used together to learn a common, approximate model. Using a cutoff point of $10$ (minimum number of observations in the Head) and clustering tail items into $10$ clusters, we obtain an expected RMSE of $1.07$. Examining our error diagnostic plots on figure \ref{fig:model-based-predictors-plots:head-tail}, we remark a general tendency to slightly overpredict small entries and underpredict large entries.
+
+    \noindent
+    \textbf{Low-rank matrix factorization}: We implemented the \textit{Alternating Least-Sqaures with Weighted-$\lambda$-Regularization} (ALS-WR) described in \cite{alswr} to obtain a low-rank representation adapted to our sparse data. It is fast, and our implementation could benefit from easy parallelization. To select the best value of the parameter $\lambda$ ($\lambda \in [10^{-2},10^0]$) as well as the target reduced rank, run the algorithm with each candidate value over $5$ random train / test dataset splits. This technique can fit the training set arbitrarily well, but we were not able to reproduce the good generalization results achieved \cite{alswr} on the Netflix dataset. However, we leveraged this algorithm in subsequent methods as an efficient dimensionality-reduction tool.
+
+    \begin{figure}
+      \center
+        \subfigure[Expected train reconstruction error]{
+          \includegraphics[width=8cm]{figures/recommendation/alswr-lambda-selection-train.pdf}
+        }
+        \hfill
+        \subfigure[Expected test reconstruction error]{
+          \includegraphics[width=8cm]{figures/recommendation/alswr-lambda-selection-test.pdf}
+        }
+      \caption{Selection of the $\lambda$ parameter for \textsc{ALS-WR} algorithm with target reduced dimensionality of $50$.}
       \label{fig:model-based-predictors-plots}
     \end{figure}
 
