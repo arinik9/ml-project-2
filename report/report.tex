@@ -101,7 +101,7 @@
     \textbf{Head-Tail split}. In order to handle better the artists for which very few data points are available (e.g. less than $10$), we follow the method described in \cite{long-tail-recommender}, and split the dataset in head and tail parts. It is important to note that even with a generous cutoff points, a vast majority of the artists lie in the tail of the dataset. While the head can support training a single model (e.g. \textsc{EachArtist}) per artist, tail artists are clustered and used together to learn a common, approximate model. Using a cutoff point of $10$ (minimum number of observations in the Head) and clustering tail items into $10$ clusters, we obtain an expected RMSE of $1.07$. Examining our error diagnostic plots on figure \ref{fig:model-based-predictors-plots:head-tail}, we remark a general tendency to slightly overpredict small entries and underpredict large entries.\\
 
     \noindent
-    \textbf{Low-rank matrix factorization}. We implemented the \textit{Alternating Least-Sqaures with Weighted-$\lambda$-Regularization} (ALS-WR) described in \cite{alswr} to obtain a low-rank representation adapted to our sparse data. It is fast, and our implementation could benefit from easy parallelization. To select the best value of the parameter $\lambda$ ($\lambda \in [10^{-2},10^0]$) as well as the target reduced rank, we run the algorithm with each candidate value over $5$ random train / test splits of our dataset. ALS-WR can fit the training set arbitrarily well, but we were not able to reproduce the good generalization results achieved \cite{alswr} on the Netflix dataset. The best expected test RMSE obtained was $TODO$ (with $\lambda = TODO$ and $TODO$ latent factors). However, we re-used this algorithm in subsequent methods as an efficient dimensionality-reduction tool.
+    \textbf{Low-rank matrix factorization}. We implemented the \textit{Alternating Least-Sqaures with Weighted-$\lambda$-Regularization} (ALS-WR) described in \cite{alswr} to obtain a low-rank representation adapted to our sparse data. It is fast, and our implementation could benefit from easy parallelization. To select the best value of the parameter $\lambda$ ($\lambda \in [10^{-2},10^0]$) as well as the target reduced rank, we run the algorithm with each candidate value over $5$ random train / test splits of our dataset. ALS-WR can fit the training set arbitrarily well, but we were not able to reproduce the good generalization results achieved \cite{alswr} on the Netflix dataset. For most values of the hyperparameters, we obtained a test RMSE of $2.1$ and more. However, we re-used this algorithm in subsequent methods as an efficient dimensionality-reduction tool.
 
     \begin{figure}
       \center
@@ -125,7 +125,7 @@
 
     \noindent
     \textbf{Gaussian Mixture Models} with Expectation Maximization (EM) for soft clustering: K-means has the disadvantage of producing ``hard'' cluster assignments. Gaussian Mixture Models, on the other hand, yield ``soft'' clustering, enabling us to capture more nuanced profiles. \cite{gaussian-mixture-model-script} provides an EM implementation relying on Variational Bayesian Inference to choose automatically the most appropriate number of clusters, effectively minimizing the number of hyperparameters to select.\\
-    However, the algorithm had computational requirements too large for our time constraints, and so we decided to cluster users \textbf{after projection} on a lower dimensional space. Using a low-rank approximation to cluster on also has the advantage ofreducing overfitting. We used our ALS-WR implementation to generate this low dimensionality approximation of the users, and obtain soft cluster assignments in that space. We then predict the reconstructed counts $\hat Y$ (as described in \cite{alswr}), weighted by the soft assignment coefficients. Without precise parameter tuning, we obtain $TODO$ RMSE, which is in fact consistent with the performance obtained with ALS-WR.\\
+    However, the algorithm had computational requirements too large for our time constraints, and so we decided to cluster users \textbf{after projection} on a lower dimensional space. Using a low-rank approximation to cluster on also has the advantage ofreducing overfitting. We used our ALS-WR implementation to generate this low dimensionality approximation of the users, and obtain soft cluster assignments in that space. We then predict the reconstructed counts $\hat Y$ (as described in \cite{alswr}), weighted by the soft assignment coefficients. Without precise parameter tuning, we obtain $2.5$ RMSE on average, which is in fact consistent with the performance obtained with ALS-WR.\\
 
     \noindent
     \textbf{Top-N similar users}. Our best results were obtained by basing our predictions on a user similarity measure. We selected the \textbf{Pearson product-moment correlation} coefficient as described in \cite{cf-techniques-review}. For two users $i$ and $j$, we compute their similarity as:
@@ -258,7 +258,7 @@
 	\caption{Comparison of all models. SVM appear to provide the best performance.}
   \end{figure}
 
-  \textbf{Predictions}: Hence, we produced our predictions for the given \texttt{X\_test} input data using the SVM classifier and wrote them in the mat file \texttt{personPred.mat}. We should underline that the predicted scores output from SVM are strongly split rather than smooth: our classifier does not predict with uncertainty, hence playing with the threshold will not affect much our label predictions.
+  \textbf{Predictions}: Hence, we produced our predictions for the given \texttt{X\_test} input data using the SVM classifier and wrote them in the file \texttt{personPred.mat}. We should underline that the predicted scores output from SVM are strongly split rather than smooth: our classifier does not predict with uncertainty, hence playing with the threshold will not affect much our label predictions.
 
  \subsubsection*{Implementation details}
   When possible, we made use of parallel computations. In the song recommendation problem, we wrote a generic \texttt{evaluateMethod} function which runs any learning function passed and evaluates its performance over several random train / test splits. Our \texttt{diagnoseError} is used each time to visually verify the predictions. Predictions are generated in parallel from any predictor by the generic \texttt{generatePredictions.m} function. The ALS-WR algorithm is implemented in \texttt{alswr.m} and the parallel computation of Pearson's similarity coefficient in \texttt{computeSimilarityMatrix.m}.\\
@@ -273,17 +273,17 @@
     We would like to thank Prof. Emtiyaz Khan and the teaching assistants for creating this project. It was a great opportunity for us to put in practice the machine learning techniques seen in class on real-world problems. We also would like to thank them for their availability throughout the semester. Thanks to our classmate Harris Jabbar for suggesting us to use Matlab's parallel processing capabilities.\\
 
     \begin{thebibliography}{99}
-      % TODO: More references!
-
       % Papers
       \bibitem{alswr} Zhou, Y., Wilkinson, D., Schreiber, R., \& Pan, R., \textit{Large-scale parallel collaborative filtering for the netflix prize} (2008).
       \bibitem{long-tail-recommender} Park, Yoon-Joo, and Alexander Tuzhilin, \textit{The long tail of recommender systems and how to leverage it}.
       \bibitem{dropout} Srivastava N, Hinton G, Krizhevsky A, Sutskever I and Salakhutdinov R, \textit{Dropout: A Simple Way to Prevent Neural Networks from Overfitting}, in Journal of Machine Learning Research 15 (2014) 1929-1958.
       \bibitem{rocanalysis} Fawcett T, \textit{An introduction to ROC analysis}, in Pattern Recognition Letters 27 (2006) 861-874.
       \bibitem{cf-techniques-review} Xiaoyuan Su and Taghi M. Khoshgoftaar, \textit{A Survey of Collaborative Filtering Techniques} (2009)
+      \bibitem{cf-techniques-review} Gilda Moradi Dakhel and Mehregan Mahdavi, \textit{A New Collaborative Filtering Algorithm Using K-means Clustering and Neighbors’ Voting} (2011)
       \bibitem{slope-one} Daniel Lemire, Anna Maclachlan, \textit{Slope One Predictors for Online Rating-Based Collaborative Filtering} (2007)
       \bibitem{cold-start-metrics} Pennock, Schein, Popescul and Ungar, \textit{Methods and Metrics for Cold-Start Recommendations} (2002)
       \bibitem{top-k-with-social-network} Xiwang Yang, Harald Steck,Yang Guo and Yong Liu, \textit{On Top-k Recommendation using Social Networks} (2012)
+      \bibitem{top-n-item-based} M. Deshpande and G. Karypis, \textit{Item-Based Top-N Recommendation Algorithms} (2004)
 
       % Code libraries
       \bibitem{piotrtoolbox} Doll'ar P, \textit{Piotr's Computer Vision Matlab Toolbox}
