@@ -156,7 +156,7 @@ learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, u
 
 [e.tr.(name), e.te.(name), trErrH4, teErrH4] = evaluate(name, learnHeadTail);
 %%
-boxplot([teErrH1 teErrH2 teErrH3 teErrH4], 'labels', {'5', '10','50','100'})
+boxplot([teErrH1 teErrH2 teErrH3], 'labels', {'5', '10','50'})
 savePlot('./report/figures/recommendation/headtail-threshold-learningcurve-test.pdf','Threshold','RMSE');
-boxplot([trErrH1 trErrH2 trErrH3 trErrH4], 'labels', {'5', '10','50','100'})
+boxplot([trErrH1 trErrH2 trErrH3], 'labels', {'5', '10','50'});
 savePlot('./report/figures/recommendation/headtail-threshold-learningcurve-train.pdf','Threshold','RMSE');
