@@ -7,7 +7,7 @@ clearvars;
 loadDataset;
 % Number of random train / test splits to generate
 % TODO: moar
-nSplits = 2;
+nSplits = 3;
 
 % Shortcut
 evaluate = @(name, learn) evaluateMethod(name, learn, Yoriginal, Goriginal, nSplits, 1);
@@ -16,10 +16,10 @@ evaluate = @(name, learn) evaluateMethod(name, learn, Yoriginal, Goriginal, nSpl
 name = 'Constant';
 [e.tr.(name), e.te.(name)] = evaluate(name, @learnConstantPredictor);
 
-%% Simple model: predict the average listening count of the artist
+%% Simple model: predict the average listening count of the user
 % (which is one of the derived variables)
-name = 'ArtistMean';
-[e.tr.(name), e.te.(name)] = evaluate(name, @learnAveragePerArtistPredictor);
+name = 'UserMean';
+[e.tr.(name), e.te.(name)] = evaluate(name, @learnAveragePerUserPredictor);
 
 %% ALS-WR (low rank approximation)
 % TODO: experiment different lambdas and number of features
