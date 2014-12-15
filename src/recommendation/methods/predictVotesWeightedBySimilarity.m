@@ -2,7 +2,6 @@ function prediction = predictVotesWeightedBySimilarity(user, artist, Y, particip
 % prediction = deviation to participant's average + this user's average
 %              * normalized similarity measure as a way to indicate trust
 
-    % TODO: try taking the vote directly
     votes = full(Y(participants, artist) - userDV(participants, 1));
     % Prediction is centered around this user's mean count
     prediction = userDV(user, 1);
