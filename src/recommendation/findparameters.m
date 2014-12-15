@@ -179,7 +179,7 @@ learnHeadTail = @(Y, Ytest, userDV, artistDV) learnHeadTailPredictor(Y, Ytest, u
 [e.tr.(name), e.te.(name), trErrK20, teErrK20] = evaluate(name, learnHeadTail);
 
 %%
-boxplot([teErrK5 teErrK10 teErrK20], 'labels', {'5', '10','50'})
-savePlot('./report/figures/recommendation/headtail-threshold-learningcurve-test.pdf','Threshold','RMSE');
-boxplot([trErrK5 trErrK10 trErrK20], 'labels', {'5', '10','50'});
-savePlot('./report/figures/recommendation/headtail-threshold-learningcurve-train.pdf','Threshold','RMSE');
+boxplot([teErrK5 teErrK10 teErrK20], 'labels', {'5', '10','20'})
+savePlot('./report/figures/recommendation/headtail-k-learningcurve-test.pdf','K number of clusters','RMSE');
+boxplot([trErrK5 trErrK10 trErrK20], 'labels', {'5', '10','20'});
+savePlot('./report/figures/recommendation/headtail-k-learningcurve-train.pdf','K number of clusters','RMSE');
