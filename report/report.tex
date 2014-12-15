@@ -283,15 +283,16 @@
   \textbf{Predictions}: Hence, we produced our predictions for the given \texttt{X\_test} input data using the SVM classifier and wrote them in the mat file \texttt{personPred.mat}. We should underline that the predicted scores output from SVM are strongly split rather than smooth: our classifier does not predict with uncertainty, hence playing with the threshold will not affect much our label predictions.
 
  \subsubsection*{Implementation details}
-    We could make use of parallel processing (thank Harris for the suggestion) working with larger dataset. In the detection problem we updated the \texttt{fastROC} and \texttt{evaluateMultipleMethods} function to versions based on cross-validation results. Our \texttt{kCVfastROC} function plots an averaged ROC curves with its 95\% confidence interval and our \texttt{kCVevaluateMultipleMethods} calls kCVfastROC and also plots boxplots of the average TPR. We also wrote methods to find automatically the parameters of each methods and used our generic \texttt{kFoldCrossValidation} function from project 1.
+  When possible, we made use of parallel computations. In the song recommendation problem, we wrote a generic \texttt{evaluateMethod} function which runs any learning function passed and evaluates its performance over several random train / test splits. Our \texttt{diagnoseError} is used each time to visually verify the predictions. Predictions are generated in parallel from any predictor by the generic \texttt{generatePredictions.m} function. The ALS-WR algorithm is implemented in \texttt{alswr.m} and the parallel computation of Pearson's similarity coefficient in \texttt{computeSimilarityMatrix.m}.\\
+  In the detection problem we updated the \texttt{fastROC} and \texttt{evaluateMultipleMethods} functions to versions based on cross-validation results. Our \texttt{kCVfastROC} function plots an averaged ROC curves with its $95\%$ confidence interval. We also wrote methods to find automatically the parameters of each methods and could re-use our generic \texttt{kFoldCrossValidation} function from project I.
 
 \section{Summary}
   Sparse matrix representation made manipulation less straightforward and required us to learn a few new techniques.
-
+  In the song recommendation problem, we reviewed several state of the art technique for model-based and collaborative filtering recommender systems. In most cases, we were not able to reproduce the results of the authors. However, we did gain valuable insight. We were able to beat the baseline by using a similarity-based approach. For strong generalization, artist-centered predictions worked best. Our main conclusion is that in presence of unstructured or other ``difficult'' data, simple approaches work best.\\
   In the detection problem, we first applied a PCA to reduce the dimensionality of our data. Then, we applied different classifiers and experimented with their parameter to improve their performance. Once having the optimal settings we could get, we compared them using ROC curves. Finally we selected SVM with RBF kernel for our predictions.
 
     \subsubsection*{Acknowledgments}
-    We would like to thank Prof. Emtiyaz Khan and the teaching assistants for creating this project. It was a great opportunity for us to put in practice the machine learning techniques seen in class on real-world problems. We also would like to thank them for their availability throughout the semester.\\
+    We would like to thank Prof. Emtiyaz Khan and the teaching assistants for creating this project. It was a great opportunity for us to put in practice the machine learning techniques seen in class on real-world problems. We also would like to thank them for their availability throughout the semester. Thanks to our classmate Harris Jabbar for suggesting us to use Matlab's parallel processing capabilities.\\
 
     \begin{thebibliography}{99}
       % TODO: More references!
