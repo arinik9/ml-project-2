@@ -77,24 +77,25 @@
     \item Withhold a proportion of the remaining (user, artist, listening count) triplets to use them as a weak prediction test set. We typically withhled $20\%$ of the available counts of each user.
   \end{itemize}
 
-  \textbf{Error measure}: Both weak and strong prediction involve generating, for a given set of (user, artist) pairs, predicted listening counts. We use mean \textbf{RMSE} as our main error measure. Given a predicted triplets $\hat{Y}$, we compute the RMSE of the residuals on nonzero elements of the \textbf{$\log$-transformed} target sparse matrix $Y$.\\
+  \textbf{Error measure}: Both weak and strong prediction involve generating, for a given set of (user, artist) pairs, predicted listening counts. We use mean \textbf{RMSE} as our main error measure. Given a predicted triplets $\hat{Y}$, we compute the RMSE of the residuals on nonzero elements of the $\log$-transformed target sparse matrix $Y$.
 
-  In the following subsections, we examine the different methods applied to the weak generalization task.
 
   \subsection{Methodology and baseline}
-  We used two baseline predictors to compare our results with: always predict the overall mean listening count, and always predict the mean of the user. Surprisingly, these performed remarkably well, with an expected test RMSE of $1.42$ and $0.867$ respectively. It turns out the latest was hard to beat.\\
+  In the following subsections, we examine the different methods applied to the weak generalization task.
+
+  We used two baseline predictors to compare our results with: \textsc{OverallMean} which always predict the mean of all observations, and\textsc{MeanPerUser} which always predict the mean of the user. These performed remarkably well, with an expected test RMSE of $1.42$ and $0.867$ respectively. It turns out the latest was hard to beat.\\
   In order to analyze the results of each proposed technique, we rely on three plots: a comparison of the observation's norm versus the predicted norm for each user, a histogram representation of the repartition of errors made for each prediction, and a plot of the mean RMSE per listening count available. This allows us to diagnose the error more precisely than a single RMSE measure (how does the predictor perform when there's a lot of counts available? When there are few? When the counts are large?). Figure \ref{fig:baseline-predictor-plots} shows such plots for the baseline predictor \textsc{MeanPerUser}.
 
   \begin{figure}[ht]
     \center
       \includegraphics[width=14cm]{figures/recommendation/baseline-predictor-plots.pdf}
-    \caption{Error diagnostic for the \textsc{MeanPerUser} baseline predictor}
+    \caption{Error diagnostic for the \textsc{MeanPerUser} baseline predictor. On the right plot, a constant predictor's error is shown in blue for comparison.}
     \label{fig:baseline-predictor-plots}
   \end{figure}
 
 
   \subsection{Model-based}
-  Model-based approaches to recommender system try to \textit{explain} the observations by learning models. However, we are confronted with the classical \textbf{sparsity} and \textbf{long-tail} problems of recommender systems.\\
+  Model-based approaches to recommender system try to \textit{explain} the observations by training models (e.g. linear regressio) from the observations. However, we are confronted with the classical \textbf{sparsity} and \textbf{long-tail} problems of recommender systems.\\
 
     \begin{figure}
       \center
@@ -102,39 +103,38 @@
           \textsc{EachArtist} is not accurate when too few listening counts are observed.
           \label{fig:model-based-predictors-plots:each-artist}
         ]{
-          \includegraphics[width=6.5cm]{figures/recommendation/each-artist-predictor-plot.pdf}
+          \includegraphics[width=4.5cm]{figures/recommendation/each-artist-predictor-plot.pdf}
         }
         \hfill
         \subfigure[
           \textsc{HeadTailSplit} with cutoff at $10$ and $10$ tail clusters
           \label{fig:model-based-predictors-plots:head-tail}
         ]{
-          \includegraphics[width=9cm]{figures/recommendation/head-tail-predictor-plot.pdf}
+          \includegraphics[width=7cm]{figures/recommendation/head-tail-predictor-plot.pdf}
         }
       \caption{Model-based methods}
       \label{fig:model-based-predictors-plots}
     \end{figure}
 
     \noindent
-    \textbf{Each Artist}: We applied an ``item''-oriented approach by training a linear model per artist. The features were extracted as proposed by \cite{long-tail-recommender}, forming a set of Derived Variables (DV) for each user and for each artist. Some of these DVs were also reused in subsequent methods. As shown on figure \ref{fig:model-based-predictors-plots:each-artist}, this approach works fairly well when a large number of counts is available, but fails when data examples are too scarce. \textsc{EachArtist} gives an expected train RMSE of $0.62$, but fails to generalize (test RMSE: $1.41$).
+    \textbf{Each Artist}. We applied an ``item''-oriented approach by training a linear model per artist. The features were extracted as proposed by \cite{long-tail-recommender}, forming a set of Derived Variables (DV) for each user and for each artist. Some of these DVs were also reused in subsequent methods. As shown on figure \ref{fig:model-based-predictors-plots:each-artist}, this approach works fairly well when a large number of counts is available, but fails when data examples are too scarce. \textsc{EachArtist} gives an expected train RMSE of $0.62$, but fails to generalize (test RMSE: $1.41$).
 
     \noindent
-    \textbf{Head-Tail split}: In order to handle better the artists for which very few data points are available (e.g. less than $10$), we follow the method described in \cite{long-tail-recommender}, and split the dataset in head and tail parts. It is interesting to note that even with a generous cutoff points, a vast majority of the artists lie in the tail of the dataset. While the head can support training a single model (e.g. \textsc{EachArtist}) per artist, tail artists are clustered and used together to learn a common, approximate model. Using a cutoff point of $10$ (minimum number of observations in the Head) and clustering tail items into $10$ clusters, we obtain an expected RMSE of $1.07$. Examining our error diagnostic plots on figure \ref{fig:model-based-predictors-plots:head-tail}, we remark a general tendency to slightly overpredict small entries and underpredict large entries.\\
-    TODO: cutoff point selection plot?
+    \textbf{Head-Tail split}. In order to handle better the artists for which very few data points are available (e.g. less than $10$), we follow the method described in \cite{long-tail-recommender}, and split the dataset in head and tail parts. It is important to note that even with a generous cutoff points, a vast majority of the artists lie in the tail of the dataset. While the head can support training a single model (e.g. \textsc{EachArtist}) per artist, tail artists are clustered and used together to learn a common, approximate model. Using a cutoff point of $10$ (minimum number of observations in the Head) and clustering tail items into $10$ clusters, we obtain an expected RMSE of $1.07$. Examining our error diagnostic plots on figure \ref{fig:model-based-predictors-plots:head-tail}, we remark a general tendency to slightly overpredict small entries and underpredict large entries.\\
 
     \noindent
-    \textbf{Low-rank matrix factorization}: We implemented the \textit{Alternating Least-Sqaures with Weighted-$\lambda$-Regularization} (ALS-WR) described in \cite{alswr} to obtain a low-rank representation adapted to our sparse data. It is fast, and our implementation could benefit from easy parallelization. To select the best value of the parameter $\lambda$ ($\lambda \in [10^{-2},10^0]$) as well as the target reduced rank, run the algorithm with each candidate value over $5$ random train / test dataset splits. This technique can fit the training set arbitrarily well, but we were not able to reproduce the good generalization results achieved \cite{alswr} on the Netflix dataset. However, we leveraged this algorithm in subsequent methods as an efficient dimensionality-reduction tool.
+    \textbf{Low-rank matrix factorization}. We implemented the \textit{Alternating Least-Sqaures with Weighted-$\lambda$-Regularization} (ALS-WR) described in \cite{alswr} to obtain a low-rank representation adapted to our sparse data. It is fast, and our implementation could benefit from easy parallelization. To select the best value of the parameter $\lambda$ ($\lambda \in [10^{-2},10^0]$) as well as the target reduced rank, we run the algorithm with each candidate value over $5$ random train / test splits of our dataset. ALS-WR can fit the training set arbitrarily well, but we were not able to reproduce the good generalization results achieved \cite{alswr} on the Netflix dataset. The best expected test RMSE obtained was $TODO$ (with $\lambda = TODO$ and $TODO$ latent factors). However, we re-used this algorithm in subsequent methods as an efficient dimensionality-reduction tool.
 
     \begin{figure}
       \center
         \subfigure[Expected train reconstruction error]{
-          \includegraphics[width=8cm]{figures/recommendation/alswr-lambda-selection-train.pdf}
+          \includegraphics[width=5cm]{figures/recommendation/alswr-lambda-selection-train.pdf}
         }
         \hfill
         \subfigure[Expected test reconstruction error]{
-          \includegraphics[width=8cm]{figures/recommendation/alswr-lambda-selection-test.pdf}
+          \includegraphics[width=5cm]{figures/recommendation/alswr-lambda-selection-test.pdf}
         }
-      \caption{Selection of the $\lambda$ parameter for \textsc{ALS-WR} algorithm with target reduced dimensionality of $50$.}
+      \caption{Selection of the $\lambda$ parameter for \textsc{ALS-WR} algorithm with $50$ latent factors.}
       \label{fig:model-based-predictors-plots}
     \end{figure}
 
@@ -142,27 +142,26 @@
   Memory-based approaches, as opposed to model-based, do not rely on the semantics of the data. On the other hand, we make the assumption that people have stable \textit{tastes} or preferences, that is that users who agreed in the past will agree in the future and that they will like similar artists than those they listened to in the past. While this approach may show limitations on large temporal scale, it proved successful on our dataset.\\
 
     \noindent
-    \textbf{K-means clustering}: Intuitively, grouping the users by taste would allow us to generate generic profiles and use them for prediction. The simplest approach is the classical K-means algorithm and predict the cluster's centroid. Since the Euclidian distance measure tends to become less meaningful in high dimensional space (related to the curse of dimensionality), we used the Cosine metric to compare users and group them into clusters. We used the fast implementation provided by \cite{piotrtoolbox}.\\
-    Even when increasing the number of clusters, simple centroid prediction failed to generalize and never achieved (in our tests) the better test error than the baseline. This clustering method can however be extended beyond centroid prediction, as we show next.
+    \textbf{K-means clustering}. Intuitively, grouping the users by taste would allow us to generate generic profiles and use them for prediction. The simplest approach is the classical K-means algorithm and predict the cluster's centroid. Since the Euclidian distance measure tends to become less meaningful in high dimensional space (related to the curse of dimensionality), we used the Cosine metric to compare users and group them into clusters. We used the fast \texttt{kmeans2} implementation provided by \cite{piotrtoolbox}.\\
+    Even when increasing the number of clusters, simple centroid prediction failed to generalize and never achieved (in our tests) a better test error than the baseline. This clustering method can however be extended beyond centroid prediction, as we show next.
 
     \noindent
     \textbf{Gaussian Mixture Models} with Expectation Maximization (EM) for soft clustering: K-means has the disadvantage of producing ``hard'' cluster assignments. Gaussian Mixture Models, on the other hand, yield ``soft'' clustering, enabling us to capture more nuanced profiles. \cite{gaussian-mixture-model-script} provides an EM implementation relying on Variational Bayesian Inference to choose automatically the most appropriate number of clusters, effectively minimizing the number of hyperparameters to select.\\
-    However, the algorithm had computational requirements too large for our time constraints, and so we decided to cluster users \textbf{after projection} on a lower dimensional space. It also has the advantage of possibly avoiding overfitting the training data. We used our ALS-WR implementation to generate this low dimensionality approximation of the users, and obtain soft cluster assignments in that space. We then predict the reconstructed counts $\hat Y$ (as described in \cite{alswr}), weighted by the soft assignment coefficients.\\
-    TODO: results
+    However, the algorithm had computational requirements too large for our time constraints, and so we decided to cluster users \textbf{after projection} on a lower dimensional space. Using a low-rank approximation to cluster on also has the advantage ofreducing overfitting. We used our ALS-WR implementation to generate this low dimensionality approximation of the users, and obtain soft cluster assignments in that space. We then predict the reconstructed counts $\hat Y$ (as described in \cite{alswr}), weighted by the soft assignment coefficients. Without precise parameter tuning, we obtain $TODO$ RMSE, which is in fact consistent with the performance obtained with ALS-WR.\\
 
     \noindent
     \textbf{Top-N similar users}. Our best results were obtained by basing our predictions on a user similarity measure. We selected the \textbf{Pearson product-moment correlation} coefficient as described in \cite{cf-techniques-review}. For two users $i$ and $j$, we compute their similarity as:
     \[
       \text{similarity}(i, j) = \frac{
-        \sum_{\text{common artists~} k} (r_{ik} - \bar r_{i})(r_{jk} - \bar r_{j})
+        \sum_{k \in \text{common artists}} (r_{ik} - \bar r_{i})(r_{jk} - \bar r_{j})
       }{
         \sqrt{ \sum_{i\text{'s counts } r_{ik}} (r_{ik} - \bar r_{i}) }
         \sqrt{ \sum_{j\text{'s counts } r_{jk}} (r_{jk} - \bar r_{j}) }
       }
     \]
-    where $\bar r_i$ is the average listening count of user $i$ and $r_{ik}$ is the listening count of user $i$ for artist $k$. Intuitively, the terms involving a deviation to the user's mean can be seen as encoding preference. It also allows to ignore the large variations in listening habits (small and large volume users). Since the sum in the nominator only takes into account artists which both users have listened to, users with no artists in common have a similarity of $0$. On the other hand, users having listened to exactly the same artists will have either $1$ or $-1$ similarity, based on whether or not they ``liked'' it (i.e. if they listened to it more or less that to other artists).\\
+    where $\bar r_i$ is the average listening count of user $i$ and $r_{ik}$ is the listening count of user $i$ for artist $k$. Intuitively, the terms involving a deviation to the user's mean encode preference. It also allows to ignore the large variations in listening habits (small and large volume users). Since the sum in the nominator only takes into account artists which both users have listened to, users with no artists in common have a similarity of $0$. On the other hand, users having listened to exactly the same artists will have either $1$ or $-1$ similarity, based on whether or not they ``liked'' it (i.e. if they listened to it more or less than to other artists).
 
-    The \textsc{Top-N-Neighbors} selects the $N$ most similar users and predicts based on their ``vote'', that is the deviation of their listening count minus their average listening count. We add a biais term $\bar r_i$ to take into account the current user's listening habits. The predicted listening count of user $i$ for artist $j$ is then:
+    The \textsc{Top-N-Neighbors} predictor selects the $N$ most similar users and predicts based on their ``vote'', that is their listening count minus their average listening count. We add a biais term $\bar r_i$ to account for the current user's listening habits. The predicted listening count of user $i$ for artist $j$ is then:
     \[
       \hat r_{i,j} =
         {\bar r_i} +
@@ -170,28 +169,26 @@
           k \times \text{similarity}(u, j) \times (r_{uj} - \bar r_{u})
     \]
 
-    Computing the similarity coefficient proved somewhat costly. For very large datasets, as for clustering, it is possible to use a low rank approximation of the dataset to compute the correlation coefficients. The Top-N predictor's hyperparameters ($N$ and the space to compute the similarity in) can be tuned to strike a balance between performance and computation time.
+    Computing the similarity coefficient proved somewhat costly. For very large datasets, as for the clustering techniques, it is possible to use a low rank approximation of the dataset to compute the correlation coefficients on. The Top-N predictor's hyperparameters ($N$ and the space to compute the similarity in) can be tuned to strike a balance between prediction quality and computation time.
 
     \noindent
-    \textbf{Final model and predictions}: Since the number of users remains limited ($\leq 2000$), we were able to fully compute the similarity matrix $S$ on the training data and predict using the votes of \textit{all} other users. Although somewhat slow, this method striked the best performance to time ratio among those which we experimented. Figure \ref{fig:similarity-predictor-plots} shows the error diagnostic for this method. We obtain an expected test RMSE of $0.76$, which finally beats the \textsc{MeanPerUser} baseline.
-    We researched further processing which could be applied to the similarity matrix, e.g. Fisher's $z$ transform, but it didn't seem to improve the results.
+    \textbf{Final model and predictions}. Since the number of users remains limited ($\leq 2000$), we were able to fully compute the similarity matrix $S$ on the training data and predict using the votes of \textit{all} other users. To make it possible in reasonable time, we implemented a parallelized similarity matrix computation function. Figure \ref{fig:similarity-predictor-plots} shows the error diagnostic for this method. We obtain an expected test RMSE of $0.76$, which finally beats the \textsc{MeanPerUser} baseline. We researched further processing which could be applied to the similarity matrix, e.g. Fisher's $z$ transform, but it didn't seem to improve the results.
 
     \begin{figure}[ht]
       \center
         \includegraphics[width=14cm]{figures/recommendation/similarity-predictor-plots.pdf}
       \caption{Error diagnostic for the \textsc{Similarity} predictor}
-      \label{fig:baseline-predictor-plots}
+      \label{fig:similarity-predictor-plots}
     \end{figure}
 
 
   \subsection{Strong generalization}
   In the strong generalization task, the baseline is to predict the overall mean of all counts and achieves an expected RMSE of $1.44$. Given the very little information available to generate predictions, even a minor improvement over the baseline seems satisfactory. One of the largest factor of error is that we do not know if the new user will have large or small listening counts. We estimate its mean listening count as the median of all available mean listening counts, which corresponds to the assumption that this user will behave similarly than a majority.\\
-  We tried using the friendship graph data to our advantage, by encoding these assumptions in our predictions: a user has tastes similar to its friends'; a heavy user is friend with heavy users (resp. light). Unfortunately, they didn't seem to correspond to the observations, since the expected RMSE never consistently beat the baseline. We were not able to extract signal from the friendship graph.\\
-  However, we did achieve a small improvement by using a measure of ``likeability'' of artists. We define likeability as the mean deviation of listening counts received to their respective users' mean. However, this measure only makes sense when some amount of observations are available. Otherwise, we replace it by its default value $0$. Moreover, we use as an estimate of the unknown user's mean the median of all observed users' means. With these simple manipulations, we obtain an expected RMSE for strong prediction of $1.39$, which is slightly below the baseline.
+  We tried using the friendship graph data to our advantage by encoding the following assumptions in our predictions: a user has tastes similar to its friends'; a heavy user is friend with heavy users (resp. light). Unfortunately, they didn't seem to correspond to the observations, since the expected RMSE never consistently beat the baseline. We were not able to extract signal from the friendship graph.\\
+  However, we did achieve a small improvement by using a measure of ``likeability'' of artists. We define likeability as the mean deviation of listening counts received to their respective users' mean. However, this measure only makes sense when some amount of observations are available (otherwise, we replace it by $0$). We estimate the unknown user's mean as described above. With these simple manipulations, we obtain an expected RMSE for strong prediction of $1.39$, which is slightly below the baseline.
 
   \subsection{Further work}
-  TODO: cite approaches that seemed promising but were not implemented due to lack of time: Boltzman machines, Naïve Bayes, Slope One (cite papers). Head/Tail could have been used better. Combine the clustering approaches with better prediction schemes Use the social network.\\
-
+  ``Cold start'' and recommender systems in general are an active area of research. We noticed several promising techniques in the litterature, such as Slope One (\cite{slope-one}) for weak generalization or the use of Boltzman machines for cold start (\cite{cold-start-metrics}). Moreover, the head-tail splitting technique could have been exploited further and combined with more advanced clustering and prediction techniques. Finally, information conveyed by the social graph should be used (\cite{top-k-with-social-network}).
 
 \section{Image classification}
 
@@ -313,6 +310,9 @@
       \bibitem{dropout} Srivastava N, Hinton G, Krizhevsky A, Sutskever I and Salakhutdinov R, \textit{Dropout: A Simple Way to Prevent Neural Networks from Overfitting}, in Journal of Machine Learning Research 15 (2014) 1929-1958.
       \bibitem{rocanalysis} Fawcett T, \textit{An introduction to ROC analysis}, in Pattern Recognition Letters 27 (2006) 861-874.
       \bibitem{cf-techniques-review} Xiaoyuan Su and Taghi M. Khoshgoftaar, \textit{A Survey of Collaborative Filtering Techniques} (2009)
+      \bibitem{slope-one} Daniel Lemire, Anna Maclachlan, \textit{Slope One Predictors for Online Rating-Based Collaborative Filtering} (2007)
+      \bibitem{cold-start-metrics} Pennock, Schein, Popescul and Ungar, \textit{Methods and Metrics for Cold-Start Recommendations} (2002)
+      \bibitem{top-k-with-social-network} Xiwang Yang, Harald Steck,Yang Guo and Yong Liu, \textit{On Top-k Recommendation using Social Networks} (2012)
 
 
       % Code libraries
