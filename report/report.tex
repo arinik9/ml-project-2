@@ -258,7 +258,7 @@
 	\caption{Comparison of all models. SVM appear to provide the best performance.}
   \end{figure}
 
-  \textbf{Predictions}: Hence, we produced our predictions for the given \texttt{X\_test} input data using the SVM classifier and wrote them in the mat file \texttt{personPred.mat}. We should underline that the predicted scores output from SVM are strongly split rather than smooth: our classifier does not predict with uncertainty, hence playing with the threshold will not affect much our label predictions.
+  \textbf{Predictions}: Hence, we produced our predictions for the given \texttt{X\_test} input data using the SVM classifier and wrote them in the mat file \texttt{personPred.mat}. We should underline that the predicted scores output from SVM are strongly split rather than smooth: our classifier seems to predict with high confidence, hence varying the threshold will not affect much our label predictions.
 
  \subsubsection*{Implementation details}
   When possible, we made use of parallel computations. In the song recommendation problem, we wrote a generic \texttt{evaluateMethod} function which runs any learning function passed and evaluates its performance over several random train / test splits. Our \texttt{diagnoseError} is used each time to visually verify the predictions. Predictions are generated in parallel from any predictor by the generic \texttt{generatePredictions.m} function. The ALS-WR algorithm is implemented in \texttt{alswr.m} and the parallel computation of Pearson's similarity coefficient in \texttt{computeSimilarityMatrix.m}.\\
