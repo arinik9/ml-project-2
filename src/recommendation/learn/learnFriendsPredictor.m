@@ -8,16 +8,22 @@ end
 
 function prediction = predictFromFriends(user, artist, Y, Gstrong, userDV, artistDV)
     nStrong = size(Gstrong, 1);
-
+    
     % Hypothetic volume of this unknown user
-    volumeEstimate = median(userDV(:, 1));
-    % Safe fallback
-    prediction = volumeEstimate + artistDV(artist, 3);
-
+    expectedMean = mean(userDV(:, 1));
+    
+    % ----- Fallback when no friends are available
+    %prediction = expectedMean + artistDV(artist, 3);
+    % KISS
+    %prediction = mean(nonzeros(Y));
+    % Take into account artist likeability
+    prediction = expectedMean + artistDV(artist, 3);
+    
     % We ignore the unknown to unknown friendships
     friends = find(Gstrong(user, 1:(end-nStrong)));
 
-    if(~isempty(friends))
+    % ----- Friends are available
+    if(false && ~isempty(friends))
         Ysub = Y(friends, artist);
         if(nnz(Ysub) > 1)
             [participants, ~] = find(Ysub);
