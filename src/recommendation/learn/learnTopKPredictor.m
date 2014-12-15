@@ -72,5 +72,10 @@ function neighbors = precomputeTopKNeighbors(K, S, similarityThreshold)
         neighbors{user} = [full(userNeighbors(1:K))', full(userSimilarities(1:K))'];
         % Use less than K neighbors if they're not similar enough
         neighbors{user} = neighbors{user}(neighbors{user}(:, 2) > similarityThreshold, :);
+        
+        % Not enough similarity available
+        if(sum(neighbors{user}(:, 2), 1) < 1e-3)
+            neighbors{user} = [];
+        end;
     end;
 end
