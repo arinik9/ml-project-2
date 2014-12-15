@@ -23,7 +23,7 @@ avgTPRst = kCVevaluateMultipleMethods( cat(3, trueTe_pcaX, trueTe_pcaExpX, trueT
 
 weightValues = [0 1e-5 1e-4 1e-3 1e-2];
 [bestWD, trainTPRlog, testTPRlog] = findWeightDecayNeuralNetwork(y, pcaExpX, 3, weightValues, 1);
-savePlot('./report/figures/detection/logreg-regularization-learningcurve.pdf','Weight Decay on L2','TPR on train (blue) and test (red)');
+%savePlot('./report/figures/detection/logreg-regularization-learningcurve.pdf','Weight Decay on L2','TPR on train (blue) and test (red)');
 
 % Best weight value is 1e-3 for which we have a test TPR of: 0.8285
 % trainTPRlog reveals the power of regularization: the model fits less the

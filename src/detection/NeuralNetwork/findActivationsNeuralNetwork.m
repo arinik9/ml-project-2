@@ -21,7 +21,6 @@ function [nActivationStar, trainTPR, testTPR] = findActivationsNeuralNetwork(y, 
         predict = @(model, X) predictNeuralNetwork(model, X);
         computePerformances = @(trueOutputs, pred, plot_flag, model_name) kCVfastROC(trueOutputs, pred, plot_flag, 0, 0, model_name);
         
-        rng('default');
         setSeed(seed);
         [trainTPR(i), testTPR(i)] = kFoldCrossValidation(y, X, k, learn, predict, computePerformances, 0);
         
