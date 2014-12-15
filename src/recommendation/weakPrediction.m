@@ -7,7 +7,7 @@ clearvars;
 loadDataset;
 % Number of random train / test splits to generate
 % TODO: moar
-nSplits = 5;
+nSplits = 3;
 
 % Shortcut
 evaluate = @(name, learn) evaluateMethod(name, learn, Yoriginal, Goriginal, nSplits, 1);
@@ -104,10 +104,10 @@ clearvars K nFeatures lambda;
 % Can be seen as a particular case of the Top-K recommendation,
 % where K is equal to the total number of individuals.
 name = 'SimilarityBased';
-transform = @(S) S;
+%transform = @(S) S;
 %transform = @applyFisherTransform;
 learnSimilarity = @(Y, Ytest, userDV, artistDV) ...
-    learnSimilarityBasedPredictor(Y, Ytest, userDV, artistDV, S, transform);
+    learnSimilarityBasedPredictor(Y, Ytest, userDV, artistDV);
 
-[e.tr.(name), e.te.(name)] = evaluate(name, learnSimilarity);
+[e.tr.(name), e.te.(name), trErrorSim, teErrorSim] = evaluate(name, learnSimilarity);
 

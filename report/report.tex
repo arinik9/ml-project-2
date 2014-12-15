@@ -107,19 +107,19 @@
   We normalized our features before using them for training.
 
   \subsection{Principal Component Analysis}
-  Our features matrix is of dimensionality $9360$ for $8545$ examples which gives us a "fat'' matrix. As several Machine Learning algorithms' time complexity grows fast with dimensionality, we applied a Principal Component Analysis (PCA) in order to work with lower dimensionality data. To do so, we used Piotr's \texttt{pca} implementation which proved to be faster than Matlab's default implementation. We experimented different rank approximations (keeping $50$, $75$, $100$, $300$, $500$ and $1000$ principal components) and applied a simple logistic regression with 3-fold cross validation to have an heuristic about the performance. From the analysis of the resulting ROC curve averaged over the folds \ref{fig:detection-pca-roc-curve} and the associated boxplots \ref{detection-pca-boxplot}, we decided to keep $100$ principal components for our data projection.
+  Our features matrix is of dimensionality $9360$ for $8545$ examples which gives us a "fat'' matrix. As several Machine Learning algorithms' time complexity grows fast with dimensionality, we applied a Principal Component Analysis (PCA) in order to work with lower dimensionality data. To do so, we used Piotr's \texttt{pca} implementation which proved to be faster than Matlab's default implementation. We experimented different rank approximations (keeping $50$, $75$, $100$, $300$, $500$ and $1000$ principal components) and applied a simple logistic regression with 3-fold cross validation to have an heuristic about the performance. From the analysis of the resulting ROC curve averaged over the folds \ref{fig:detection-pca-roc-curve} and the associated boxplots \ref{detection-pca-boxplot}, we decided to keep $100$ principal components for our data projection. We have $60\%$ of the variance explained in our reduced space.
   
   Using a reduced number of features also helps avoiding overfitting, as we are, to some extend, using only the signal (residing in the principal components).
 
    \begin{figure}[ht]
        \center
       	\subfigure[ROC Curve of logistic regression applied to different low-rank approximation. $100$ principal components returns the best results begin the most top-left curve.]{
-      		\includegraphics[width=2.5in]{figures/detection/pcaselection-curve2.pdf}
+      		\includegraphics[width=2.5in]{figures/detection/pcaselection-curve3.pdf}
       		\label{fig:detection-pca-roc-curve}
       	}
     	\hfill
-	\subfigure[Associated boxplots informing about the variance of each method confirms $100$ principal components as a robust option.]{
-      		\includegraphics[width=2.5in]{figures/detection/pcaselection-boxplots2.pdf}
+	\subfigure[Associated boxplots informing confirms $100$ principal components as good option even though it is not the most robust option.]{
+      		\includegraphics[width=2.5in]{figures/detection/pcaselection-boxplots3.pdf}
       		\label{detection-pca-boxplot}
     	}
 	\caption{PCA on detection dataset. Selection of the number of principal components}

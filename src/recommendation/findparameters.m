@@ -124,9 +124,7 @@ name = ['K', int2str(K), 'MeansALS'];
 [e.tr.(name), e.te.(name), trK5, teK5] = evaluate(name, learnKMeansALS);
 
 
-boxplot([teK1 teK2 teK3 teK4], 'labels', {'5','10','15','20'})
+boxplot([teK5 teK1 teK2 teK3 teK4], 'labels', {'3', '5','10','15','20'})
 savePlot('./report/figures/recommendation/kmeans-k-learningcurve-test.pdf','K','RMSE');
-boxplot([trK1 trK2 trK3 trK4], 'labels', {'5','10','15','20'})
+boxplot([trK5 trK1 trK2 trK3 trK4], 'labels', {'3', '5','10','15','20'})
 savePlot('./report/figures/recommendation/kmeans-k-learningcurve-train.pdf','K','RMSE');
-
-%%

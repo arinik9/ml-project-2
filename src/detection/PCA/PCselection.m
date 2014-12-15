@@ -8,27 +8,27 @@ savePlot('./report/figures/detection/pca-varianceExplained.pdf','Principal Compo
 %% Different projections
 
 fprintf('PCA > Projecting train and test data on the first %d PC..\n', 50);
-[pcaX50, ~, ~] = pcaApplyOnData(X, PCA.coeff, PCA.mu, 50);
+[pcaX50, ~, ~] = pcaApplyOnData(expX, PCA.coeff, PCA.mu, 50);
 [pcaX50, ~, ~] = zscore(pcaX50);
 
 fprintf('PCA > Projecting train and test data on the first %d PC..\n', 75);
-[pcaX75, ~, ~] = pcaApplyOnData(X, PCA.coeff, PCA.mu, 50);
+[pcaX75, ~, ~] = pcaApplyOnData(expX, PCA.coeff, PCA.mu, 50);
 [pcaX75, ~, ~] = zscore(pcaX75);
 
 fprintf('PCA > Projecting train and test data on the first %d PC..\n', 100);
-[pcaX100, ~, ~] = pcaApplyOnData(X, PCA.coeff, PCA.mu, 100);
+[pcaX100, ~, ~] = pcaApplyOnData(expX, PCA.coeff, PCA.mu, 100);
 [pcaX100, ~, ~] = zscore(pcaX100);
 
 fprintf('PCA > Projecting train and test data on the first %d PC..\n', 300);
-[pcaX300, ~, ~] = pcaApplyOnData(X, PCA.coeff, PCA.mu, 300);
+[pcaX300, ~, ~] = pcaApplyOnData(expX, PCA.coeff, PCA.mu, 300);
 [pcaX300, ~, ~] = zscore(pcaX300);
 
 fprintf('PCA > Projecting train and test data on the first %d PC..\n', 500);
-[pcaX500, ~, ~] = pcaApplyOnData(X, PCA.coeff, PCA.mu, 500);
+[pcaX500, ~, ~] = pcaApplyOnData(expX, PCA.coeff, PCA.mu, 500);
 [pcaX500, ~, ~] = zscore(pcaX500);
 
 fprintf('PCA > Projecting train and test data on the first %d PC..\n', 1000);
-[pcaX1000, ~, ~] = pcaApplyOnData(X, PCA.coeff, PCA.mu, 1000);
+[pcaX1000, ~, ~] = pcaApplyOnData(expX, PCA.coeff, PCA.mu, 1000);
 [pcaX1000, ~, ~] = zscore(pcaX1000);
 
 %% Train and predict Logistic Regression model
@@ -59,4 +59,3 @@ methodNames = {'50PC', '75PC', '100PC', '300PC', '500PC', '1000PC'};
 
 % Prediction performances on different models
 avgTPRList = kCVevaluateMultipleMethods( cat(3, trueTe_50, trueTe_75, trueTe_100, trueTe_300, trueTe_500, trueTe_1000), cat(3, predTe_50, predTe_75, predTe_100, predTe_300, predTe_500, predTe_1000), true, methodNames );
-
