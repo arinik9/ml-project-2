@@ -92,7 +92,7 @@
   \subsection{Dataset description}
   \textbf{Objective}: The people detection dataset consists of a set of images associated with a label that indicates whether there is a person or not in the image. Our goal is to predict whether people are present in unseen images.
 
-  \textbf{Data characteristics}: The training set is composed of $8545$ examples. For each of these images, we are provided with the Histogram of Oriented Gradient (HOG) features generated with Piotr's toolbox \cite{piotrtoolbox}. In order to work with the HOG features we convert them into a vector. Hence for each image we get a vector of dimensionality $9360$. The test set that we have to make prediction for is composed of $8743$ examples.
+  \textbf{Data characteristics}: The training set is composed of $8545$ examples. For each of these images, we are provided with the Histogram of Oriented Gradient (HOG) features generated with Piotr's toolbox \cite{piotrtoolbox}. In order to work with the HOG features we convert them into a vector. Hence for each image we get a vector of dimensionality $9360$. The test set that we have to make predictions for is composed of $8743$ examples.
 
   The training dataset includes $1237$ positive examples (images with a person on it) encoded with the label $+1$ and $7308$ negative examples encoded with the label $-1$. The distribution is thus heavily skewed towards negative examples.
 
@@ -107,9 +107,9 @@
   We normalized our features before using them for training.
 
   \subsection{Principal Component Analysis}
-  Our features matrix is of dimensionality $9360$ for $8545$ examples which gives us a "fat'' matrix. As several Machine Learning algorithms' time complexity grows fast with dimensionality, we applied a Principal Component Analysis (PCA) in order to work with lower dimensionality data. To do so, we used Piotr's \texttt{pca} implementation which proved to be faster than Matlab's default implementation. We experimented different rank approximations (keeping $50$, $75$, $100$, $300$, $500$ and $1000$ principal components) and applied a simple logistic regression with 3-fold cross validation to have an heuristic about the performance. From the analysis of the resulting ROC curve averaged over the folds \ref{fig:detection-pca-roc-curve} and the associated boxplots \ref{detection-pca-boxplot}, we decided to keep $100$ principal components for our data projection. We have $60\%$ of the variance explained in our reduced space.
+  Our features matrix is of dimensionality $9360$ for $8545$ examples which gives us a "fat'' matrix. As several Machine Learning algorithms' time complexity grows fast with dimensionality, we applied a Principal Component Analysis (PCA) in order to work with lower dimensionality data. To do so, we used Piotr's \texttt{pca} implementation which proved to be faster than Matlab's default implementation. We experimented different rank approximations (keeping $50$, $75$, $100$, $300$, $500$ and $1000$ principal components) and applied a simple logistic regression with 3-fold cross validation to have an heuristic about the performance. From the analysis of the resulting ROC curve averaged over the folds \ref{fig:detection-pca-roc-curve}, we decided to keep $100$ principal components for our data projection. 
   
-  Using a reduced number of features also helps avoiding overfitting, as we are, to some extend, using only the signal (residing in the principal components).
+  Using a reduced number of features also helps avoiding overfitting, as we are, to some extend, using only the signal (residing in the principal components). We have almost $50\%$ of the variance explained in our reduced space \ref{fig:detection-pca-variance}, the rest being mostly noise.
 
    \begin{figure}[ht]
        \center
@@ -118,9 +118,9 @@
       		\label{fig:detection-pca-roc-curve}
       	}
     	\hfill
-	\subfigure[Associated boxplots informing confirms $100$ principal components as good option even though it is not the most robust option.]{
-      		\includegraphics[width=2.5in]{figures/detection/pcaselection-boxplots3.pdf}
-      		\label{detection-pca-boxplot}
+	\subfigure[Explained variance per principal component (barplot) and cumulated explained variance (curve).]{
+      		\includegraphics[width=2.5in]{figures/detection/pca-varianceExplained.pdf}
+      		\label{detection-pca-variance}
     	}
 	\caption{PCA on detection dataset. Selection of the number of principal components}
   \end{figure}
@@ -138,7 +138,6 @@
 
   \textbf{Logistic Regression}: Since it can be seen as a single-layer Neural Network, we used the Deep Learning toolbox. We added a regularization term (see below for details). We applied this classifier on our reduced data after exponential transform and learned the regularization term with cross validation and ended up with a regularization of value equal to $10^{-3}$.
 
-<<<<<<< HEAD
   \textbf{Gaussian Processes}: Having a large number of data examples in our training set, we used "large scale'' GP classification from Rasmussen's GPML library. It relies on low-rank and diagonal approximation to the exact covariance using induction points. Solving a classification problem, we opted for a logistic function as a likelihood function. We did not have specific intuition about the prior distribution so we used a constant 0-mean prior. We selected a squared exponential covariance with isometric distance measure \texttt{covSEiso} rather than the ARD one. While yielding comparable performance, the former uses only two hyper-parameters, in contrast with the latter which needs $D+1$ hyper parameters and thus might be prone to overfitting. Finally we chose Laplace approximation to infer on our data because of its reasonable computation time (as opposed to Expectation-Propagation). Gaussian Processes have a lot of hyper parameters and are very sensitive to those, especially the covariance hyper parameters. We only succeeded to make it work on a low-rank approximation over 50 principal components. None of our several trials of grid search to find the hyper parameters for our regular reduced input data succeeded.
   
     \textbf{Neural Networks}: We applied a 2-layered Neural Network on our full-dimension data. We were able to tune the number of activation functions on each layer as well as its type. A sigmoid activation function gives better results than the $\tanh$ function and is more robust.\\
@@ -153,14 +152,6 @@
 
   \textbf{Support Vectors Machines}: We experimented with different kernels: linear, polynomial and Radial Basis Function (RBF). As the polynomial and RBF kernels are more complex models their computational complexity is much higher than the linear one. Hence we applied SVM with those kernels on our low-rank approximation data. We retained the RBF kernel because it was giving the best performance results (fig. \ref{fig:detection-svm-kernels}) and then we select the best smoothness parameter $\gamma$ over a range of possible values through cross validation. We used the range $[0.2*L, 0.5*L, L, 2*L, 5*L]$ with $L = 1 / \sqrt{size(X,2)}$. As $\gamma$ increases, the algorithm tries harder to avoid misclassification on train data which leads to overfitting. One can notice it on fig. \ref{fig:detection-svm-gamma} that represents the learning curve for $\gamma$ parameter: as gamma increases the model fits perfectly the training data and thus performs worse on test data.
   
-=======
-  \textbf{Gaussian Processes}: Having a large number of data examples in our training set, we used "large scale'' GP classification from Rasmussen's GPML library. It relies on low-rank and diagonal approximation to the exact covariance using induction points. Solving a classification problem, we opted for a logistic function as a likelihood function. We did not have specific intuition about the prior distribution so we used a constant 0-mean prior. We selected a squared exponential covariance with isometric distance measure \texttt{covSEiso} rather than the ARD one. While yielding comparable performance, the former uses only two hyper-parameters, in contrast with the latter which needs $D+1$ hyper parameters and thus might be prone to overfitting. Finally we chose Laplace approximation to infer on our data because of its reasonable computation time (as opposed to Expectation-Propagation). Gaussian Processes have a lot of hyper parameters and are very sensitive to those. We only succeed to make it work on a low-rank approximation over 50 principal components. None of our several trials of grid search to find the hyper parameters for our regular reduced input data succeeded.
-
-    \textbf{Random Forests}: We trained a random forest on the reduced input data and learned different parameters through cross-validation. We experimented with the number of trees (on which the decision is averaged), the fraction of variables selected in the random bagging for each decision split, and the minimum observations per tree leaf. A low number of these observations and a large fraction of features selected might be prone to overfitting while increasing the number of trees improves the predictions performances up to some point. However increasing the number of minimum observation per leaf gives us worse results, this may happen because we don't have enough training examples in our folds. We kept 100 as the number of trees over the range $[50, 100, 200, 300, 400, 500]$, as it offers a good compromise between computational complexity and performance:  while performing as good as more trees it is reasonably fast. We chose the $\sqrt{size(X,2)}/ 2$ as the optimal number of variables sampled.
-
-  \textbf{Support Vectors Machines}: We experimented with different kernels: linear, polynomial and Radial Basis Function (RBF). As the polynomial and RBF kernels are more complex models their computational complexity is much higher than the linear one. Hence we applied SVM with those kernels on our low-rank approximation data. We retained the RBF kernel because it was giving the best performance results (fig. \ref{fig:detection-svm-kernels}) and then we select the best smoothness parameter $\gamma$ over a range of possible values through cross validation. We used the range $[0.2*L, 0.5*L, L, 2*L, 5*L]$ with $L = 1 / \sqrt{size(X,2)}$. As $\gamma$ increases, the algorithm tries harder to avoid misclassification on train data which leads to overfitting. One can notice it on fig. \ref{fig:detection-svm-gamma} that represents the learning curve for $\gamma$ parameter: the model fits perfectly the training data and thus performs worse on test data.
-
->>>>>>> 612883b8b675f68514e68e047a816cb54df32517
      \begin{figure}[ht]
        \center
       	\subfigure[Averaged ROC curves to choose the best kernel.]{
@@ -192,13 +183,8 @@
     	}
 	\caption{Comparison of all models. SVM appear to provide the best performance.}
   \end{figure}
-<<<<<<< HEAD
   
   \textbf{Predictions}: Hence, we produced our predictions for the given \texttt{X\_test} input data using the SVM classifier and wrote them in the mat file \texttt{personPred.mat}. We should underline that the predicted scores output from SVM are strongly split rather than smooth: our classifier does not predict with uncertainty, hence playing with the threshold will not affect much our label predictions.
-=======
-
-  \textbf{Predictions}: Hence, we produced our predictions for the given \texttt{X\_test} input data using the SVM classifier and wrote them in the mat file \texttt{personPred.mat}.
->>>>>>> 612883b8b675f68514e68e047a816cb54df32517
 
 \section{Summary}
   Sparse matrix representation made manipulation less straightforward and required us to learn a few new techniques.
@@ -207,7 +193,6 @@
 
   \subsubsection*{Acknowledgments}
   	We would like to thank Prof. Emtiyaz Khan and the teaching assistants for creating this project. It was a great opportunity for us to put in practice the machine learning techniques seen in class on real-world problems. We also would like to thank them for their availability throughout the semester.\\
-<<<<<<< HEAD
   
      \begin{thebibliography}{99}
    
@@ -225,17 +210,4 @@
 
    \end{thebibliography}
    
-=======
-
-  \begin{thebibliography}{99}
-
-    \bibitem{piotrtoolbox} Doll'ar P, \textit{Piotr's Computer Vision Matlab Toolbox}
-    \bibitem{gpmltoolbox} Rasmussen C and Williams C, \textit{Gaussian Processes for Machine Learning Toolbox}
-  	\bibitem{deeplearningtoolbox} Rasmus Berg Palm, \textit{Deep Learning Toolbox}
-  	\bibitem{libsvmtoolbox} Chang CC and Lin CJ, \textit{LIBSVM: A library for support vector machines}, in ACM Transactions on Intelligent Systems and Technology, vol. 2 (2011)
-  	\bibitem{dropout} Srivastava N, Hinton G, Krizhevsky A, Sutskever I and Salakhutdinov R, \textit{Dropout: A Simple Way to Prevent Neural Networks from Overfitting}, in Journal of Machine Learning Research 15 (2014) 1929-1958.
-
-  \end{thebibliography}
-
->>>>>>> 612883b8b675f68514e68e047a816cb54df32517
 \end{document}

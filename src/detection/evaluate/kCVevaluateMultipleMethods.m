@@ -71,7 +71,7 @@ function avgTprAtWP = kCVevaluateMultipleMethods( labels, predictions, ...
         end
 
         legend( legendROC, 'Location', 'SouthEast' );
-        savePlot('./report/figures/detection/pcaselection-curve4.pdf','False Positive Rate','True Positive Rate');
+        %savePlot('./report/figures/detection/pcaselection-curve4.pdf','False Positive Rate','True Positive Rate');
     end
 
     % Boxplot to show variance over all methods    
@@ -81,7 +81,7 @@ function avgTprAtWP = kCVevaluateMultipleMethods( labels, predictions, ...
         title('TPR at WP of different methods');
         xlabel('Applied methods');
         ylabel('Average TPR');
-        savePlot('./report/figures/detection/pcaselection-boxplots4.pdf','Applied methods','Average TPR');
+        %savePlot('./report/figures/detection/pcaselection-boxplots4.pdf','Applied methods','Average TPR');
     end
     
 
