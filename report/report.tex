@@ -139,17 +139,16 @@
     \end{figure}
 
   \subsection{Memory-based}
-  Memory-based approaches, as opposed to model-based, do not rely on semantics of the data. On the other hand, we make the assumption that people have stable \textit{tastes} or preferences, that is that users who agreed in the past will agree in the future and that they will like similar artists than those they listened to in the past. While this approach may show limitations on a large temporal scale, it proved successful on our dataset.\\
+  Memory-based approaches, as opposed to model-based, do not rely on the semantics of the data. On the other hand, we make the assumption that people have stable \textit{tastes} or preferences, that is that users who agreed in the past will agree in the future and that they will like similar artists than those they listened to in the past. While this approach may show limitations on large temporal scale, it proved successful on our dataset.\\
 
     \noindent
-    \textbf{K-nearest-neighbors clustering}:
-    TODO: fast implementation from \cite{piotrtoolbox}.\\
+    \textbf{K-means clustering}: Intuitively, grouping the users by taste would allow us to generate generic profiles and use them for prediction. The simplest approach is the classical K-means algorithm and predict the cluster's centroid. Since the Euclidian distance measure tends to become less meaningful in high dimensional space (related to the curse of dimensionality), we used the Cosine metric to compare users and group them into clusters. We used the fast implementation provided by \cite{piotrtoolbox}.\\
+    Even when increasing the number of clusters, simple centroid prediction failed to generalize and never achieved (in our tests) the better test error than the baseline. This clustering method can however be extended beyond centroid prediction, as we show next.
 
     \noindent
-    \textbf{Gaussian Mixture Models} with Expectation Maximization (EM) for soft clustering:
-    TODO: cite the script used.\\
-    TODO: not fast enough, so we clustered after projecting into lower-dimensionality space (reuse ALSWR algorithm).\\
-    TODO: predict ALS-WR reconstruction, weighted by the soft assignments.
+    \textbf{Gaussian Mixture Models} with Expectation Maximization (EM) for soft clustering: K-means has the disadvantage of producing ``hard'' cluster assignments. Gaussian Mixture Models, on the other hand, yield ``soft'' clustering, enabling us to capture more nuanced profiles. \cite{gaussian-mixture-model-script} provides an EM implementation relying on Variational Bayesian Inference to choose automatically the most appropriate number of clusters, effectively minimizing the number of hyperparameters to select.\\
+    However, the algorithm had computational requirements too large for our time constraints, and so we decided to cluster users \textbf{after projection} on a lower dimensional space. It also has the advantage of possibly avoiding overfitting the training data. We used our ALS-WR implementation to generate this low dimensionality approximation of the users, and obtain soft cluster assignments in that space. We then predict the reconstructed counts $\hat Y$ (as described in \cite{alswr}), weighted by the soft assignment coefficients.\\
+    TODO: results
 
     \noindent
     \textbf{Top-N similar users}:

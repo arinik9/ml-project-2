@@ -74,8 +74,8 @@ name = ['K', int2str(K), 'Means'];
 clearvars K nFeatures lambda;
 
 %% Gaussian Mixture Model clustering (soft clustering)
-K = 15;
-nFeatures = 100;
+K = 10;
+nFeatures = 20;
 lambda = 0.05;
 
 reduceSpace = @(Ytrain, Ytest) alswr(Ytrain, Ytest, nFeatures, lambda, 1);
