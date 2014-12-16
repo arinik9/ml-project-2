@@ -11,6 +11,21 @@ Team members
 
 The project was designed by Prof. Emtiyaz & TAs.
 
+Project structure
+-----------------
+
+This project contained two tasks: people detection in images, and a song recommender system from listening counts data.
+
+- `analysis`: simple data exploratory analysis scripts we used to get to know the datasets better.
+- `src`:
+  - `detection`: code for the people detection dataset. We experimented with Gaussian Processes, Neural Networks, PCA, SVM and Random Forests
+  - `recommendation`: code for the song recommendation dataset. We experimented with various feature extractions, ALS-WR, linear regression, K-means clustering, Gaussian Mixture Model clustering, Top-N recommendation and the Pearson similarity measure.
+- `toolbox`: place the dependencies there. Our code relies on the DeepLearn toolbox, Piotr toolbox, and the VBGM script (see Tools section).
+- `report`: project report (written in LaTeX). Contains references to related papers which were helpful for the project.
+- `data` and `results`: input and output data (provided as Matlab `.mat` files).
+- `test`: simple test scripts which were provided for us to check the output format of our predictions.
+
+
 Project's TODO
 --------------
 
@@ -95,3 +110,4 @@ Tools
 - [Piotr's toolbox](http://vision.ucsd.edu/~pdollar/toolbox/doc/)
 - [DeepLearn toolbox](https://github.com/rasmusbergpalm/DeepLearnToolbox/archive/)
 - [Gaussian Processes for Machine Learning](http://www.gaussianprocess.org/gpml/code/matlab/doc/)
+- [Variational Bayesian Inference for Gaussian Mixture Model](http://www.mathworks.com/matlabcentral/fileexchange/35362-variational-bayesian-inference-for-gaussian-mixture-model) script by Mo Chen
